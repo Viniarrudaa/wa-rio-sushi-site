@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="WA RIO Sushi: delivery japonês com combos, hot filadélfia, sashimi, uramaki, joe joe e buffet japonês para eventos no Rio de Janeiro.">
+<meta name="robots" content="index,follow">
+<meta property="og:title" content="WA RIO Sushi | Delivery japonês e buffet para eventos">
+<meta property="og:description" content="Peça sushi pelo WhatsApp ou solicite buffet japonês para aniversários, casamentos e eventos corporativos.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="hero_desktop_wa_rio_optimized.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="WA RIO Sushi | Delivery japonês e buffet para eventos">
+<meta name="twitter:description" content="Combos, hot filadélfia, sashimi, joe joe e buffet japonês com atendimento pelo WhatsApp.">
+<meta name="twitter:image" content="hero_desktop_wa_rio_optimized.jpg">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://viacep.com.br https://fonts.gstatic.com https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; form-action 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>WA RIO Sushi | Delivery japonês e buffet para eventos</title>
+<link rel="icon" href="favicon.ico?v=3" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=3">
+<link rel="icon" type="image/png" sizes="256x256" href="favicon_wario.png?v=3">
+<link rel="apple-touch-icon" href="favicon_wario.png?v=3">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="wario_sushi_v2_16.css?v=22">
+</head>
+<body>
+<div class="brand-intro" aria-hidden="true">
+  <div class="brand-intro-mark"><img src="logo_wariobranca - Editado.png" alt=""></div>
+</div>
+
+<nav id="navbar">
+  <a href="#inicio"><img class="logo-img" src="logo_wariobranca - Editado.png" alt="WA RIO SUSHI"></a>
+  <ul id="navbarMenu">
+    <li><a href="#inicio" aria-current="page">Início</a></li>
+    <li><a href="#combos">Cardápio</a></li>
+    <li><a href="#combos">Combos</a></li>
+    <li><a href="#buffet">Buffet</a></li>
+    <li><a href="#whatsapp">Contato</a></li>
+  </ul>
+  <a href="https://wa.me/5521982225443?text=Ol%C3%A1%2C%20WA%20RIO%20Sushi%21%20Quero%20falar%20com%20o%20atendimento." target="_blank" rel="noopener noreferrer" class="nav-cta" aria-label="Pedir pelo WhatsApp">
+    <span>Pedir Agora</span>
+    <svg viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7"/><path d="M9 7h8v8"/></svg>
+  </a>
+  <button class="nav-toggle" id="navToggle" type="button" aria-label="Abrir menu" aria-controls="navbarMenu" aria-expanded="false">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="inicio">
+  <div class="hero-content">
+    <span class="hero-tag">Excelência em cada detalhe</span>
+    <h1>O verdadeiro<br><em>sabor japonês.</em></h1>
+    <p>Ingredientes selecionados, técnicas tradicionais<br> e paixão pela gastronomia japonesa.</p>
+    <a href="#combos" class="btn-primary">
+      <span class="btn-primary-text">Ver Cardápio</span>
+      <span class="btn-primary-arrow" aria-hidden="true"></span>
+    </a>
+  </div>
+  <div class="hero-image">
+    <img src="hero_desktop_wa_rio_optimized.jpg" alt="Sushi WA RIO">
+    <span class="hero-sushi-soften" aria-hidden="true"></span>
+  </div>
+</section>
+
+<!-- COMBOS -->
+<section class="combos" id="combos">
+  <div class="combos-header">
+    <div class="combos-title-wrap">
+      <span class="sec-tag">Nosso Cardápio</span>
+      <h2 class="sec-title">Seleção <em>WA RIO</em></h2>
+      <p class="combos-intro">Uma curadoria dos pedidos mais desejados da casa, preparada para quem busca frescor, textura e sabor japonês com acabamento especial.</p>
+    </div>
+    <span class="scroll-hint">Explore por categoria</span>
+    <a href="https://wa.me/5521982225443?text=Ol%C3%A1%2C%20WA%20RIO%20Sushi%21%20Quero%20falar%20com%20o%20atendimento." target="_blank" rel="noopener noreferrer" class="ver-todos">Falar com atendente →</a>
+  </div>
+  <div class="menu-tabs" role="tablist" aria-label="Categorias do cardápio">
+    <button class="menu-tab is-active" type="button" role="tab" aria-selected="true" data-filter="selecao">Seleção WA RIO</button>
+    <button class="menu-tab" type="button" role="tab" aria-selected="false" data-filter="entradas">Entradas</button>
+    <button class="menu-tab" type="button" role="tab" aria-selected="false" data-filter="combos">Combos</button>
+    <button class="menu-tab" type="button" role="tab" aria-selected="false" data-filter="sushis">Sushis</button>
+    <button class="menu-tab" type="button" role="tab" aria-selected="false" data-filter="temakis">Temakis</button>
+    <button class="menu-tab" type="button" role="tab" aria-selected="false" data-filter="hot">Hot</button>
+    <button class="menu-tab" type="button" role="tab" aria-selected="false" data-filter="quentes">Quentes</button>
+    <button class="menu-tab" type="button" role="tab" aria-selected="false" data-filter="sobremesas">Sobremesas</button>
+    <button class="menu-tab" type="button" role="tab" aria-selected="false" data-filter="bebidas">Bebidas</button>
+  </div>
+  <div class="combos-grid" id="combosGrid">
+    <div class="combo-feature" id="comboFeature" aria-live="polite"></div>
+    <div class="combo-list-wrap">
+      <div class="combo-list-head"><span>Itens da categoria</span><strong id="comboVisibleCount">9 opções</strong></div>
+      <div class="combo-list" id="comboList">
+    <article class="combo-card is-featured" data-id="harumaki" data-name="Harumaki" data-label="Entrada crocante" data-category="selecao entradas">
+      <img src="foto_yakissoba_site_optimized.jpg" alt="Harumaki" loading="lazy">
+      <div class="combo-body"><span class="combo-label">Entrada crocante</span><div class="combo-name">Harumaki</div><p class="combo-desc">Massa fina, textura dourada e recheio saboroso para abrir o pedido com leveza.</p><div class="combo-meta"><span class="combo-pill">Entrada</span><span class="combo-pill">Crocante</span></div><button class="combo-cta add-to-order" type="button">Adicionar ao pedido →</button></div>
+    </article>
+    <article class="combo-card" data-id="combo-wa-rio" data-name="Combo WA RIO" data-label="Para compartilhar" data-category="selecao combos">
+      <img src="wario1_cardapio_optimized.jpg" alt="Combo WA RIO" loading="lazy">
+      <div class="combo-badge">Combo</div>
+      <div class="combo-body"><span class="combo-label">Para compartilhar</span><div class="combo-name">Combo WA RIO</div><p class="combo-desc">Uma seleção equilibrada de peças da casa para dividir, com variedade e apresentação caprichada.</p><div class="combo-meta"><span class="combo-pill">Compartilhar</span><span class="combo-pill">Seleção</span></div><button class="combo-cta add-to-order" type="button">Adicionar ao pedido →</button></div>
+    </article>
+    <article class="combo-card" data-id="joe-joe" data-name="Joe Joe" data-label="Assinatura WA RIO" data-category="selecao sushis">
+      <img src="joejoe_cardapio_optimized.jpg" alt="Joe Joe" loading="lazy">
+      <div class="combo-badge">Exclusivo</div>
+      <div class="combo-body"><span class="combo-label">Assinatura WA RIO</span><div class="combo-name">Joe Joe</div><p class="combo-desc">Peças autorais com montagem delicada, recheio generoso e presença elegante no prato.</p><div class="combo-meta"><span class="combo-pill">Exclusivo</span><span class="combo-pill">Premium</span></div><button class="combo-cta add-to-order" type="button">Adicionar ao pedido →</button></div>
+    </article>
+    <article class="combo-card" data-id="sushi-niguiri" data-name="Sushi Niguiri" data-label="Mais pedido" data-category="selecao sushis">
+      <img src="sushinigiri_cardapio_optimized.jpg" alt="Sushi Niguiri" loading="lazy">
+      <div class="combo-badge">Mais Pedido</div>
+      <div class="combo-body"><span class="combo-label">Mais pedido</span><div class="combo-name">Sushi Niguiri</div><p class="combo-desc">Salmão em corte macio sobre arroz temperado, com apresentação limpa e sabor preciso.</p><div class="combo-meta"><span class="combo-pill">Salmão</span><span class="combo-pill">Favorito</span></div><button class="combo-cta add-to-order" type="button">Adicionar ao pedido →</button></div>
+    </article>
+    <article class="combo-card" data-id="temaki-filadelfia" data-name="Temaki Filadélfia" data-label="Clássico da casa" data-category="selecao temakis">
+      <img src="TEMAKI_site_optimized.jpg" alt="Temaki Filadélfia" loading="lazy">
+      <div class="combo-body"><span class="combo-label">Clássico da casa</span><div class="combo-name">Temaki Filadélfia</div><p class="combo-desc">Salmão fresco, cream cheese e pepino em uma combinação cremosa, leve e bem equilibrada.</p><div class="combo-meta"><span class="combo-pill">Salmão</span><span class="combo-pill">Individual</span></div><button class="combo-cta add-to-order" type="button">Adicionar ao pedido →</button></div>
+    </article>
+    <article class="combo-card" data-id="temaki-hot" data-name="Temaki Hot" data-label="Toque picante" data-category="selecao hot">
+      <img src="TEMAKI_site_optimized.jpg" alt="Temaki Hot" loading="lazy">
+      <div class="combo-body"><span class="combo-label">Toque picante</span><div class="combo-name">Temaki Hot</div><p class="combo-desc">Salmão selado, molho especial e finalização intensa para quem prefere sabores marcantes.</p><div class="combo-meta"><span class="combo-pill">Hot</span><span class="combo-pill">Especial</span></div><button class="combo-cta add-to-order" type="button">Adicionar ao pedido →</button></div>
+    </article>
+    <article class="combo-card" data-id="yakisoba" data-name="Yakisoba" data-label="Quente e completo" data-category="selecao quentes">
+      <img src="foto_yakissoba_site_optimized.jpg" alt="Yakisoba" loading="lazy">
+      <div class="combo-body"><span class="combo-label">Quente e completo</span><div class="combo-name">Yakisoba</div><p class="combo-desc">Legumes frescos, molho envolvente e preparo no ponto para uma refeição mais completa.</p><div class="combo-meta"><span class="combo-pill">Quente</span><span class="combo-pill">Refeição</span></div><button class="combo-cta add-to-order" type="button">Adicionar ao pedido →</button></div>
+    </article>
+    <article class="combo-card" data-id="harumaki-doce" data-name="Harumaki Doce" data-label="Sobremesa" data-category="selecao sobremesas">
+      <img src="foto-principal2_optimized.jpg" alt="Harumaki Doce" loading="lazy">
+      <div class="combo-body"><span class="combo-label">Sobremesa</span><div class="combo-name">Harumaki Doce</div><p class="combo-desc">Massa crocante com recheio doce e finalização delicada para encerrar o pedido com leveza.</p><div class="combo-meta"><span class="combo-pill">Doce</span><span class="combo-pill">Crocante</span></div><button class="combo-cta add-to-order" type="button">Adicionar ao pedido →</button></div>
+    </article>
+    <article class="combo-card" data-id="cha-gelado" data-name="Chá Gelado" data-label="Bebida" data-category="selecao bebidas">
+      <img src="foto_principal_insta_optimized.jpg" alt="Chá Gelado" loading="lazy">
+      <div class="combo-body"><span class="combo-label">Bebida</span><div class="combo-name">Chá Gelado</div><p class="combo-desc">Refrescante, leve e equilibrado para acompanhar pratos quentes, peças frias e combos.</p><div class="combo-meta"><span class="combo-pill">Refrescante</span><span class="combo-pill">Acompanha</span></div><button class="combo-cta add-to-order" type="button">Adicionar ao pedido →</button></div>
+    </article>
+      </div>
+      <div class="combo-empty-list" id="comboEmptyList">Todos os itens desta categoria estão em destaque. Selecione outra categoria para ver mais opções.</div>
+    </div>
+  </div>
+</section>
+
+<!-- BUFFET -->
+<section class="buffet-section" id="buffet">
+  <div class="bf-bg"><img src="buffet_wa_rio_optimized.jpg" alt="Chef WA RIO Sushi no buffet"></div>
+  <div class="bf-ov-left"></div>
+  <div class="bf-ov-bottom"></div>
+  <div class="bf-chef-pop"></div>
+  <div class="bf-wrap">
+    <div class="bf-content">
+      <span class="sec-tag">Buffet japonês para eventos</span>
+      <h2 class="bf-title">Alta gastronomia <em>japonesa</em><br>no seu evento.</h2>
+      <div class="bf-rule"></div>
+      <p class="bf-desc">Buffet japonês completo para aniversários, casamentos e eventos corporativos, com chef, estrutura, preparo ao vivo e apresentação elegante para receber seus convidados com cuidado do início ao fim.</p>
+      <div class="bf-seal">
+        <span class="bf-seal-title">Mestre Sushi</span>
+        <span class="bf-seal-sub">Desde 2018</span>
+      </div>
+      <a href="https://wa.me/5521982225443?text=Ol%C3%A1%2C%20WA%20RIO%20Sushi%21%20Vim%20pelo%20site%20e%20gostaria%20de%20solicitar%20um%20or%C3%A7amento%20para%20um%20evento.%20Pode%20me%20ajudar%20com%20op%C3%A7%C3%B5es%2C%20valores%20e%20disponibilidade%3F" target="_blank" rel="noopener noreferrer" class="btn-buffet">Solicitar orçamento →</a>
+    </div>
+  </div>
+  <div class="bf-stats">
+    <div class="bf-stat"><div><span class="bf-stat-num">+200</span><span class="bf-stat-label">Eventos realizados</span></div></div>
+    <div class="bf-divider"></div>
+    <div class="bf-stat"><div><span class="bf-stat-num">+5K</span><span class="bf-stat-label">Convidados atendidos</span></div></div>
+    <div class="bf-divider"></div>
+    <div class="bf-stat"><div><span class="bf-stat-num">4.9</span><span class="bf-stat-label">Nota m&eacute;dia 99Food</span></div></div>
+  </div>
+</section>
+
+<!-- DEPOIMENTOS -->
+<section class="depoimentos">
+  <div class="dep-header">
+    <span class="sec-tag">Avaliações</span>
+    <h2 class="sec-title">O que nossos <em>clientes</em> dizem</h2>
+    <div class="dep-rating-proof" aria-label="Avaliacao 4.9 no 99Food">
+      <span class="dep-rating-score">4.9</span>
+      <span class="dep-rating-star" aria-hidden="true">&#9733;</span>
+      <span class="dep-rating-copy">Avalia&ccedil;&atilde;o m&eacute;dia no <strong>99Food</strong></span>
+    </div>
+  </div>
+  <div class="dep-marquee-wrap">
+    <div class="dep-marquee">
+      <div class="dep-card">
+          <div class="dep-top">
+            <span class="dep-avatar" aria-hidden="true">AL</span>
+            <div><div class="dep-stars">★★★★★</div><span class="dep-author">Ana Lima</span></div>
+          </div>
+          <p class="dep-text">"Melhor sushi da cidade. Frescor e sabor que nunca encontrei em outro lugar!"</p>
+        </div>
+<div class="dep-card">
+          <div class="dep-top">
+            <span class="dep-avatar" aria-hidden="true">CS</span>
+            <div><div class="dep-stars">★★★★★</div><span class="dep-author">Carlos Souza</span></div>
+          </div>
+          <p class="dep-text">"Entrega rápida e impecável. Chegou perfeito, como sempre. Super recomendo!"</p>
+        </div>
+<div class="dep-card">
+          <div class="dep-top">
+            <span class="dep-avatar" aria-hidden="true">MC</span>
+            <div><div class="dep-stars">★★★★★</div><span class="dep-author">Mariana Costa</span></div>
+          </div>
+          <p class="dep-text">"Peço toda semana. Qualidade constante que me encanta e surpreende sempre."</p>
+        </div>
+<div class="dep-card">
+          <div class="dep-top">
+            <span class="dep-avatar" aria-hidden="true">RA</span>
+            <div><div class="dep-stars">★★★★★</div><span class="dep-author">Ricardo Alves</span></div>
+          </div>
+          <p class="dep-text">"O combo especial é sensacional. Vale cada centavo. Nota 10!"</p>
+        </div>
+<div class="dep-card">
+          <div class="dep-top">
+            <span class="dep-avatar" aria-hidden="true">FR</span>
+            <div><div class="dep-stars">★★★★★</div><span class="dep-author">Fernanda Reis</span></div>
+          </div>
+          <p class="dep-text">"Atendimento nota 10. Rápido, educado e muito profissional. Voltarei sempre!"</p>
+        </div>
+<div class="dep-card">
+          <div class="dep-top">
+            <span class="dep-avatar" aria-hidden="true">PM</span>
+            <div><div class="dep-stars">★★★★★</div><span class="dep-author">Paulo Mendes</span></div>
+          </div>
+          <p class="dep-text">"Ingredientes de altíssima qualidade. Você sente a diferença em cada mordida."</p>
+        </div>
+<div class="dep-card">
+          <div class="dep-top">
+            <span class="dep-avatar" aria-hidden="true">JN</span>
+            <div><div class="dep-stars">★★★★★</div><span class="dep-author">Juliana Neves</span></div>
+          </div>
+          <p class="dep-text">"Virou tradição aqui em casa. WA RIO é a referência de sushi no Rio!"</p>
+        </div>
+<div class="dep-card">
+          <div class="dep-top">
+            <span class="dep-avatar" aria-hidden="true">BS</span>
+            <div><div class="dep-stars">★★★★★</div><span class="dep-author">Bruno Santos</span></div>
+          </div>
+          <p class="dep-text">"O temaki de salmão é extraordinário. Nunca encontrei nada parecido!"</p>
+        </div>
+<div class="dep-card">
+          <div class="dep-top">
+            <span class="dep-avatar" aria-hidden="true">PG</span>
+            <div><div class="dep-stars">★★★★★</div><span class="dep-author">Patrícia Gomes</span></div>
+          </div>
+          <p class="dep-text">"Melhor delivery japonês que já pedi. Parabéns ao mestre sushi!"</p>
+        </div>
+<div class="dep-card">
+          <div class="dep-top">
+            <span class="dep-avatar" aria-hidden="true">LF</span>
+            <div><div class="dep-stars">★★★★★</div><span class="dep-author">Lucas Ferreira</span></div>
+          </div>
+          <p class="dep-text">"Fiz pedido pro meu aniversário. Todo mundo ficou impressionado!"</p>
+        </div>
+<div class="dep-card">
+          <div class="dep-top">
+            <span class="dep-avatar" aria-hidden="true">SO</span>
+            <div><div class="dep-stars">★★★★★</div><span class="dep-author">Sofia Oliveira</span></div>
+          </div>
+          <p class="dep-text">"Apresentação impecável. Parece comida de restaurante fino. Perfeito!"</p>
+        </div>
+<div class="dep-card">
+          <div class="dep-top">
+            <span class="dep-avatar" aria-hidden="true">DC</span>
+            <div><div class="dep-stars">★★★★★</div><span class="dep-author">Diego Castro</span></div>
+          </div>
+          <p class="dep-text">"Provei o Joe Joe e fiquei apaixonado. Nunca mais peço em outro lugar!"</p>
+        </div>
+      <div class="dep-card">
+          <div class="dep-top">
+            <span class="dep-avatar" aria-hidden="true">AL</span>
+            <div><div class="dep-stars">★★★★★</div><span class="dep-author">Ana Lima</span></div>
+          </div>
+          <p class="dep-text">"Melhor sushi da cidade. Frescor e sabor que nunca encontrei em outro lugar!"</p>
+        </div>
+<div class="dep-card">
+          <div class="dep-top">
+            <span class="dep-avatar" aria-hidden="true">CS</span>
+            <div><div class="dep-stars">★★★★★</div><span class="dep-author">Carlos Souza</span></div>
+          </div>
+          <p class="dep-text">"Entrega rápida e impecável. Chegou perfeito, como sempre. Super recomendo!"</p>
+        </div>
+<div class="dep-card">
+          <div class="dep-top">
+            <span class="dep-avatar" aria-hidden="true">MC</span>
+            <div><div class="dep-stars">★★★★★</div><span class="dep-author">Mariana Costa</span></div>
+          </div>
+          <p class="dep-text">"Peço toda semana. Qualidade constante que me encanta e surpreende sempre."</p>
+        </div>
+<div class="dep-card">
+          <div class="dep-top">
+            <span class="dep-avatar" aria-hidden="true">RA</span>
+            <div><div class="dep-stars">★★★★★</div><span class="dep-author">Ricardo Alves</span></div>
+          </div>
+          <p class="dep-text">"O combo especial é sensacional. Vale cada centavo. Nota 10!"</p>
+        </div>
+<div class="dep-card">
+          <div class="dep-top">
+            <span class="dep-avatar" aria-hidden="true">FR</span>
+            <div><div class="dep-stars">★★★★★</div><span class="dep-author">Fernanda Reis</span></div>
+          </div>
+          <p class="dep-text">"Atendimento nota 10. Rápido, educado e muito profissional. Voltarei sempre!"</p>
+        </div>
+<div class="dep-card">
+          <div class="dep-top">
+            <span class="dep-avatar" aria-hidden="true">PM</span>
+            <div><div class="dep-stars">★★★★★</div><span class="dep-author">Paulo Mendes</span></div>
+          </div>
+          <p class="dep-text">"Ingredientes de altíssima qualidade. Você sente a diferença em cada mordida."</p>
+        </div>
+<div class="dep-card">
+          <div class="dep-top">
+            <span class="dep-avatar" aria-hidden="true">JN</span>
+            <div><div class="dep-stars">★★★★★</div><span class="dep-author">Juliana Neves</span></div>
+          </div>
+          <p class="dep-text">"Virou tradição aqui em casa. WA RIO é a referência de sushi no Rio!"</p>
+        </div>
+<div class="dep-card">
+          <div class="dep-top">
+            <span class="dep-avatar" aria-hidden="true">BS</span>
+            <div><div class="dep-stars">★★★★★</div><span class="dep-author">Bruno Santos</span></div>
+          </div>
+          <p class="dep-text">"O temaki de salmão é extraordinário. Nunca encontrei nada parecido!"</p>
+        </div>
+<div class="dep-card">
+          <div class="dep-top">
+            <span class="dep-avatar" aria-hidden="true">PG</span>
+            <div><div class="dep-stars">★★★★★</div><span class="dep-author">Patrícia Gomes</span></div>
+          </div>
+          <p class="dep-text">"Melhor delivery japonês que já pedi. Parabéns ao mestre sushi!"</p>
+        </div>
+<div class="dep-card">
+          <div class="dep-top">
+            <span class="dep-avatar" aria-hidden="true">LF</span>
+            <div><div class="dep-stars">★★★★★</div><span class="dep-author">Lucas Ferreira</span></div>
+          </div>
+          <p class="dep-text">"Fiz pedido pro meu aniversário. Todo mundo ficou impressionado!"</p>
+        </div>
+<div class="dep-card">
+          <div class="dep-top">
+            <span class="dep-avatar" aria-hidden="true">SO</span>
+            <div><div class="dep-stars">★★★★★</div><span class="dep-author">Sofia Oliveira</span></div>
+          </div>
+          <p class="dep-text">"Apresentação impecável. Parece comida de restaurante fino. Perfeito!"</p>
+        </div>
+<div class="dep-card">
+          <div class="dep-top">
+            <span class="dep-avatar" aria-hidden="true">DC</span>
+            <div><div class="dep-stars">★★★★★</div><span class="dep-author">Diego Castro</span></div>
+          </div>
+          <p class="dep-text">"Provei o Joe Joe e fiquei apaixonado. Nunca mais peço em outro lugar!"</p>
+        </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROVA SOCIAL -->
+<section class="prova-social">
+  <div class="ps-inner">
+    <div class="ps-card"><span class="ps-num">+1.200</span><span class="ps-label">Pedidos entregues</span></div>
+    <div class="ps-divider"></div>
+    <div class="ps-card"><span class="ps-num">4.9 ★</span><span class="ps-label">Avaliação média</span></div>
+    <div class="ps-divider"></div>
+    <div class="ps-card"><span class="ps-num">100%</span><span class="ps-label">Clientes fiéis toda semana</span></div>
+    <div class="ps-divider"></div>
+    <div class="ps-card"><span class="ps-num">2018</span><span class="ps-label">Desde quando servimos</span></div>
+  </div>
+</section>
+
+<!-- INSTAGRAM -->
+<section class="insta-section">
+  <div class="insta-header">
+    <span class="sec-tag">Redes Sociais</span>
+    <h2 class="sec-title">Siga o <em>WA RIO</em></h2>
+    <a href="https://www.instagram.com/wario.sushi/" target="_blank" rel="noopener noreferrer" class="insta-handle" aria-label="Abrir Instagram WA RIO">@wario.sushi</a>
+  </div>
+  <div class="insta-grid">
+    <a href="https://www.instagram.com/wario.sushi/" target="_blank" rel="noopener noreferrer" class="insta-item" aria-label="Abrir Instagram WA RIO - temaki"><img src="TEMAKI_site_optimized.jpg" alt="Temaki WA RIO" loading="lazy"><div class="insta-overlay"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="white" stroke="none"/></svg></div></a>
+    <a href="https://www.instagram.com/wario.sushi/" target="_blank" rel="noopener noreferrer" class="insta-item" aria-label="Abrir Instagram WA RIO - yakissoba"><img src="foto_yakissoba_site_optimized.jpg" alt="Yakissoba WA RIO" loading="lazy"><div class="insta-overlay"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="white" stroke="none"/></svg></div></a>
+    <a href="https://www.instagram.com/wario.sushi/" target="_blank" rel="noopener noreferrer" class="insta-item" aria-label="Abrir Instagram WA RIO - evento"><img class="insta-img-lower" src="foto-principal2_optimized.jpg" alt="Mesa WA RIO em evento" loading="lazy"><div class="insta-overlay"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="white" stroke="none"/></svg></div></a>
+    <a href="https://www.instagram.com/wario.sushi/" target="_blank" rel="noopener noreferrer" class="insta-item" aria-label="Abrir Instagram WA RIO - chef"><img src="foto_principal_insta_optimized.jpg" alt="Chef WA RIO com barcas de sushi" loading="lazy"><div class="insta-overlay"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="white" stroke="none"/></svg></div></a>
+  </div>
+</section>
+
+<!-- WHATSAPP -->
+<section class="whatsapp-section" id="whatsapp">
+  <span class="sec-tag">Atendimento Rápido</span>
+  <h2 class="sec-title">Peça agora pelo<br><em>WhatsApp</em></h2>
+  <p>Atendemos de Segunda a Domingo, das 19h às 23h.<br>Envie sua mensagem e receba seu pedido quentinho!</p>
+  <div class="payment-strip" aria-label="Formas de pagamento aceitas">
+    <span>Pix</span>
+    <span>Débito</span>
+    <span>Crédito</span>
+    <span>Dinheiro</span>
+    <span>Link seguro</span>
+  </div>
+  <a href="https://wa.me/5521982225443?text=Ol%C3%A1%2C%20WA%20RIO%20Sushi%21%20Quero%20falar%20com%20o%20atendimento." target="_blank" rel="noopener noreferrer" class="btn-whatsapp">
+    <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    Chamar no WhatsApp
+  </a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <img class="footer-logo-img" src="logo_wariobranca - Editado.png" alt="WA RIO SUSHI">
+      <p class="footer-brand-desc">O verdadeiro sabor japonês, feito para você com técnica, dedicação e paixão.</p>
+      <div class="footer-social">
+        <a href="https://www.instagram.com/wario.sushi/" target="_blank" rel="noopener noreferrer" title="Instagram" aria-label="Abrir Instagram WA RIO"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+        <a href="https://wa.me/5521982225443?text=Ol%C3%A1%2C%20WA%20RIO%20Sushi%21%20Quero%20falar%20com%20o%20atendimento." target="_blank" rel="noopener noreferrer" title="WhatsApp" aria-label="Chamar WA RIO no WhatsApp"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>Navegação</h4>
+      <ul>
+        <li><a href="#inicio">Início</a></li>
+        <li><a href="#combos">Cardápio</a></li>
+        <li><a href="#combos">Combos</a></li>
+        <li><a href="#buffet">Buffet</a></li>
+        <li><a href="#whatsapp">Contato</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Atendimento</h4>
+      <ul>
+        <li>📍 Rio de Janeiro, RJ</li>
+        <li>🕐 Seg a Dom: 19h às 23h</li>
+        <li>📱 (21) 98222-5443</li>
+        <li>✉ wariosushi10@gmail.com</li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Pagamento</h4>
+      <div class="pay-icons">
+        <div class="pay-icon">VISA</div>
+        <div class="pay-icon">MASTER</div>
+        <div class="pay-icon">ELO</div>
+        <div class="pay-icon">PIX</div>
+        <div class="pay-icon">DÉBITO</div>
+        <div class="pay-icon">LINK</div>
+      </div>
+    </div>
+  </div>
+  <div class="footer-divider"></div>
+  <div class="footer-bottom">
+    <p>© 2024 WA RIO SUSHI. Todos os direitos reservados.</p>
+  </div>
+</footer>
+
+<a href="https://wa.me/5521982225443?text=Ol%C3%A1%2C%20WA%20RIO%20Sushi%21%20Quero%20falar%20com%20o%20atendimento." target="_blank" rel="noopener noreferrer" class="whatsapp-float" title="Fale conosco no WhatsApp" aria-label="Chamar WA RIO no WhatsApp">
+  <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<div class="order-backdrop" data-order-close></div>
+<aside class="order-drawer" id="orderDrawer" aria-hidden="true" aria-labelledby="orderTitle">
+  <div class="order-head">
+    <div>
+      <h3 id="orderTitle">Seu pedido</h3>
+      <p class="order-subtitle">Revise seus itens antes de enviar pelo WhatsApp.</p>
+      <strong class="order-count-badge" id="orderHeadCount">0 itens</strong>
+    </div>
+    <button class="order-icon-btn" type="button" data-order-close aria-label="Fechar resumo">×</button>
+  </div>
+  <div class="order-content">
+    <div class="order-empty" id="orderEmpty"><strong>Seu pedido ainda está vazio</strong><span>Escolha seus favoritos no cardápio para revisar antes de enviar.</span></div>
+    <div class="order-items" id="orderItems"></div>
+    <div class="delivery-check" id="deliveryCheck">
+      <div class="delivery-check-head">
+        <span class="delivery-check-kicker">Entrega</span>
+        <strong class="delivery-check-title">CEP ou endereço</strong>
+      </div>
+      <div class="delivery-field">
+        <input id="deliveryCep" type="text" inputmode="numeric" maxlength="9" placeholder="00000-000" autocomplete="postal-code">
+        <button id="deliveryCheckButton" type="button">Verificar</button>
+      </div>
+      <button class="delivery-manual-button" id="deliveryManualButton" type="button">Não sei meu CEP</button>
+      <p class="delivery-status" id="deliveryStatus">Digite o CEP ou preencha o endereço se não souber.</p>
+      <div class="address-form" id="addressForm">
+        <label class="address-field address-field-wide" for="customerName">Nome para entrega
+          <input id="customerName" type="text" placeholder="Seu nome" autocomplete="name" maxlength="80" disabled>
+        </label>
+        <label class="address-field address-field-wide" for="deliveryStreet">Endereço
+          <input id="deliveryStreet" type="text" placeholder="Rua, avenida ou travessa" autocomplete="address-line1" maxlength="140" disabled>
+        </label>
+        <label class="address-field" for="deliveryNumber">Número
+          <input id="deliveryNumber" type="text" inputmode="numeric" placeholder="Nº" autocomplete="address-line2" maxlength="12" disabled>
+        </label>
+        <label class="address-field" for="deliveryComplement">Complemento
+          <input id="deliveryComplement" type="text" placeholder="Apto, bloco..." autocomplete="address-line2" maxlength="80" disabled>
+        </label>
+        <label class="address-field address-field-wide" for="deliveryNeighborhood">Bairro
+          <input id="deliveryNeighborhood" type="text" placeholder="Ex: Méier" autocomplete="address-level2" maxlength="80" disabled>
+        </label>
+        <label class="address-field address-field-wide" for="deliveryReference">Referência
+          <input id="deliveryReference" type="text" placeholder="Ex: portaria, loja, próximo a..." maxlength="140" disabled>
+        </label>
+      </div>
+      <p class="address-help" id="addressHelp">Confirme o CEP ou toque em “Não sei meu CEP” para preencher o endereço.</p>
+    </div>
+    <div class="payment-methods" id="paymentMethods">
+      <div class="payment-methods-head">
+        <span>Pagamento</span>
+        <strong>Formas de pagamento</strong>
+      </div>
+      <div class="payment-options" role="radiogroup" aria-label="Forma de pagamento">
+        <label class="payment-option">
+          <input type="radio" name="paymentMethod" value="pix" data-label="Pix" checked>
+          <span>Pix</span>
+          <small>Confirmação automática</small>
+        </label>
+        <label class="payment-option">
+          <input type="radio" name="paymentMethod" value="debit" data-label="Debito">
+          <span>Debito</span>
+          <small>Na entrega</small>
+        </label>
+        <label class="payment-option">
+          <input type="radio" name="paymentMethod" value="credit" data-label="Credito">
+          <span>Credito</span>
+          <small>Na entrega</small>
+        </label>
+        <label class="payment-option">
+          <input type="radio" name="paymentMethod" value="cash" data-label="Dinheiro">
+          <span>Dinheiro</span>
+          <small>Na entrega</small>
+        </label>
+      </div>
+      <p class="payment-help" id="paymentHelp">A forma escolhida será enviada com o pedido.</p>
+      <div class="pix-payment" id="pixPayment" hidden>
+        <div class="pix-payment-head">
+          <span>Pix seguro</span>
+          <strong id="pixAmount">R$ 0,00</strong>
+        </div>
+        <img class="pix-qr" id="pixQrImage" alt="QR Code Pix" hidden>
+        <textarea id="pixCode" readonly rows="4" aria-label="Código Pix copia e cola"></textarea>
+        <div class="turnstile-box" id="turnstileBox" hidden>
+          <div id="turnstileWidget"></div>
+          <p id="turnstileHint">Confirme a verificação para gerar o Pix.</p>
+        </div>
+        <button class="pix-create" id="pixCreate" type="button" disabled>Gerar Pix seguro</button>
+        <button class="pix-copy" id="pixCopy" type="button" disabled>Copiar código Pix</button>
+        <p class="pix-status" id="pixStatus">Escolha os itens e confirme a entrega para gerar o Pix.</p>
+      </div>
+    </div>
+    <label class="order-note" for="orderNote">
+      <span>Observações do pedido</span>
+      <textarea id="orderNote" maxlength="240" placeholder="Ex: sem cebolinha, molho separado, ponto de entrega..."></textarea>
+    </label>
+  </div>
+  <div class="order-foot">
+    <div class="order-totals">
+      <div class="order-total"><span>Subtotal</span><strong id="orderSubtotal">R$ 0,00</strong></div>
+      <div class="order-total"><span>Entrega</span><strong id="orderDelivery">A calcular</strong></div>
+      <div class="order-total order-total-final"><span>Total</span><strong id="orderTotal">R$ 0,00</strong></div>
+    </div>
+    <button class="order-send" id="orderSend" type="button" disabled>Enviar pedido pelo WhatsApp</button>
+    <p class="order-support">Você será direcionado para finalizar com a equipe WA RIO.</p>
+    <button class="order-clear" id="orderClear" type="button">Limpar seleção</button>
+  </div>
+</aside>
+
+<button class="order-bar" id="orderBar" type="button" aria-label="Abrir resumo do pedido">
+  <span>Pedido WA RIO</span>
+  <strong id="orderBarSummary">0 itens</strong>
+  <span class="order-bar-action">Ver pedido</span>
+</button>
+
+<script src="wario_sushi_v2_16.js?v=22" defer></script>
+</body>
+</html>
