@@ -550,7 +550,7 @@ footer{background:linear-gradient(90deg,#240000 0%,#5E0000 45%,#7A0000 100%);bor
   .hero p{font-size:14.5px;line-height:1.95;color:rgba(245,235,222,.80);margin:0 auto 32px;max-width:390px;}
   .hero p br{display:none;}
   .hero-image{width:100%;opacity:1;}
-  .hero-image img{content:url("hero_mobile_wa_rio_generated_v2_optimized.jpg");object-position:50% 50%;transform:scale(1);opacity:.97;filter:contrast(1.05) saturate(1.04) brightness(1.04) sepia(.03);}
+  .hero-image img{content:url("hero_mobile_wa_rio_optimized.jpg");object-position:50% 50%;transform:scale(1);opacity:.97;filter:contrast(1.05) saturate(1.04) brightness(1.04) sepia(.03);}
   .hero-sushi-soften{display:none;}
   .hero-image::before{left:0;width:100%;background:linear-gradient(90deg,rgba(5,5,5,.28) 0%,rgba(5,5,5,.18) 50%,rgba(5,5,5,.28) 100%);}
   .hero-image::after{left:0;right:auto;width:100%;opacity:1;background:linear-gradient(to bottom,rgba(5,5,5,.07) 0%,rgba(5,5,5,.01) 38%,rgba(5,5,5,.56) 100%);-webkit-mask-image:none;mask-image:none;}
