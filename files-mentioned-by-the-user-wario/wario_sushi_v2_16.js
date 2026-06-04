@@ -1027,14 +1027,11 @@ document.querySelectorAll('.add-to-order').forEach(button=>{
   button.addEventListener('click',()=>{const card=button.closest('.combo-card');if(card)addToOrder(card,button);});
 });
 document.querySelectorAll('a[href*="wa.me/5521982225443"]').forEach(link=>{
-  if(link.classList.contains('btn-buffet')) return;
-  link.addEventListener('click',event=>{
-    if(isBusinessOpen()) return;
-    event.preventDefault();
+  link.addEventListener('click',()=>{
     setNavMenuOpen(false);
-    setOrderOpen(true);
-    renderOrder();
-    showClosedOrderNotice();
+    if(!isBusinessOpen()&&!link.classList.contains('btn-buffet')){
+      showBusinessToast(closedOrderMessage());
+    }
   });
 });
 orderBar?.addEventListener('click',()=>setOrderOpen(true));
