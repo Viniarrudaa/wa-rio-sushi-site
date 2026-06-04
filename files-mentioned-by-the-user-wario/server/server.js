@@ -60,18 +60,18 @@ function loadEnv(filePath){
 
 function validateProductionConfig(){
   if(!isProduction) return;
-  const missing=[];
-  if(!mpAccessToken) missing.push('MP_ACCESS_TOKEN');
-  if(!mpWebhookSecret) missing.push('MP_WEBHOOK_SECRET');
-  if(!appOrigins.length) missing.push('APP_ORIGIN');
-  if(turnstileRequired&&!turnstileSiteKey) missing.push('TURNSTILE_SITE_KEY');
-  if(turnstileRequired&&!turnstileSecretKey) missing.push('TURNSTILE_SECRET_KEY');
-  if(missing.length) throw new Error(`Variaveis obrigatorias ausentes em producao: ${missing.join(', ')}`);
+  const warnings=[];
+  if(!appOrigins.length) warnings.push('APP_ORIGIN ausente; configure o dominio final antes de usar APIs em producao.');
+  if(!mpAccessToken) warnings.push('MP_ACCESS_TOKEN ausente; Pix online ficara indisponivel.');
+  if(!mpWebhookSecret) warnings.push('MP_WEBHOOK_SECRET ausente; webhook do Mercado Pago ficara indisponivel.');
+  if(turnstileRequired&&!turnstileSiteKey) warnings.push('TURNSTILE_SITE_KEY ausente; validacao anti-bot do Pix ficara bloqueada.');
+  if(turnstileRequired&&!turnstileSecretKey) warnings.push('TURNSTILE_SECRET_KEY ausente; validacao anti-bot do Pix ficara bloqueada.');
   for(const origin of appOrigins){
     if(!/^https:\/\//i.test(origin)){
-      throw new Error('APP_ORIGIN/ALLOWED_ORIGINS deve usar HTTPS em producao.');
+      warnings.push('APP_ORIGIN/ALLOWED_ORIGINS deve usar HTTPS em producao.');
     }
   }
+  if(warnings.length) console.warn(`Avisos de configuracao em producao: ${warnings.join(' | ')}`);
 }
 
 function loadOrderStore(){
@@ -163,13 +163,22 @@ function setSecurityHeaders(req,res){
 function applyCors(req,res){
   const origin=req.headers.origin;
   if(!origin) return true;
-  if(!allowedOrigins.has(origin)) return false;
+  if(!allowedOrigins.has(origin)&&!isSameHostOrigin(req,origin)) return false;
   res.setHeader('Access-Control-Allow-Origin',origin);
   res.setHeader('Vary','Origin');
   res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers','Content-Type,Accept');
   res.setHeader('Access-Control-Max-Age','600');
   return true;
+}
+
+function isSameHostOrigin(req,origin){
+  if(appOrigins.length) return false;
+  try{
+    return new URL(origin).host===String(req.headers.host||'');
+  }catch(error){
+    return false;
+  }
 }
 
 function clientIp(req){
