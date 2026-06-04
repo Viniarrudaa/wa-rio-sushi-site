@@ -1,0 +1,14 @@
+{
+  "name": "wa-rio-sushi-site",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "start": "node files-mentioned-by-the-user-wario/server/server.js",
+    "check": "node --check files-mentioned-by-the-user-wario/wario_sushi_v2_16.js && node --check files-mentioned-by-the-user-wario/server/server.js"
+  },
+  "dependencies": {}
+}
