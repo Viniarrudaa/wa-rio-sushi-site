@@ -23,12 +23,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="wario_sushi_v2_16.css?v=22">
+<link rel="stylesheet" href="wario_sushi_v2_16.css?v=32">
 </head>
 <body>
 <div class="brand-intro" aria-hidden="true">
   <div class="brand-intro-mark"><img src="logo_wariobranca - Editado.png" alt=""></div>
 </div>
+
+<div class="business-toast" id="businessToast" role="status" aria-live="polite" aria-hidden="true"></div>
 
 <nav id="navbar">
   <a href="#inicio"><img class="logo-img" src="logo_wariobranca - Editado.png" alt="WA RIO SUSHI"></a>
@@ -79,7 +81,7 @@
     <a href="https://wa.me/5521982225443?text=Ol%C3%A1%2C%20WA%20RIO%20Sushi%21%20Quero%20falar%20com%20o%20atendimento." target="_blank" rel="noopener noreferrer" class="ver-todos">Falar com atendente →</a>
   </div>
   <div class="menu-tabs" role="tablist" aria-label="Categorias do cardápio">
-    <button class="menu-tab is-active" type="button" role="tab" aria-selected="true" data-filter="selecao">Seleção WA RIO</button>
+    <button class="menu-tab is-active" type="button" role="tab" aria-selected="true" data-filter="todos">Todos</button>
     <button class="menu-tab" type="button" role="tab" aria-selected="false" data-filter="entradas">Entradas</button>
     <button class="menu-tab" type="button" role="tab" aria-selected="false" data-filter="combos">Combos</button>
     <button class="menu-tab" type="button" role="tab" aria-selected="false" data-filter="sushis">Sushis</button>
@@ -92,49 +94,49 @@
   <div class="combos-grid" id="combosGrid">
     <div class="combo-feature" id="comboFeature" aria-live="polite"></div>
     <div class="combo-list-wrap">
-      <div class="combo-list-head"><span>Itens da categoria</span><strong id="comboVisibleCount">9 opções</strong></div>
+      <div class="combo-list-head"><span>Itens da categoria</span><strong id="comboVisibleCount">14 opções</strong></div>
       <div class="combo-list" id="comboList">
-    <article class="combo-card is-featured" data-id="harumaki" data-name="Harumaki" data-label="Entrada crocante" data-category="selecao entradas">
+    <article class="combo-card is-featured" data-id="harumaki" data-name="Harumaki" data-label="Entrada crocante" data-category="entradas">
       <img src="foto_yakissoba_site_optimized.jpg" alt="Harumaki" loading="lazy">
       <div class="combo-body"><span class="combo-label">Entrada crocante</span><div class="combo-name">Harumaki</div><p class="combo-desc">Massa fina, textura dourada e recheio saboroso para abrir o pedido com leveza.</p><div class="combo-meta"><span class="combo-pill">Entrada</span><span class="combo-pill">Crocante</span></div><button class="combo-cta add-to-order" type="button">Adicionar ao pedido →</button></div>
     </article>
-    <article class="combo-card" data-id="combo-wa-rio" data-name="Combo WA RIO" data-label="Para compartilhar" data-category="selecao combos">
+    <article class="combo-card" data-id="combo-wa-rio" data-name="Combo WA RIO" data-label="Para compartilhar" data-category="combos">
       <img src="wario1_cardapio_optimized.jpg" alt="Combo WA RIO" loading="lazy">
       <div class="combo-badge">Combo</div>
       <div class="combo-body"><span class="combo-label">Para compartilhar</span><div class="combo-name">Combo WA RIO</div><p class="combo-desc">Uma seleção equilibrada de peças da casa para dividir, com variedade e apresentação caprichada.</p><div class="combo-meta"><span class="combo-pill">Compartilhar</span><span class="combo-pill">Seleção</span></div><button class="combo-cta add-to-order" type="button">Adicionar ao pedido →</button></div>
     </article>
-    <article class="combo-card" data-id="joe-joe" data-name="Joe Joe" data-label="Assinatura WA RIO" data-category="selecao sushis">
+    <article class="combo-card" data-id="joe-joe" data-name="Joe Joe" data-label="Assinatura WA RIO" data-category="sushis">
       <img src="joejoe_cardapio_optimized.jpg" alt="Joe Joe" loading="lazy">
       <div class="combo-badge">Exclusivo</div>
       <div class="combo-body"><span class="combo-label">Assinatura WA RIO</span><div class="combo-name">Joe Joe</div><p class="combo-desc">Peças autorais com montagem delicada, recheio generoso e presença elegante no prato.</p><div class="combo-meta"><span class="combo-pill">Exclusivo</span><span class="combo-pill">Premium</span></div><button class="combo-cta add-to-order" type="button">Adicionar ao pedido →</button></div>
     </article>
-    <article class="combo-card" data-id="sushi-niguiri" data-name="Sushi Niguiri" data-label="Mais pedido" data-category="selecao sushis">
+    <article class="combo-card" data-id="sushi-niguiri" data-name="Sushi Niguiri" data-label="Mais pedido" data-category="sushis">
       <img src="sushinigiri_cardapio_optimized.jpg" alt="Sushi Niguiri" loading="lazy">
       <div class="combo-badge">Mais Pedido</div>
       <div class="combo-body"><span class="combo-label">Mais pedido</span><div class="combo-name">Sushi Niguiri</div><p class="combo-desc">Salmão em corte macio sobre arroz temperado, com apresentação limpa e sabor preciso.</p><div class="combo-meta"><span class="combo-pill">Salmão</span><span class="combo-pill">Favorito</span></div><button class="combo-cta add-to-order" type="button">Adicionar ao pedido →</button></div>
     </article>
-    <article class="combo-card" data-id="temaki-filadelfia" data-name="Temaki Filadélfia" data-label="Clássico da casa" data-category="selecao temakis">
+    <article class="combo-card" data-id="temaki-filadelfia" data-name="Temaki Filadélfia" data-label="Clássico da casa" data-category="temakis">
       <img src="TEMAKI_site_optimized.jpg" alt="Temaki Filadélfia" loading="lazy">
       <div class="combo-body"><span class="combo-label">Clássico da casa</span><div class="combo-name">Temaki Filadélfia</div><p class="combo-desc">Salmão fresco, cream cheese e pepino em uma combinação cremosa, leve e bem equilibrada.</p><div class="combo-meta"><span class="combo-pill">Salmão</span><span class="combo-pill">Individual</span></div><button class="combo-cta add-to-order" type="button">Adicionar ao pedido →</button></div>
     </article>
-    <article class="combo-card" data-id="temaki-hot" data-name="Temaki Hot" data-label="Toque picante" data-category="selecao hot">
-      <img src="TEMAKI_site_optimized.jpg" alt="Temaki Hot" loading="lazy">
+    <article class="combo-card" data-id="temaki-hot" data-name="Temaki Hot" data-label="Toque picante" data-category="hot">
+      <img src="temakihot_cardapio_optimized.jpg" alt="Temaki Hot" loading="lazy">
       <div class="combo-body"><span class="combo-label">Toque picante</span><div class="combo-name">Temaki Hot</div><p class="combo-desc">Salmão selado, molho especial e finalização intensa para quem prefere sabores marcantes.</p><div class="combo-meta"><span class="combo-pill">Hot</span><span class="combo-pill">Especial</span></div><button class="combo-cta add-to-order" type="button">Adicionar ao pedido →</button></div>
     </article>
-    <article class="combo-card" data-id="yakisoba" data-name="Yakisoba" data-label="Quente e completo" data-category="selecao quentes">
+    <article class="combo-card" data-id="yakisoba" data-name="Yakisoba" data-label="Quente e completo" data-category="quentes">
       <img src="foto_yakissoba_site_optimized.jpg" alt="Yakisoba" loading="lazy">
       <div class="combo-body"><span class="combo-label">Quente e completo</span><div class="combo-name">Yakisoba</div><p class="combo-desc">Legumes frescos, molho envolvente e preparo no ponto para uma refeição mais completa.</p><div class="combo-meta"><span class="combo-pill">Quente</span><span class="combo-pill">Refeição</span></div><button class="combo-cta add-to-order" type="button">Adicionar ao pedido →</button></div>
     </article>
-    <article class="combo-card" data-id="harumaki-doce" data-name="Harumaki Doce" data-label="Sobremesa" data-category="selecao sobremesas">
+    <article class="combo-card" data-id="harumaki-doce" data-name="Harumaki Doce" data-label="Sobremesa" data-category="sobremesas">
       <img src="foto-principal2_optimized.jpg" alt="Harumaki Doce" loading="lazy">
       <div class="combo-body"><span class="combo-label">Sobremesa</span><div class="combo-name">Harumaki Doce</div><p class="combo-desc">Massa crocante com recheio doce e finalização delicada para encerrar o pedido com leveza.</p><div class="combo-meta"><span class="combo-pill">Doce</span><span class="combo-pill">Crocante</span></div><button class="combo-cta add-to-order" type="button">Adicionar ao pedido →</button></div>
     </article>
-    <article class="combo-card" data-id="cha-gelado" data-name="Chá Gelado" data-label="Bebida" data-category="selecao bebidas">
+    <article class="combo-card" data-id="cha-gelado" data-name="Chá Gelado" data-label="Bebida" data-category="bebidas">
       <img src="foto_principal_insta_optimized.jpg" alt="Chá Gelado" loading="lazy">
       <div class="combo-body"><span class="combo-label">Bebida</span><div class="combo-name">Chá Gelado</div><p class="combo-desc">Refrescante, leve e equilibrado para acompanhar pratos quentes, peças frias e combos.</p><div class="combo-meta"><span class="combo-pill">Refrescante</span><span class="combo-pill">Acompanha</span></div><button class="combo-cta add-to-order" type="button">Adicionar ao pedido →</button></div>
     </article>
       </div>
-      <div class="combo-empty-list" id="comboEmptyList">Todos os itens desta categoria estão em destaque. Selecione outra categoria para ver mais opções.</div>
+      <div class="combo-empty-list" id="comboEmptyList">Esta categoria possui apenas essa opção no momento.</div>
     </div>
   </div>
 </section>
@@ -153,7 +155,7 @@
       <p class="bf-desc">Buffet japonês completo para aniversários, casamentos e eventos corporativos, com chef, estrutura, preparo ao vivo e apresentação elegante para receber seus convidados com cuidado do início ao fim.</p>
       <div class="bf-seal">
         <span class="bf-seal-title">Mestre Sushi</span>
-        <span class="bf-seal-sub">Desde 2018</span>
+        <span class="bf-seal-sub">Desde 2013</span>
       </div>
       <a href="https://wa.me/5521982225443?text=Ol%C3%A1%2C%20WA%20RIO%20Sushi%21%20Vim%20pelo%20site%20e%20gostaria%20de%20solicitar%20um%20or%C3%A7amento%20para%20um%20evento.%20Pode%20me%20ajudar%20com%20op%C3%A7%C3%B5es%2C%20valores%20e%20disponibilidade%3F" target="_blank" rel="noopener noreferrer" class="btn-buffet">Solicitar orçamento →</a>
     </div>
@@ -361,7 +363,7 @@
     <div class="ps-divider"></div>
     <div class="ps-card"><span class="ps-num">100%</span><span class="ps-label">Clientes fiéis toda semana</span></div>
     <div class="ps-divider"></div>
-    <div class="ps-card"><span class="ps-num">2018</span><span class="ps-label">Desde quando servimos</span></div>
+    <div class="ps-card"><span class="ps-num">2013</span><span class="ps-label">Desde quando servimos</span></div>
   </div>
 </section>
 
@@ -373,8 +375,6 @@
     <a href="https://www.instagram.com/wario.sushi/" target="_blank" rel="noopener noreferrer" class="insta-handle" aria-label="Abrir Instagram WA RIO">@wario.sushi</a>
   </div>
   <div class="insta-grid">
-    <a href="https://www.instagram.com/wario.sushi/" target="_blank" rel="noopener noreferrer" class="insta-item" aria-label="Abrir Instagram WA RIO - temaki"><img src="TEMAKI_site_optimized.jpg" alt="Temaki WA RIO" loading="lazy"><div class="insta-overlay"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="white" stroke="none"/></svg></div></a>
-    <a href="https://www.instagram.com/wario.sushi/" target="_blank" rel="noopener noreferrer" class="insta-item" aria-label="Abrir Instagram WA RIO - yakissoba"><img src="foto_yakissoba_site_optimized.jpg" alt="Yakissoba WA RIO" loading="lazy"><div class="insta-overlay"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="white" stroke="none"/></svg></div></a>
     <a href="https://www.instagram.com/wario.sushi/" target="_blank" rel="noopener noreferrer" class="insta-item" aria-label="Abrir Instagram WA RIO - evento"><img class="insta-img-lower" src="foto-principal2_optimized.jpg" alt="Mesa WA RIO em evento" loading="lazy"><div class="insta-overlay"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="white" stroke="none"/></svg></div></a>
     <a href="https://www.instagram.com/wario.sushi/" target="_blank" rel="noopener noreferrer" class="insta-item" aria-label="Abrir Instagram WA RIO - chef"><img src="foto_principal_insta_optimized.jpg" alt="Chef WA RIO com barcas de sushi" loading="lazy"><div class="insta-overlay"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="white" stroke="none"/></svg></div></a>
   </div>
@@ -384,7 +384,7 @@
 <section class="whatsapp-section" id="whatsapp">
   <span class="sec-tag">Atendimento Rápido</span>
   <h2 class="sec-title">Peça agora pelo<br><em>WhatsApp</em></h2>
-  <p>Atendemos de Segunda a Domingo, das 19h às 23h.<br>Envie sua mensagem e receba seu pedido quentinho!</p>
+  <p>Atendemos de quarta a domingo, das 19h às 23h.<br>Envie sua mensagem e receba seu pedido quentinho!</p>
   <div class="payment-strip" aria-label="Formas de pagamento aceitas">
     <span>Pix</span>
     <span>Débito</span>
@@ -423,7 +423,7 @@
       <h4>Atendimento</h4>
       <ul>
         <li>📍 Rio de Janeiro, RJ</li>
-        <li>🕐 Seg a Dom: 19h às 23h</li>
+        <li>🕐 Qua a Dom: 19h às 23h</li>
         <li>📱 (21) 98222-5443</li>
         <li>✉ wariosushi10@gmail.com</li>
       </ul>
@@ -442,7 +442,8 @@
   </div>
   <div class="footer-divider"></div>
   <div class="footer-bottom">
-    <p>© 2024 WA RIO SUSHI. Todos os direitos reservados.</p>
+    <p>© 2026 WA RIO SUSHI. Todos os direitos reservados.</p>
+    <p class="footer-dev-credit">Desenvolvimento: <a href="https://github.com/Viniarrudaa" target="_blank" rel="noopener noreferrer">Vinicius Arruda <small>@Viniarrudaa</small></a></p>
   </div>
 </footer>
 
@@ -552,7 +553,7 @@
       <div class="order-total order-total-final"><span>Total</span><strong id="orderTotal">R$ 0,00</strong></div>
     </div>
     <button class="order-send" id="orderSend" type="button" disabled>Enviar pedido pelo WhatsApp</button>
-    <p class="order-support">Você será direcionado para finalizar com a equipe WA RIO.</p>
+    <p class="order-support" id="orderSupport">Você será direcionado para finalizar com a equipe WA RIO.</p>
     <button class="order-clear" id="orderClear" type="button">Limpar seleção</button>
   </div>
 </aside>
@@ -563,6 +564,6 @@
   <span class="order-bar-action">Ver pedido</span>
 </button>
 
-<script src="wario_sushi_v2_16.js?v=22" defer></script>
+<script src="wario_sushi_v2_16.js?v=32" defer></script>
 </body>
 </html>

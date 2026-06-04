@@ -84,7 +84,7 @@ function safeImageSrc(value){
   return 'logo_wariobranca - Editado.png';
 }
 const menuCategories=[
-  ['selecao','Todos'],
+  ['todos','Todos'],
   ['combos','Combos'],
   ['filadelfia','Filadélfia'],
   ['hot','Hot Filadélfia'],
@@ -95,43 +95,15 @@ const menuCategories=[
   ['joe','Joe Joe'],
   ['especiais','Especiais']
 ];
-const menuItems=[
-  {id:'hot-filadelfia-20',name:'Hot Filadélfia 20 peças',label:'Promoções Hot Filadélfia',category:'promocoes',price:23,pieces:20,badge:'Promoção',desc:'Seleção enxuta para matar a vontade de hot crocante e filadélfia cremoso.',meta:['20 peças','Promoção'],image:'Hot_roll_cardapio_optimized.jpg'},
-  {id:'hot-filadelfia-30',name:'Hot Filadélfia 30 peças',label:'Promoções Hot Filadélfia',category:'promocoes',price:31,pieces:30,badge:'Promoção',desc:'Porção equilibrada para dividir, com variedade e ótimo custo-benefício.',meta:['30 peças','Favorito'],image:'Hot_roll_cardapio_optimized.jpg'},
-  {id:'hot-filadelfia-40',name:'Hot Filadélfia 40 peças',label:'Promoções Hot Filadélfia',category:'promocoes',price:40,pieces:40,badge:'Promoção',desc:'Mais peças para uma experiência completa entre crocância e cremosidade.',meta:['40 peças','Compartilhar'],image:'Hot_roll_cardapio_optimized.jpg'},
-  {id:'hot-filadelfia-50',name:'Hot Filadélfia 50 peças',label:'Promoções Hot Filadélfia',category:'promocoes',price:50,pieces:50,badge:'Promoção',desc:'Ideal para mesa maior, mantendo apresentação limpa e sabor marcante.',meta:['50 peças','Mesa'],image:'Hot_roll_cardapio_optimized.jpg'},
-  {id:'hot-filadelfia-60',name:'Hot Filadélfia 60 peças',label:'Promoções Hot Filadélfia',category:'promocoes',price:60,pieces:60,badge:'Promoção',desc:'A promoção mais completa da categoria para compartilhar sem faltar peça.',meta:['60 peças','Completo'],image:'Hot_roll_cardapio_optimized.jpg'},
-  {id:'temaki-frio',name:'Temaki Frio',label:'Temaki',category:'temaki',price:18.9,desc:'Temaki fresco, bem recheado e finalizado com equilíbrio para uma porção individual.',meta:['Individual','Frio'],image:'TEMAKI_site_optimized.jpg'},
-  {id:'temaki-hot',name:'Temaki Hot',label:'Temaki',category:'temaki',price:19.9,desc:'Versão quente e intensa do temaki, com textura crocante e recheio cremoso.',meta:['Individual','Hot'],image:'TEMAKI_site_optimized.jpg'},
-  {id:'hot-filadelfia-10',name:'Hot Filadélfia 10 peças',label:'Hot Filadélfia',category:'hot-filadelfia',price:16.9,pieces:10,desc:'Porção clássica de hot e filadélfia para acompanhar ou completar o pedido.',meta:['10 peças','Clássico'],image:'Hot_roll_cardapio_optimized.jpg'},
-  {id:'sushi-dog',name:'Sushi Dog',label:'Sushi Dog',category:'sushi-dog',price:34.9,badge:'Especial',desc:'Criação generosa da casa, pensada para quem gosta de uma experiência diferente.',meta:['Especial','Generoso'],image:'sushidog_cardapio_optimized.jpg'},
-  {id:'uramaki-salmao-10',name:'Uramaki de Salmão 10 peças',label:'Uramaki de Salmão',category:'uramaki-salmao',price:18.9,pieces:10,desc:'Peças frias com salmão, arroz bem temperado e finalização delicada.',meta:['10 peças','Salmão'],image:'uramakisalmao_cardapio_optimized.jpg'},
-  {id:'uramaki-salmao-20',name:'Uramaki de Salmão 20 peças',label:'Uramaki de Salmão',category:'uramaki-salmao',price:34.9,pieces:20,desc:'Dobro de uramaki para compartilhar com leveza e sabor limpo.',meta:['20 peças','Salmão'],image:'uramakisalmao_cardapio_optimized.jpg'},
-  {id:'uramaki-especial-10',name:'Uramaki Especial 10 peças',label:'Uramaki Especial',category:'uramaki-especial',price:21.9,pieces:10,badge:'Especial',desc:'Uramaki com montagem mais elaborada e acabamento premium.',meta:['10 peças','Especial'],image:'uramakiespecialatualizado_cardapio_optimized.jpg'},
-  {id:'uramaki-especial-20',name:'Uramaki Especial 20 peças',label:'Uramaki Especial',category:'uramaki-especial',price:39.9,pieces:20,badge:'Especial',desc:'Mais peças especiais para um pedido sofisticado e bem apresentado.',meta:['20 peças','Especial'],image:'uramakiespecialatualizado_cardapio_optimized.jpg'},
-  {id:'sashimi-1',name:'Sashimi 1 peça',label:'Sashimi',category:'sashimi',price:4,pieces:1,desc:'Corte fresco de salmão para complementar o pedido com precisão.',meta:['1 peça','Salmão'],image:'sashimi_cardapio_optimized.jpg'},
-  {id:'sashimi-4',name:'Sashimi 4 peças',label:'Sashimi',category:'sashimi',price:14,pieces:4,desc:'Seleção de cortes para quem gosta da pureza do salmão fresco.',meta:['4 peças','Salmão'],image:'sashimi_cardapio_optimized.jpg'},
-  {id:'sashimi-5',name:'Sashimi 5 peças',label:'Sashimi',category:'sashimi',price:18,pieces:5,desc:'Porção de sashimi com presença e frescor para completar a mesa.',meta:['5 peças','Salmão'],image:'sashimi_cardapio_optimized.jpg'},
-  {id:'niguiri-1',name:'Sushi Niguiri 1 peça',label:'Sushi Niguiri',category:'niguiri',price:3,pieces:1,desc:'Arroz temperado e salmão em corte delicado, servido por peça.',meta:['1 peça','Salmão'],image:'sushinigiri_cardapio_optimized.jpg'},
-  {id:'niguiri-2',name:'Sushi Niguiri 2 peças',label:'Sushi Niguiri',category:'niguiri',price:5,pieces:2,desc:'Dupla de niguiri para adicionar equilíbrio ao pedido.',meta:['2 peças','Salmão'],image:'sushinigiri_cardapio_optimized.jpg'},
-  {id:'niguiri-4',name:'Sushi Niguiri 4 peças',label:'Sushi Niguiri',category:'niguiri',price:9,pieces:4,desc:'Quatro peças clássicas para quem prefere uma escolha simples e precisa.',meta:['4 peças','Salmão'],image:'sushinigiri_cardapio_optimized.jpg'},
-  {id:'joe-joe-1',name:'Joe Joe 1 peça',label:'Joe Joe',category:'joe-joe',price:3,pieces:1,desc:'Peça cremosa e delicada para adicionar um toque especial ao pedido.',meta:['1 peça','Especial'],image:'joejoe_cardapio_optimized.jpg'},
-  {id:'joe-joe-2',name:'Joe Joe 2 peças',label:'Joe Joe',category:'joe-joe',price:5,pieces:2,desc:'Duas peças autorais para completar a seleção com cremosidade.',meta:['2 peças','Especial'],image:'joejoe_cardapio_optimized.jpg'},
-  {id:'joe-joe-4',name:'Joe Joe 4 peças',label:'Joe Joe',category:'joe-joe',price:10,pieces:4,desc:'Quatro peças com presença para quem gosta da assinatura da casa.',meta:['4 peças','Especial'],image:'joejoe_cardapio_optimized.jpg'},
-  {id:'combo-du-chef',name:'Combo Du Chef',label:'Combos',category:'combos',price:65,pieces:36,badge:'36 peças',desc:'36 peças: 20 Hot Filadélfia, 5 Filadélfia, 2 Nigiri, 3 Gunkan com tataki, 2 Joe Joe e 4 Sashimi.',meta:['36 peças','Chef'],image:'duchef_Cardapio_optimized.jpg'},
-  {id:'combo-mix-joes',name:'Combo Mix Joes',label:'Combos',category:'combos',price:35.9,pieces:12,badge:'12 peças',desc:'12 peças: Joe com cream cheese, gunkan com tataki e Joe com geleias de pimenta e maracujá.',meta:['12 peças','Joes'],image:'mixdejoe_cardapio_optimized.jpg'},
-  {id:'combo-wa-rio-1',name:'Combo WA RIO 1',label:'Combos',category:'combos',price:55.9,pieces:31,badge:'31 peças',desc:'31 peças: Filadélfia, Hot Filadélfia, uramaki, Joe de maracujá, nigiri e gunkan de tataki.',meta:['31 peças','WA RIO'],image:'wario1_cardapio_optimized.jpg'},
-  {id:'combo-wa-rio-2',name:'Combo WA RIO 2',label:'Combos',category:'combos',price:76.9,pieces:36,badge:'36 peças',desc:'36 peças: sashimi, niguiri, niguiri skin, Joe, uramaki, Filadélfia roll e Hot Filadélfia.',meta:['36 peças','Premium'],image:'wario2_cardapio_optimized.jpg'}
-];
 const menuProducts=[
   {id:'combo-du-chef',name:'Combo Du Chef',label:'Combos',category:'combos',badge:'36 peças',desc:'36 peças para dividir com hot, salmão, peças especiais e sashimi.',composition:'Itens inclusos no Combo Du Chef:',details:['20 Hot Filadélfia','5 Filadélfia','2 Sushi nigiri','3 Gunkan c/ tataki de salmão','2 Joe Joe','4 Sashimi de salmão'],variants:[{id:'36',label:'36 un',price:65}],meta:['36 peças','Chef'],image:'duchef_Cardapio_optimized.jpg'},
   {id:'combo-mix-joes',name:'Combo Mix Joes',label:'Combos',category:'combos',badge:'12 peças',desc:'12 peças autorais para quem gosta de joes, gunkans e geleias especiais.',composition:'Itens inclusos no Mix Joes:',details:['4 Joe de salmão c/ cream cheese','4 Gunkan c/ tataki de salmão','2 Joe c/ geleia de pimenta','2 Joe c/ geleia de maracujá'],variants:[{id:'12',label:'12 un',price:35.9}],meta:['12 peças','Joes'],image:'mixdejoe_cardapio_optimized.jpg'},
   {id:'combo-wa-rio-1',name:'Combo WA RIO 1',label:'Combos',category:'combos',badge:'31 peças',desc:'31 peças com filadélfia, hot, uramaki e peças especiais da casa.',composition:'Itens inclusos no WA RIO 1:',details:['10 Filadélfia','10 Hot Filadélfia','5 Uramaki de salmão','2 Joe c/ geleia de maracujá','2 Nigiri de salmão','2 Gunkan de tataki de salmão'],variants:[{id:'31',label:'31 un',price:55.9}],meta:['31 peças','WA RIO'],image:'wario1_cardapio_optimized.jpg'},
   {id:'combo-wa-rio-2',name:'Combo WA RIO 2',label:'Combos',category:'combos',badge:'36 peças',desc:'36 peças premium com sashimi, nigiri, joes, uramakis, filadélfia e hot.',composition:'Itens inclusos no WA RIO 2:',details:['4 Sashimi de salmão','4 Nigiri de salmão','2 Nigiri skin','2 Joe c/ cream cheese','4 Uramaki de salmão','4 Uramaki especial','10 Filadélfia roll','10 Hot Filadélfia'],variants:[{id:'36',label:'36 un',price:76.9}],meta:['36 peças','Premium'],image:'wario2_cardapio_optimized.jpg'},
-  {id:'filadelfia-roll',name:'Filadélfia Roll',label:'Filadélfia',category:'filadelfia',badge:'Clássico',desc:'Salmão fresco, cream cheese e arroz temperado em uma opção cremosa e muito pedida da casa.',variants:[{id:'5',label:'5 un',price:9.9},{id:'10',label:'10 un',price:18.9}],meta:['Salmão','Cream cheese'],image:'filadelfia_cardapio_optimized.jpg'},
+  {id:'filadelfia-roll',name:'Filadélfia Roll',label:'Filadélfia',category:'filadelfia',badge:'Clássico',desc:'Salmão fresco, cream cheese e arroz temperado em uma opção cremosa e muito pedida da casa.',variants:[{id:'10',label:'10 un',price:16.9},{id:'20',label:'20 un',price:23},{id:'30',label:'30 un',price:31},{id:'40',label:'40 un',price:40},{id:'50',label:'50 un',price:50},{id:'60',label:'60 un',price:60}],meta:['10 a 60 un','Cream cheese'],image:'filadelfia_cardapio_optimized.jpg'},
   {id:'hot-filadelfia',name:'Hot Filadélfia',label:'Hot Filadélfia',category:'hot',badge:'Mais pedido',desc:'Hot crocante e filadélfia cremoso, organizado por quantidade para facilitar a escolha.',variants:[{id:'10',label:'10 un',price:16.9},{id:'20',label:'20 un',price:23},{id:'30',label:'30 un',price:31},{id:'40',label:'40 un',price:40},{id:'50',label:'50 un',price:50},{id:'60',label:'60 un',price:60}],meta:['10 a 60 un','Hot'],image:'Hot_roll_cardapio_optimized.jpg'},
   {id:'temaki-frio',name:'Temaki Frio',label:'Temaki',category:'temaki',desc:'Temaki fresco, bem recheado e finalizado com equilíbrio para uma porção individual.',variants:[{id:'1',label:'1 un',price:18.9}],meta:['Individual','Frio'],image:'TEMAKI_site_optimized.jpg'},
-  {id:'temaki-hot',name:'Temaki Hot',label:'Temaki',category:'temaki',desc:'Versão quente e intensa do temaki, com textura crocante e recheio cremoso.',variants:[{id:'1',label:'1 un',price:19.9}],meta:['Individual','Hot'],image:'TEMAKI_site_optimized.jpg'},
+  {id:'temaki-hot',name:'Temaki Hot',label:'Temaki',category:'temaki',desc:'Versão quente e intensa do temaki, com textura crocante e recheio cremoso.',variants:[{id:'1',label:'1 un',price:19.9}],meta:['Individual','Hot'],image:'temakihot_cardapio_optimized.jpg'},
   {id:'sushi-dog',name:'Sushi Dog',label:'Especial',category:'especiais',badge:'Especial',desc:'Criação generosa da casa, pensada para quem gosta de uma experiência diferente.',variants:[{id:'1',label:'1 un',price:34.9}],meta:['Especial','Generoso'],image:'sushidog_cardapio_optimized.jpg'},
   {id:'uramaki-salmao',name:'Uramaki de Salmão',label:'Uramaki',category:'uramaki',desc:'Peças frias com salmão, arroz bem temperado e finalização delicada.',variants:[{id:'10',label:'10 un',price:18.9},{id:'20',label:'20 un',price:34.9}],meta:['Salmão','Frio'],image:'uramakisalmao_cardapio_optimized.jpg'},
   {id:'uramaki-especial',name:'Uramaki Especial',label:'Uramaki',category:'uramaki',badge:'Especial',desc:'Uramaki com montagem mais elaborada, acabamento premium e sabor marcante.',variants:[{id:'10',label:'10 un',price:21.9},{id:'20',label:'20 un',price:39.9}],meta:['Especial','Premium'],image:'uramakiespecialatualizado_cardapio_optimized.jpg'},
@@ -167,7 +139,7 @@ function renderMenu(){
       const itemNameAttr=escapeAttr(item.name);
       const itemLabel=escapeHtml(item.label);
       const itemLabelAttr=escapeAttr(item.label);
-      const itemCategory=escapeAttr(`selecao ${item.category}`);
+      const itemCategory=escapeAttr(item.category);
       const variantId=escapeAttr(firstVariant.id);
       const variantLabel=escapeHtml(firstVariant.label);
       const variantLabelAttr=escapeAttr(firstVariant.label);
@@ -218,16 +190,25 @@ function updateFeaturedCard(){
 }
 document.querySelectorAll('.menu-tab').forEach(tab=>{
   tab.addEventListener('click',()=>{
-    const filter=tab.dataset.filter;
-    document.querySelectorAll('.menu-tab').forEach(btn=>{btn.classList.toggle('is-active',btn===tab);btn.setAttribute('aria-selected',btn===tab?'true':'false');});
-    comboCards.forEach(card=>{
-      const categories=(card.dataset.category||'').split(/\s+/);
-      card.classList.toggle('is-hidden',!categories.includes(filter));
-    });
-    updateFeaturedCard();
+    applyMenuFilter(tab.dataset.filter);
   });
 });
-updateFeaturedCard();
+function applyMenuFilter(filter='todos'){
+  const activeFilter=safeText(filter,40)||'todos';
+  if(comboGrid) comboGrid.dataset.activeFilter=activeFilter;
+  document.querySelectorAll('.menu-tab').forEach(btn=>{
+    const active=btn.dataset.filter===activeFilter;
+    btn.classList.toggle('is-active',active);
+    btn.setAttribute('aria-selected',active?'true':'false');
+  });
+  comboCards.forEach(card=>{
+    const category=safeText(card.dataset.category,40);
+    const shouldShow=activeFilter==='todos'||category===activeFilter;
+    card.classList.toggle('is-hidden',!shouldShow);
+  });
+  updateFeaturedCard();
+}
+applyMenuFilter('todos');
 
 function enableVariantScroller(scroller){
   let isDragging=false;
@@ -296,6 +277,8 @@ const orderBar=document.getElementById('orderBar');
 const orderBarSummary=document.getElementById('orderBarSummary');
 const orderHeadCount=document.getElementById('orderHeadCount');
 const orderSend=document.getElementById('orderSend');
+const orderSupport=document.getElementById('orderSupport')||document.querySelector('.order-support');
+const businessToast=document.getElementById('businessToast');
 const orderClear=document.getElementById('orderClear');
 const orderNote=document.getElementById('orderNote');
 const paymentInputs=[...document.querySelectorAll('input[name="paymentMethod"]')];
@@ -325,7 +308,10 @@ const addressInputs=[customerName,deliveryStreet,deliveryNumber,deliveryCompleme
 const deliveryState={status:'empty',cep:'',area:null};
 const defaultDeliveryFee=8;
 const orderSendCooldownMs=3000;
+const businessToastMs=4000;
+const businessHours={openHour:19,closeHour:23,openDays:[0,3,4,5,6],timeZone:'America/Sao_Paulo'};
 let lastOrderSendAt=0;
+let businessToastTimer=null;
 const pixApi={
   create:'/api/pix/create',
   status:id=>`/api/pix/status/${encodeURIComponent(id)}`,
@@ -383,7 +369,78 @@ function isAddressComplete(){
   return hasDeliveryAddressMode()&&hasBaseAddress&&(!needsNeighborhood||Boolean(deliveryNeighborhood?.value.trim()));
 }
 function requiresPixApproval(){return selectedPaymentMethod().value==='pix';}
-function canSendOrder(){return orderQty()>0&&hasDeliveryAddressMode()&&isAddressComplete()&&(!requiresPixApproval()||pixState.approved);}
+function currentBusinessMinutes(date=new Date()){
+  try{
+    const parts=new Intl.DateTimeFormat('pt-BR',{
+      timeZone:businessHours.timeZone,
+      hour:'2-digit',
+      minute:'2-digit',
+      hour12:false
+    }).formatToParts(date);
+    const values=Object.fromEntries(parts.map(part=>[part.type,part.value]));
+    const hour=Number(values.hour==='24'?'0':values.hour);
+    const minute=Number(values.minute)||0;
+    return (Number.isFinite(hour)?hour:0)*60+(Number.isFinite(minute)?minute:0);
+  }catch(error){
+    return date.getHours()*60+date.getMinutes();
+  }
+}
+function currentBusinessDay(date=new Date()){
+  try{
+    const weekday=new Intl.DateTimeFormat('en-US',{
+      timeZone:businessHours.timeZone,
+      weekday:'short'
+    }).format(date).slice(0,3).toLowerCase();
+    return {sun:0,mon:1,tue:2,wed:3,thu:4,fri:5,sat:6}[weekday]??date.getDay();
+  }catch(error){
+    return date.getDay();
+  }
+}
+function isBusinessDay(date=new Date()){
+  return businessHours.openDays.includes(currentBusinessDay(date));
+}
+function isBusinessOpen(date=new Date()){
+  const minutes=currentBusinessMinutes(date);
+  return isBusinessDay(date)&&minutes>=businessHours.openHour*60&&minutes<businessHours.closeHour*60;
+}
+function closedOrderMessage(date=new Date()){
+  const minutes=currentBusinessMinutes(date);
+  const schedule='Atendemos de quarta a domingo, das 19h \u00e0s 23h.';
+  if(!isBusinessDay(date)){
+    return `Hoje n\u00e3o estamos abertos. ${schedule}`;
+  }
+  if(minutes<businessHours.openHour*60){
+    return `Ainda n\u00e3o estamos abertos. ${schedule}`;
+  }
+  return `Atendimento encerrado por hoje. ${schedule}`;
+}
+function closedOrderButtonText(date=new Date()){
+  if(!isBusinessDay(date)) return 'Fechado hoje';
+  return currentBusinessMinutes(date)<businessHours.openHour*60?'Ainda n\u00e3o estamos abertos':'Atendimento encerrado';
+}
+function updateOrderSupport(isOpen=isBusinessOpen()){
+  if(!orderSupport) return;
+  orderSupport.classList.toggle('is-warning',!isOpen);
+  orderSupport.textContent=isOpen
+    ? 'Voc\u00ea ser\u00e1 direcionado para finalizar com a equipe WA RIO.'
+    : closedOrderMessage();
+}
+function showBusinessToast(message=closedOrderMessage()){
+  if(!businessToast) return;
+  businessToast.textContent=message;
+  businessToast.setAttribute('aria-hidden','false');
+  businessToast.classList.add('is-visible');
+  window.clearTimeout(businessToastTimer);
+  businessToastTimer=window.setTimeout(()=>{
+    businessToast.classList.remove('is-visible');
+    businessToast.setAttribute('aria-hidden','true');
+  },businessToastMs);
+}
+function showClosedOrderNotice(){
+  updateOrderSupport(false);
+  showBusinessToast(closedOrderMessage());
+}
+function canSendOrder(isOpen=isBusinessOpen()){return isOpen&&orderQty()>0&&hasDeliveryAddressMode()&&isAddressComplete()&&(!requiresPixApproval()||pixState.approved);}
 function selectedPaymentMethod(){
   const checked=paymentInputs.find(input=>input.checked)||paymentInputs[0];
   return {
@@ -512,6 +569,19 @@ function updatePixPayment(){
     pixStatus.className='pix-status';
     return;
   }
+  if(!isBusinessOpen()){
+    if(pixAmount) pixAmount.textContent='Fechado';
+    pixCode.value='';
+    if(pixCreate) pixCreate.disabled=true;
+    pixCopy.disabled=true;
+    if(pixQrImage){
+      pixQrImage.hidden=true;
+      pixQrImage.removeAttribute('src');
+    }
+    pixStatus.className='pix-status is-warning';
+    pixStatus.textContent=closedOrderMessage();
+    return;
+  }
   const amount=pixOrderAmount();
   if(!amount){
     if(pixAmount) pixAmount.textContent='A confirmar';
@@ -598,6 +668,12 @@ function startPixPolling(){
   pixState.pollTimer=window.setInterval(checkPixStatus,5000);
 }
 async function createPixCharge(){
+  if(!isBusinessOpen()){
+    setOrderOpen(true);
+    showClosedOrderNotice();
+    updatePixPayment();
+    return;
+  }
   const amount=pixOrderAmount();
   if(!amount){
     updatePixPayment();
@@ -741,6 +817,16 @@ function setAddButtonAdded(button){
   text.textContent='Adicionado';
   button.replaceChildren(plus,text);
 }
+function setAddButtonClosed(button){
+  const plus=document.createElement('span');
+  plus.className='combo-cta-plus';
+  plus.setAttribute('aria-hidden','true');
+  plus.textContent='!';
+  const text=document.createElement('span');
+  text.className='combo-cta-text';
+  text.textContent='Fechado agora';
+  button.replaceChildren(plus,text);
+}
 function updateOrderSelectionState(){
   const total=orderQty();
   orderBar?.classList.toggle('has-items',total>0);
@@ -764,6 +850,7 @@ function setOrderOpen(open){
 function renderOrder(){
   if(!orderItems) return;
   orderItems.innerHTML='';
+  const isOpen=isBusinessOpen();
   const items=[...order.values()];
   items.forEach(item=>{
     const row=document.createElement('div');
@@ -836,9 +923,10 @@ function renderOrder(){
   orderBarSummary.textContent=total>0?`${pluralizeItem(total)} • ${totalText}`:pluralizeItem(total);
   if(orderHeadCount) orderHeadCount.textContent=total>0?`${pluralizeItem(total)} • ${totalText}`:pluralizeItem(total);
   if(orderSend){
-    orderSend.disabled=!canSendOrder();
-    orderSend.textContent=total>0&&requiresPixApproval()&&!pixState.approved?'Aguardando pagamento Pix':'Enviar pedido pelo WhatsApp';
+    orderSend.disabled=!canSendOrder(isOpen);
+    orderSend.textContent=!isOpen?closedOrderButtonText():total>0&&requiresPixApproval()&&!pixState.approved?'Aguardando pagamento Pix':'Enviar pedido pelo WhatsApp';
   }
+  updateOrderSupport(isOpen);
   updateAddressHelp();
   updatePaymentHelp();
   updateOrderSelectionState();
@@ -857,6 +945,22 @@ function selectVariant(button){
   updateOrderSelectionState();
 }
 function addToOrder(card,button){
+  if(!isBusinessOpen()){
+    setOrderOpen(true);
+    renderOrder();
+    showClosedOrderNotice();
+    if(button){
+      button.classList.add('is-added','is-closed-notice');
+      setAddButtonClosed(button);
+      window.clearTimeout(button._orderTimer);
+      button._orderTimer=window.setTimeout(()=>{
+        button.classList.remove('is-added','is-closed-notice');
+        setAddButtonDefault(button);
+        updateOrderSelectionState();
+      },1400);
+    }
+    return;
+  }
   const item=itemFromCard(card);
   const current=order.get(item.id);
   order.set(item.id,{...item,qty:current?current.qty+1:1});
@@ -922,6 +1026,17 @@ document.querySelectorAll('.combo-variant-option').forEach(button=>button.addEve
 document.querySelectorAll('.add-to-order').forEach(button=>{
   button.addEventListener('click',()=>{const card=button.closest('.combo-card');if(card)addToOrder(card,button);});
 });
+document.querySelectorAll('a[href*="wa.me/5521982225443"]').forEach(link=>{
+  if(link.classList.contains('btn-buffet')) return;
+  link.addEventListener('click',event=>{
+    if(isBusinessOpen()) return;
+    event.preventDefault();
+    setNavMenuOpen(false);
+    setOrderOpen(true);
+    renderOrder();
+    showClosedOrderNotice();
+  });
+});
 orderBar?.addEventListener('click',()=>setOrderOpen(true));
 document.querySelectorAll('[data-order-close]').forEach(btn=>btn.addEventListener('click',()=>setOrderOpen(false)));
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){setNavMenuOpen(false);setOrderOpen(false);}});
@@ -931,6 +1046,11 @@ orderItems?.addEventListener('click',e=>{
   const id=button.closest('.order-item')?.dataset.id;
   const item=order.get(id);
   if(!item) return;
+  if(button.dataset.action==='increase'&&!isBusinessOpen()){
+    showClosedOrderNotice();
+    updatePixPayment();
+    return;
+  }
   if(button.dataset.action==='increase') item.qty+=1;
   if(button.dataset.action==='decrease') item.qty-=1;
   if(button.dataset.action==='remove'||item.qty<=0) order.delete(id);
@@ -992,6 +1112,12 @@ orderClear?.addEventListener('click',()=>{
   if(window.matchMedia('(max-width:900px)').matches)setOrderOpen(false);
 });
 orderSend?.addEventListener('click',()=>{
+  if(!isBusinessOpen()){
+    setOrderOpen(true);
+    showClosedOrderNotice();
+    updatePixPayment();
+    return;
+  }
   if(!orderQty()) return;
   if(requiresPixApproval()&&!pixState.approved){
     setOrderOpen(true);

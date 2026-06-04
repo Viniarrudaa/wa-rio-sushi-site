@@ -35,6 +35,7 @@ const turnstileEnabled=Boolean(turnstileSiteKey&&turnstileSecretKey&&turnstileRe
 const orderPersistenceEnabled=String(process.env.ORDER_STORE||'file').toLowerCase()!=='memory';
 const orderStoreFile=path.resolve(__dirname,process.env.ORDER_STORE_FILE||path.join('data','orders.json'));
 const orderStoreTtlMs=Math.max(1,Number(process.env.ORDER_STORE_TTL_HOURS)||72)*60*60*1000;
+const businessHours={openHour:19,closeHour:23,openDays:[0,3,4,5,6],timeZone:'America/Sao_Paulo'};
 let orderPersistTimer=null;
 
 loadOrderStore();
@@ -295,8 +296,12 @@ const productCatalog=new Map([
   ['combo-mix-joes-12',{name:'Combo Mix Joes (12 un)',price:35.9}],
   ['combo-wa-rio-1-31',{name:'Combo WA RIO 1 (31 un)',price:55.9}],
   ['combo-wa-rio-2-36',{name:'Combo WA RIO 2 (36 un)',price:76.9}],
-  ['filadelfia-roll-5',{name:'Filadelfia Roll (5 un)',price:9.9}],
-  ['filadelfia-roll-10',{name:'Filadelfia Roll (10 un)',price:18.9}],
+  ['filadelfia-roll-10',{name:'Filadelfia Roll (10 un)',price:16.9}],
+  ['filadelfia-roll-20',{name:'Filadelfia Roll (20 un)',price:23}],
+  ['filadelfia-roll-30',{name:'Filadelfia Roll (30 un)',price:31}],
+  ['filadelfia-roll-40',{name:'Filadelfia Roll (40 un)',price:40}],
+  ['filadelfia-roll-50',{name:'Filadelfia Roll (50 un)',price:50}],
+  ['filadelfia-roll-60',{name:'Filadelfia Roll (60 un)',price:60}],
   ['hot-filadelfia-10',{name:'Hot Filadelfia (10 un)',price:16.9}],
   ['hot-filadelfia-20',{name:'Hot Filadelfia (20 un)',price:23}],
   ['hot-filadelfia-30',{name:'Hot Filadelfia (30 un)',price:31}],
@@ -448,6 +453,56 @@ function formatMoney(value){
   return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(value)||0);
 }
 
+function currentBusinessMinutes(date=new Date()){
+  try{
+    const parts=new Intl.DateTimeFormat('pt-BR',{
+      timeZone:businessHours.timeZone,
+      hour:'2-digit',
+      minute:'2-digit',
+      hour12:false
+    }).formatToParts(date);
+    const values=Object.fromEntries(parts.map(part=>[part.type,part.value]));
+    const hour=Number(values.hour==='24'?'0':values.hour);
+    const minute=Number(values.minute)||0;
+    return (Number.isFinite(hour)?hour:0)*60+(Number.isFinite(minute)?minute:0);
+  }catch(error){
+    return date.getHours()*60+date.getMinutes();
+  }
+}
+
+function currentBusinessDay(date=new Date()){
+  try{
+    const weekday=new Intl.DateTimeFormat('en-US',{
+      timeZone:businessHours.timeZone,
+      weekday:'short'
+    }).format(date).slice(0,3).toLowerCase();
+    return {sun:0,mon:1,tue:2,wed:3,thu:4,fri:5,sat:6}[weekday]??date.getDay();
+  }catch(error){
+    return date.getDay();
+  }
+}
+
+function isBusinessDay(date=new Date()){
+  return businessHours.openDays.includes(currentBusinessDay(date));
+}
+
+function isBusinessOpen(date=new Date()){
+  const minutes=currentBusinessMinutes(date);
+  return isBusinessDay(date)&&minutes>=businessHours.openHour*60&&minutes<businessHours.closeHour*60;
+}
+
+function closedOrderMessage(date=new Date()){
+  const minutes=currentBusinessMinutes(date);
+  const schedule='Atendemos de quarta a domingo, das 19h as 23h.';
+  if(!isBusinessDay(date)){
+    return `Hoje nao estamos abertos. ${schedule}`;
+  }
+  if(minutes<businessHours.openHour*60){
+    return `Ainda nao estamos abertos. ${schedule}`;
+  }
+  return `Atendimento encerrado por hoje. ${schedule}`;
+}
+
 function buildWhatsappMessage(order){
   const addressParts=[
     `${order.address.street}, no ${order.address.number}`,
@@ -468,6 +523,9 @@ function buildWhatsappMessage(order){
 }
 
 async function createPixOrder(req,res){
+  if(!isBusinessOpen()){
+    return sendJson(res,409,{error:closedOrderMessage()});
+  }
   const body=await readJson(req);
   if(!await verifyTurnstileToken(body?.turnstileToken,req)){
     return sendJson(res,403,{error:'Confirme a verificacao anti-bot para gerar o Pix.'});
@@ -580,9 +638,17 @@ async function handleWebhook(req,res,url){
 }
 
 async function serveStatic(req,res,url){
-  let pathname=decodeURIComponent(url.pathname);
+  let pathname;
+  try{
+    pathname=decodeURIComponent(url.pathname);
+  }catch(error){
+    res.writeHead(400);
+    res.end('Bad request');
+    return;
+  }
   if(pathname==='/'||pathname==='') pathname='/wario_sushi_v2_16.html';
-  if(pathname.startsWith('/server')||pathname.includes('..')||pathname.includes('\\')){
+  const pathParts=pathname.split('/').filter(Boolean);
+  if(pathname.startsWith('/server')||pathname.includes('..')||pathname.includes('\\')||pathParts.some(part=>part.startsWith('.'))){
     res.writeHead(404);
     res.end('Not found');
     return;
@@ -604,8 +670,14 @@ async function serveStatic(req,res,url){
       '.png':'image/png',
       '.jpg':'image/jpeg',
       '.jpeg':'image/jpeg',
+      '.webp':'image/webp',
       '.ico':'image/x-icon'
-    }[ext]||'application/octet-stream';
+    }[ext];
+    if(!type){
+      res.writeHead(404);
+      res.end('Not found');
+      return;
+    }
     res.writeHead(200,{
       'Content-Type':type,
       'Cache-Control':/\.(?:html|css|js)$/i.test(filePath)?'no-store':'public, max-age=86400'
