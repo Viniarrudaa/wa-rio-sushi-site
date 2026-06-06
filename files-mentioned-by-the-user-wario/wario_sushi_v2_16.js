@@ -353,18 +353,17 @@ const deliveryFeeByNeighborhood={
 };
 const deliveryNeighborhoods=[
   // Edite esta lista para alterar os bairros atendidos.
-  'Méier',
   'Cachambi',
+  'Méier',
   'Engenho de Dentro',
   'Pilares',
-  'Abolição',
+  'Riachuelo',
   'Maria da Graça',
   'Higienópolis',
-  'Todos os Santos',
-  'Engenhão',
-  'Cardim',
   'Engenho Novo',
-  'Riachuelo'
+  'Del Castilho',
+  'Abolição',
+  'Piedade'
 ];
 
 function pluralizeItem(total){return total===1?'1 item':`${total} itens`;}

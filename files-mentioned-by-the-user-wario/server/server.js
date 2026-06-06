@@ -140,7 +140,7 @@ function setSecurityHeaders(req,res){
     "default-src 'self'",
     "base-uri 'none'",
     "object-src 'none'",
-    "script-src 'self' https://challenges.cloudflare.com",
+    "script-src 'self' 'sha256-Pdwf9f7BmDWe4dD63iUff1TmwlLIN74NdCoz221f/fw=' https://challenges.cloudflare.com",
     "style-src 'self' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data:",
@@ -341,18 +341,17 @@ const deliveryFeeByNeighborhood={
   'maria da graca':7
 };
 const deliveryNeighborhoods=[
-  'meier',
   'cachambi',
+  'meier',
   'engenho de dentro',
   'pilares',
-  'abolicao',
+  'riachuelo',
   'maria da graca',
   'higienopolis',
-  'todos os santos',
-  'engenhao',
-  'cardim',
   'engenho novo',
-  'riachuelo'
+  'del castilho',
+  'abolicao',
+  'piedade'
 ];
 
 function deliveryFeeFor(neighborhood){
@@ -723,7 +722,9 @@ async function serveStatic(req,res,url){
       '.jpg':'image/jpeg',
       '.jpeg':'image/jpeg',
       '.webp':'image/webp',
-      '.ico':'image/x-icon'
+      '.ico':'image/x-icon',
+      '.xml':'application/xml; charset=utf-8',
+      '.txt':'text/plain; charset=utf-8'
     }[ext];
     if(!type){
       res.writeHead(404);

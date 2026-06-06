@@ -460,6 +460,14 @@ mix-blend-mode:screen;opacity:.68;}
 .insta-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);opacity:0;transition:opacity 0.4s;}
 .insta-item:hover .insta-overlay{opacity:1;}
 
+/* AREAS ATENDIDAS */
+.delivery-areas{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.35fr);gap:44px;align-items:center;padding:84px 60px;background:linear-gradient(135deg,#070504 0%,#030303 58%,#100706 100%);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.delivery-areas-copy{max-width:470px;}
+.delivery-areas-copy .sec-title{margin-bottom:16px;}
+.delivery-areas-copy p{font-family:var(--body-font);font-size:14px;line-height:1.85;color:rgba(210,191,176,.74);font-weight:300;}
+.delivery-area-list{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;}
+.delivery-area-list span{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:0 15px;border:1px solid rgba(212,168,67,.18);border-radius:999px;background:rgba(255,255,255,.035);font-family:var(--body-font);font-size:10px;font-weight:850;letter-spacing:1.15px;text-transform:uppercase;color:rgba(245,235,222,.76);box-shadow:inset 0 1px 0 rgba(255,255,255,.035);}
+
 /* WHATSAPP */
 .whatsapp-section{padding:96px 60px;text-align:center;background:#000;position:relative;overflow:hidden;}
 .whatsapp-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(37,211,102,0.06) 0%,transparent 60%);pointer-events:none;}
@@ -720,6 +728,11 @@ footer{background:linear-gradient(90deg,#240000 0%,#5E0000 45%,#7A0000 100%);bor
   .footer-bottom p{font-size:9px;line-height:1.5;letter-spacing:.8px;}
   .footer-legal-links{justify-content:center;flex-wrap:wrap;}
   .footer-dev-credit{justify-content:center;flex-wrap:wrap;}
+  .delivery-areas{grid-template-columns:1fr;gap:24px;padding:52px 24px;text-align:center;}
+  .delivery-areas-copy{max-width:360px;margin:0 auto;}
+  .delivery-areas-copy p{font-size:12.5px;line-height:1.7;}
+  .delivery-area-list{justify-content:center;gap:8px;}
+  .delivery-area-list span{min-height:34px;padding:0 12px;font-size:8.4px;letter-spacing:.9px;}
   .order-legal-note{font-size:10px;line-height:1.55;}
   .legal-header{padding:0 22px;min-height:72px;}
   .legal-logo img{height:52px;}
