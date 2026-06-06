@@ -540,7 +540,7 @@ function formatScheduleDate(dateValue){
 
 function normalizeSchedule(value){
   const mode=safeText(value?.mode,40);
-  if(mode!=='scheduled') return {mode:'immediate',label:'Assim que possivel'};
+  if(mode!=='scheduled') return null;
   const date=safeText(value?.date,10);
   const time=safeText(value?.time,5);
   const dateObject=scheduleDateObject(date);
@@ -568,7 +568,7 @@ function buildWhatsappMessage(order){
     'Pedido:',
     ...order.items.map(item=>`- ${item.qty}x ${item.name} - ${formatMoney(item.total)}`),
     `Endereco: ${addressParts.join(' - ')}`,
-    `Agendamento: ${order.schedule?.mode==='scheduled'?order.schedule.label:'Assim que possivel'}`,
+    `Agendamento: ${order.schedule?.label||'Nao informado'}`,
     'Pagamento: Pix aprovado',
     `Total: ${formatMoney(order.amount)}`,
     `Codigo do pagamento: ${order.mpOrderId||order.paymentId}`
@@ -579,9 +579,6 @@ async function createPixOrder(req,res){
   const body=await readJson(req);
   const schedule=normalizeSchedule(body?.schedule);
   if(!schedule) return sendJson(res,400,{error:'Agendamento invalido.'});
-  if(schedule.mode!=='scheduled'&&!isBusinessOpen()){
-    return sendJson(res,409,{error:closedOrderMessage()});
-  }
   if(!await verifyTurnstileToken(body?.turnstileToken,req)){
     return sendJson(res,403,{error:'Confirme a verificacao anti-bot para gerar o Pix.'});
   }

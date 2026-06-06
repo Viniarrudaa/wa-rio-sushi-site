@@ -23,7 +23,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="wario_sushi_v2_16.css?v=34">
+<link rel="stylesheet" href="wario_sushi_v2_16.css?v=35">
 </head>
 <body>
 <div class="brand-intro" aria-hidden="true">
@@ -462,7 +462,7 @@
     </div>
     <button class="order-icon-btn" type="button" data-order-close aria-label="Fechar resumo">×</button>
   </div>
-  <div class="order-content">
+  <div class="order-content" id="orderContent">
     <div class="order-empty" id="orderEmpty"><strong>Seu pedido ainda está vazio</strong><span>Escolha seus favoritos no cardápio para revisar antes de enviar.</span></div>
     <div class="order-items" id="orderItems"></div>
     <div class="delivery-check" id="deliveryCheck">
@@ -503,19 +503,7 @@
           <span>Agendamento</span>
           <strong>Quando entregar?</strong>
         </div>
-        <div class="schedule-options" role="radiogroup" aria-label="Agendamento do pedido">
-          <label class="schedule-option">
-            <input type="radio" name="orderSchedule" value="immediate" checked>
-            <span>Assim que poss&iacute;vel</span>
-            <small>Durante o hor&aacute;rio aberto</small>
-          </label>
-          <label class="schedule-option">
-            <input type="radio" name="orderSchedule" value="scheduled">
-            <span>Agendar entrega</span>
-            <small>Escolha dia e hor&aacute;rio</small>
-          </label>
-        </div>
-        <div class="schedule-fields" id="scheduleFields" hidden>
+        <div class="schedule-fields" id="scheduleFields">
           <label class="schedule-field" for="scheduleDate">Data
             <input id="scheduleDate" type="date">
           </label>
@@ -523,7 +511,7 @@
             <select id="scheduleTime"></select>
           </label>
         </div>
-        <p class="schedule-status" id="scheduleStatus">Pedidos imediatos ficam dispon&iacute;veis durante o atendimento.</p>
+        <p class="schedule-status" id="scheduleStatus">Escolha data e hor&aacute;rio para a entrega.</p>
     </div>
     <div class="payment-methods" id="paymentMethods">
       <div class="payment-methods-head">
@@ -575,6 +563,7 @@
     </label>
     <p class="order-legal-note">Aten&ccedil;&atilde;o: produtos podem conter peixe cru, leite/cream cheese, gergelim, gl&uacute;ten, soja e tra&ccedil;os de outros alerg&ecirc;nicos. Informe restri&ccedil;&otilde;es nas observa&ccedil;&otilde;es antes de enviar.</p>
   </div>
+  <button class="order-scroll-cue" id="orderScrollCue" type="button" aria-label="Mostrar mais do pedido">⌄</button>
   <div class="order-foot">
     <div class="order-totals">
       <div class="order-total"><span>Subtotal</span><strong id="orderSubtotal">R$ 0,00</strong></div>
@@ -593,6 +582,6 @@
   <span class="order-bar-action">Ver pedido</span>
 </button>
 
-<script src="wario_sushi_v2_16.js?v=34" defer></script>
+<script src="wario_sushi_v2_16.js?v=35" defer></script>
 </body>
 </html>

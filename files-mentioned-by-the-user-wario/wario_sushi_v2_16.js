@@ -231,6 +231,7 @@ function enableVariantScroller(scroller){
 
   scroller.addEventListener('pointerdown',event=>{
     if(event.button!==0||!canScrollHorizontally()) return;
+    if(event.target.closest('.combo-variant-option')) return;
     isDragging=true;
     moved=false;
     startX=event.clientX;
@@ -272,6 +273,9 @@ document.querySelectorAll('.combo-variants').forEach(enableVariantScroller);
 // order flow
 const order=new Map();
 const orderDrawer=document.getElementById('orderDrawer');
+const orderContent=document.getElementById('orderContent');
+const orderFoot=document.querySelector('.order-foot');
+const orderScrollCue=document.getElementById('orderScrollCue');
 const orderItems=document.getElementById('orderItems');
 const orderEmpty=document.getElementById('orderEmpty');
 const orderSubtotalEl=document.getElementById('orderSubtotal');
@@ -309,7 +313,6 @@ const deliveryNeighborhood=document.getElementById('deliveryNeighborhood');
 const deliveryReference=document.getElementById('deliveryReference');
 const addressHelp=document.getElementById('addressHelp');
 const addressInputs=[customerName,deliveryStreet,deliveryNumber,deliveryComplement,deliveryNeighborhood,deliveryReference].filter(Boolean);
-const scheduleInputs=[...document.querySelectorAll('input[name="orderSchedule"]')];
 const scheduleFields=document.getElementById('scheduleFields');
 const scheduleDate=document.getElementById('scheduleDate');
 const scheduleTime=document.getElementById('scheduleTime');
@@ -501,14 +504,7 @@ function setupScheduleControls(){
     if(scheduleTime.dataset.defaultTime) scheduleTime.value=scheduleTime.dataset.defaultTime;
   }
 }
-function selectedScheduleMode(){
-  const checked=scheduleInputs.find(input=>input.checked)||scheduleInputs[0];
-  return safeText(checked?.value,40)||'immediate';
-}
 function schedulePayload(){
-  if(selectedScheduleMode()!=='scheduled'){
-    return {mode:'immediate',label:'Assim que poss\u00edvel'};
-  }
   const date=safeText(scheduleDate?.value,10);
   const time=safeText(scheduleTime?.value,5);
   return {
@@ -521,11 +517,6 @@ function schedulePayload(){
 function scheduleValidation(isOpen=isBusinessOpen()){
   setupScheduleControls();
   const payload=schedulePayload();
-  if(payload.mode==='immediate'){
-    return isOpen
-      ? {valid:true,status:'success',message:'Pedido imediato liberado durante o atendimento.',payload}
-      : {valid:false,status:'warning',message:'Estamos fechados agora. Escolha "Agendar entrega" para reservar um hor\u00e1rio.',payload};
-  }
   const date=scheduleDateObject(payload.date);
   if(!date) return {valid:false,status:'warning',message:'Escolha uma data para agendar a entrega.',payload};
   if(!isBusinessDay(date)) return {valid:false,status:'warning',message:'Escolha uma data de quarta a domingo.',payload};
@@ -538,8 +529,7 @@ function scheduleValidation(isOpen=isBusinessOpen()){
 }
 function updateScheduleUi(isOpen=isBusinessOpen()){
   setupScheduleControls();
-  const scheduled=selectedScheduleMode()==='scheduled';
-  if(scheduleFields) scheduleFields.hidden=!scheduled;
+  if(scheduleFields) scheduleFields.hidden=false;
   if(!scheduleStatus) return;
   const validation=scheduleValidation(isOpen);
   scheduleStatus.className=`schedule-status is-${validation.status}`.trim();
@@ -549,8 +539,6 @@ function canAcceptOrder(isOpen=isBusinessOpen()){
   return scheduleValidation(isOpen).valid;
 }
 function selectScheduledMode(){
-  const scheduled=scheduleInputs.find(input=>input.value==='scheduled');
-  if(scheduled) scheduled.checked=true;
   setupScheduleControls();
 }
 function updateOrderSupport(isOpen=isBusinessOpen()){
@@ -558,7 +546,7 @@ function updateOrderSupport(isOpen=isBusinessOpen()){
   const validation=scheduleValidation(isOpen);
   orderSupport.classList.toggle('is-warning',!validation.valid);
   orderSupport.textContent=validation.valid
-    ? (validation.payload.mode==='scheduled'?`Pedido agendado para ${validation.payload.label}.`:'Voc\u00ea ser\u00e1 direcionado para finalizar com a equipe WA RIO.')
+    ? `Pedido agendado para ${validation.payload.label}.`
     : validation.message;
 }
 function showBusinessToast(message=closedOrderMessage()){
@@ -985,6 +973,22 @@ function updateOrderSelectionState(){
 function setOrderOpen(open){
   document.body.classList.toggle('order-open',open);
   orderDrawer?.setAttribute('aria-hidden',open?'false':'true');
+  window.requestAnimationFrame(updateOrderScrollCue);
+}
+function updateOrderScrollCue(){
+  if(!orderDrawer||!orderContent||!orderScrollCue) return;
+  if(orderFoot){
+    orderDrawer.style.setProperty('--order-foot-height',`${Math.round(orderFoot.getBoundingClientRect().height)}px`);
+  }
+  const canScroll=orderContent.scrollHeight>orderContent.clientHeight+10;
+  const nearBottom=orderContent.scrollTop+orderContent.clientHeight>=orderContent.scrollHeight-28;
+  const shouldShow=document.body.classList.contains('order-open')&&canScroll&&!nearBottom;
+  orderDrawer.classList.toggle('has-scroll-cue',shouldShow);
+}
+function scrollOrderContentForward(){
+  if(!orderContent) return;
+  orderContent.scrollBy({top:Math.max(180,orderContent.clientHeight*.72),behavior:'smooth'});
+  window.setTimeout(updateOrderScrollCue,260);
 }
 function renderOrder(){
   if(!orderItems) return;
@@ -1070,6 +1074,7 @@ function renderOrder(){
   updateAddressHelp();
   updatePaymentHelp();
   updateOrderSelectionState();
+  window.requestAnimationFrame(updateOrderScrollCue);
 }
 function selectVariant(button){
   const card=button.closest('.combo-card');
@@ -1148,7 +1153,7 @@ function buildWhatsappMessage(){
     'Pedido:',
     ...lines,
     `Endereço: ${addressLine}`,
-    `Agendamento: ${schedule.mode==='scheduled'?schedule.label:'Assim que poss\u00edvel'}`,
+    `Agendamento: ${schedule.label}`,
     `Pagamento: ${paymentLabel}`,
     `Total: ${totalLine}`,
     note?`Obs: ${note}`:''
@@ -1172,6 +1177,9 @@ document.querySelectorAll('a[href*="wa.me/5521982225443"]').forEach(link=>{
   });
 });
 orderBar?.addEventListener('click',()=>setOrderOpen(true));
+orderContent?.addEventListener('scroll',updateOrderScrollCue,{passive:true});
+orderScrollCue?.addEventListener('click',scrollOrderContentForward);
+window.addEventListener('resize',updateOrderScrollCue);
 document.querySelectorAll('[data-order-close]').forEach(btn=>btn.addEventListener('click',()=>setOrderOpen(false)));
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){setNavMenuOpen(false);setOrderOpen(false);}});
 orderItems?.addEventListener('click',e=>{
@@ -1213,10 +1221,6 @@ addressInputs.forEach(input=>{
   });
 });
 paymentInputs.forEach(input=>input.addEventListener('change',()=>{
-  resetPixState();
-  renderOrder();
-}));
-scheduleInputs.forEach(input=>input.addEventListener('change',()=>{
   resetPixState();
   renderOrder();
 }));
