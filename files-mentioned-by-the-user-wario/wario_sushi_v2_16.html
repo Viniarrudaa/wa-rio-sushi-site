@@ -498,6 +498,33 @@
       </div>
       <p class="address-help" id="addressHelp">Confirme o CEP ou toque em “Não sei meu CEP” para preencher o endereço.</p>
     </div>
+    <div class="schedule-check" id="scheduleCheck">
+        <div class="schedule-check-head">
+          <span>Agendamento</span>
+          <strong>Quando entregar?</strong>
+        </div>
+        <div class="schedule-options" role="radiogroup" aria-label="Agendamento do pedido">
+          <label class="schedule-option">
+            <input type="radio" name="orderSchedule" value="immediate" checked>
+            <span>Assim que poss&iacute;vel</span>
+            <small>Durante o hor&aacute;rio aberto</small>
+          </label>
+          <label class="schedule-option">
+            <input type="radio" name="orderSchedule" value="scheduled">
+            <span>Agendar entrega</span>
+            <small>Escolha dia e hor&aacute;rio</small>
+          </label>
+        </div>
+        <div class="schedule-fields" id="scheduleFields" hidden>
+          <label class="schedule-field" for="scheduleDate">Data
+            <input id="scheduleDate" type="date">
+          </label>
+          <label class="schedule-field" for="scheduleTime">Hor&aacute;rio
+            <select id="scheduleTime"></select>
+          </label>
+        </div>
+        <p class="schedule-status" id="scheduleStatus">Pedidos imediatos ficam dispon&iacute;veis durante o atendimento.</p>
+    </div>
     <div class="payment-methods" id="paymentMethods">
       <div class="payment-methods-head">
         <span>Pagamento</span>

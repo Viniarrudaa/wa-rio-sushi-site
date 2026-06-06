@@ -257,6 +257,10 @@ function enableVariantScroller(scroller){
   scroller.addEventListener('pointercancel',stopDragging);
   scroller.addEventListener('click',event=>{
     if(!moved) return;
+    if(event.target.closest('.combo-variant-option')){
+      moved=false;
+      return;
+    }
     event.preventDefault();
     event.stopPropagation();
     moved=false;
@@ -305,11 +309,17 @@ const deliveryNeighborhood=document.getElementById('deliveryNeighborhood');
 const deliveryReference=document.getElementById('deliveryReference');
 const addressHelp=document.getElementById('addressHelp');
 const addressInputs=[customerName,deliveryStreet,deliveryNumber,deliveryComplement,deliveryNeighborhood,deliveryReference].filter(Boolean);
+const scheduleInputs=[...document.querySelectorAll('input[name="orderSchedule"]')];
+const scheduleFields=document.getElementById('scheduleFields');
+const scheduleDate=document.getElementById('scheduleDate');
+const scheduleTime=document.getElementById('scheduleTime');
+const scheduleStatus=document.getElementById('scheduleStatus');
 const deliveryState={status:'empty',cep:'',area:null};
 const defaultDeliveryFee=8;
 const orderSendCooldownMs=3000;
 const businessToastMs=4000;
 const businessHours={openHour:19,closeHour:23,openDays:[0,3,4,5,6],timeZone:'America/Sao_Paulo'};
+const scheduleLeadMinutes=30;
 let lastOrderSendAt=0;
 let businessToastTimer=null;
 const pixApi={
@@ -418,12 +428,138 @@ function closedOrderButtonText(date=new Date()){
   if(!isBusinessDay(date)) return 'Fechado hoje';
   return currentBusinessMinutes(date)<businessHours.openHour*60?'Ainda n\u00e3o estamos abertos':'Atendimento encerrado';
 }
+function pad2(value){return String(value).padStart(2,'0');}
+function brazilDateParts(date=new Date()){
+  try{
+    const parts=new Intl.DateTimeFormat('en-CA',{
+      timeZone:businessHours.timeZone,
+      year:'numeric',
+      month:'2-digit',
+      day:'2-digit'
+    }).formatToParts(date);
+    return Object.fromEntries(parts.map(part=>[part.type,part.value]));
+  }catch(error){
+    return {year:String(date.getFullYear()),month:pad2(date.getMonth()+1),day:pad2(date.getDate())};
+  }
+}
+function brazilDateValue(date=new Date()){
+  const parts=brazilDateParts(date);
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+function scheduleTimes(){
+  const slots=[];
+  for(let minutes=businessHours.openHour*60;minutes<businessHours.closeHour*60;minutes+=30){
+    slots.push(`${pad2(Math.floor(minutes/60))}:${pad2(minutes%60)}`);
+  }
+  return slots;
+}
+function scheduleDateObject(dateValue){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(dateValue||''))) return null;
+  const date=new Date(`${dateValue}T12:00:00-03:00`);
+  return Number.isNaN(date.getTime())?null:date;
+}
+function scheduleTimestamp(dateValue,timeValue){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(dateValue||''))||!/^\d{2}:\d{2}$/.test(String(timeValue||''))) return NaN;
+  return Date.parse(`${dateValue}T${timeValue}:00-03:00`);
+}
+function isBusinessTime(timeValue){
+  const match=String(timeValue||'').match(/^(\d{2}):(\d{2})$/);
+  if(!match) return false;
+  const minutes=Number(match[1])*60+Number(match[2]);
+  return Number.isFinite(minutes)&&minutes>=businessHours.openHour*60&&minutes<businessHours.closeHour*60;
+}
+function formatScheduleDate(dateValue){
+  const date=scheduleDateObject(dateValue);
+  if(!date) return '';
+  return new Intl.DateTimeFormat('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'}).format(date).replace('.', '');
+}
+function findNextScheduleSlot(){
+  const now=Date.now();
+  const minTime=now+scheduleLeadMinutes*60_000;
+  const times=scheduleTimes();
+  for(let dayOffset=0;dayOffset<21;dayOffset+=1){
+    const probe=new Date(now+dayOffset*86_400_000);
+    const dateValue=brazilDateValue(probe);
+    const date=scheduleDateObject(dateValue);
+    if(!date||!isBusinessDay(date)) continue;
+    const time=times.find(slot=>scheduleTimestamp(dateValue,slot)>=minTime);
+    if(time) return {date:dateValue,time};
+  }
+  return {date:brazilDateValue(),time:times[0]||'19:00'};
+}
+function setupScheduleControls(){
+  if(scheduleDate){
+    scheduleDate.min=brazilDateValue();
+    if(!scheduleDate.value){
+      const next=findNextScheduleSlot();
+      scheduleDate.value=next.date;
+      if(scheduleTime) scheduleTime.dataset.defaultTime=next.time;
+    }
+  }
+  if(scheduleTime&&!scheduleTime.options.length){
+    scheduleTime.innerHTML=scheduleTimes().map(time=>`<option value="${time}">${time}</option>`).join('');
+    if(scheduleTime.dataset.defaultTime) scheduleTime.value=scheduleTime.dataset.defaultTime;
+  }
+}
+function selectedScheduleMode(){
+  const checked=scheduleInputs.find(input=>input.checked)||scheduleInputs[0];
+  return safeText(checked?.value,40)||'immediate';
+}
+function schedulePayload(){
+  if(selectedScheduleMode()!=='scheduled'){
+    return {mode:'immediate',label:'Assim que poss\u00edvel'};
+  }
+  const date=safeText(scheduleDate?.value,10);
+  const time=safeText(scheduleTime?.value,5);
+  return {
+    mode:'scheduled',
+    date,
+    time,
+    label:`${formatScheduleDate(date)} \u00e0s ${time}`
+  };
+}
+function scheduleValidation(isOpen=isBusinessOpen()){
+  setupScheduleControls();
+  const payload=schedulePayload();
+  if(payload.mode==='immediate'){
+    return isOpen
+      ? {valid:true,status:'success',message:'Pedido imediato liberado durante o atendimento.',payload}
+      : {valid:false,status:'warning',message:'Estamos fechados agora. Escolha "Agendar entrega" para reservar um hor\u00e1rio.',payload};
+  }
+  const date=scheduleDateObject(payload.date);
+  if(!date) return {valid:false,status:'warning',message:'Escolha uma data para agendar a entrega.',payload};
+  if(!isBusinessDay(date)) return {valid:false,status:'warning',message:'Escolha uma data de quarta a domingo.',payload};
+  if(!isBusinessTime(payload.time)) return {valid:false,status:'warning',message:'Escolha um hor\u00e1rio entre 19h e 23h.',payload};
+  const timestamp=scheduleTimestamp(payload.date,payload.time);
+  if(!Number.isFinite(timestamp)||timestamp<Date.now()+scheduleLeadMinutes*60_000){
+    return {valid:false,status:'warning',message:`Escolha um hor\u00e1rio com pelo menos ${scheduleLeadMinutes} minutos de anteced\u00eancia.`,payload};
+  }
+  return {valid:true,status:'success',message:`Entrega agendada para ${payload.label}.`,payload};
+}
+function updateScheduleUi(isOpen=isBusinessOpen()){
+  setupScheduleControls();
+  const scheduled=selectedScheduleMode()==='scheduled';
+  if(scheduleFields) scheduleFields.hidden=!scheduled;
+  if(!scheduleStatus) return;
+  const validation=scheduleValidation(isOpen);
+  scheduleStatus.className=`schedule-status is-${validation.status}`.trim();
+  scheduleStatus.textContent=validation.message;
+}
+function canAcceptOrder(isOpen=isBusinessOpen()){
+  return scheduleValidation(isOpen).valid;
+}
+function selectScheduledMode(){
+  const scheduled=scheduleInputs.find(input=>input.value==='scheduled');
+  if(scheduled) scheduled.checked=true;
+  setupScheduleControls();
+}
 function updateOrderSupport(isOpen=isBusinessOpen()){
   if(!orderSupport) return;
-  orderSupport.classList.toggle('is-warning',!isOpen);
-  orderSupport.textContent=isOpen
-    ? 'Voc\u00ea ser\u00e1 direcionado para finalizar com a equipe WA RIO.'
-    : closedOrderMessage();
+  const validation=scheduleValidation(isOpen);
+  orderSupport.classList.toggle('is-warning',!validation.valid);
+  orderSupport.textContent=validation.valid
+    ? (validation.payload.mode==='scheduled'?`Pedido agendado para ${validation.payload.label}.`:'Voc\u00ea ser\u00e1 direcionado para finalizar com a equipe WA RIO.')
+    : validation.message;
 }
 function showBusinessToast(message=closedOrderMessage()){
   if(!businessToast) return;
@@ -440,7 +576,7 @@ function showClosedOrderNotice(){
   updateOrderSupport(false);
   showBusinessToast(closedOrderMessage());
 }
-function canSendOrder(isOpen=isBusinessOpen()){return isOpen&&orderQty()>0&&hasDeliveryAddressMode()&&isAddressComplete()&&(!requiresPixApproval()||pixState.approved);}
+function canSendOrder(isOpen=isBusinessOpen()){return canAcceptOrder(isOpen)&&orderQty()>0&&hasDeliveryAddressMode()&&isAddressComplete()&&(!requiresPixApproval()||pixState.approved);}
 function selectedPaymentMethod(){
   const checked=paymentInputs.find(input=>input.checked)||paymentInputs[0];
   return {
@@ -569,8 +705,9 @@ function updatePixPayment(){
     pixStatus.className='pix-status';
     return;
   }
-  if(!isBusinessOpen()){
-    if(pixAmount) pixAmount.textContent='Fechado';
+  const scheduleCheck=scheduleValidation();
+  if(!scheduleCheck.valid){
+    if(pixAmount) pixAmount.textContent='Agende';
     pixCode.value='';
     if(pixCreate) pixCreate.disabled=true;
     pixCopy.disabled=true;
@@ -579,7 +716,7 @@ function updatePixPayment(){
       pixQrImage.removeAttribute('src');
     }
     pixStatus.className='pix-status is-warning';
-    pixStatus.textContent=closedOrderMessage();
+    pixStatus.textContent=scheduleCheck.message;
     return;
   }
   const amount=pixOrderAmount();
@@ -644,6 +781,7 @@ function orderPayloadForPayment(){
       neighborhood:areaName,
       cep:cep?formatCep(cep):''
     },
+    schedule:schedulePayload(),
     turnstileToken:turnstileState.token
   };
 }
@@ -668,9 +806,10 @@ function startPixPolling(){
   pixState.pollTimer=window.setInterval(checkPixStatus,5000);
 }
 async function createPixCharge(){
-  if(!isBusinessOpen()){
+  const scheduleCheck=scheduleValidation();
+  if(!scheduleCheck.valid){
     setOrderOpen(true);
-    showClosedOrderNotice();
+    showBusinessToast(scheduleCheck.message);
     updatePixPayment();
     return;
   }
@@ -922,9 +1061,10 @@ function renderOrder(){
   orderTotal.textContent=total>0?totalText:formatMoney(0);
   orderBarSummary.textContent=total>0?`${pluralizeItem(total)} • ${totalText}`:pluralizeItem(total);
   if(orderHeadCount) orderHeadCount.textContent=total>0?`${pluralizeItem(total)} • ${totalText}`:pluralizeItem(total);
+  updateScheduleUi(isOpen);
   if(orderSend){
     orderSend.disabled=!canSendOrder(isOpen);
-    orderSend.textContent=!isOpen?closedOrderButtonText():total>0&&requiresPixApproval()&&!pixState.approved?'Aguardando pagamento Pix':'Enviar pedido pelo WhatsApp';
+    orderSend.textContent=!canAcceptOrder(isOpen)?'Escolha um agendamento':total>0&&requiresPixApproval()&&!pixState.approved?'Aguardando pagamento Pix':'Enviar pedido pelo WhatsApp';
   }
   updateOrderSupport(isOpen);
   updateAddressHelp();
@@ -945,27 +1085,17 @@ function selectVariant(button){
   updateOrderSelectionState();
 }
 function addToOrder(card,button){
-  if(!isBusinessOpen()){
-    setOrderOpen(true);
-    renderOrder();
-    showClosedOrderNotice();
-    if(button){
-      button.classList.add('is-added','is-closed-notice');
-      setAddButtonClosed(button);
-      window.clearTimeout(button._orderTimer);
-      button._orderTimer=window.setTimeout(()=>{
-        button.classList.remove('is-added','is-closed-notice');
-        setAddButtonDefault(button);
-        updateOrderSelectionState();
-      },1400);
-    }
-    return;
-  }
+  const isOpen=isBusinessOpen();
+  if(!isOpen) selectScheduledMode();
   const item=itemFromCard(card);
   const current=order.get(item.id);
   order.set(item.id,{...item,qty:current?current.qty+1:1});
   resetPixState();
   renderOrder();
+  if(!isOpen){
+    setOrderOpen(true);
+    showBusinessToast('Item adicionado. Escolha o dia e hor\u00e1rio para agendar a entrega.');
+  }
   if(orderBar){
     orderBar.classList.add('is-pulsing');
     window.clearTimeout(orderBar._pulseTimer);
@@ -986,6 +1116,7 @@ function buildWhatsappMessage(){
   const lines=[...order.values()].map(item=>`• ${Number(item.qty)||0}x ${safeText(item.name,120)} - ${formatMoney(item.price*item.qty)}`);
   const note=safeText(orderNote?.value,240);
   const method=selectedPaymentMethod();
+  const schedule=schedulePayload();
   const paymentLabel=method.value==='pix'
     ? (pixState.approved?'Pix aprovado':'Pix aguardando confirmacao')
     : `${method.label} na entrega`;
@@ -1017,12 +1148,18 @@ function buildWhatsappMessage(){
     'Pedido:',
     ...lines,
     `Endereço: ${addressLine}`,
+    `Agendamento: ${schedule.mode==='scheduled'?schedule.label:'Assim que poss\u00edvel'}`,
     `Pagamento: ${paymentLabel}`,
     `Total: ${totalLine}`,
     note?`Obs: ${note}`:''
   ].filter(Boolean).join('\n');
 }
-document.querySelectorAll('.combo-variant-option').forEach(button=>button.addEventListener('click',()=>selectVariant(button)));
+document.addEventListener('click',event=>{
+  const button=event.target.closest('.combo-variant-option');
+  if(!button) return;
+  event.preventDefault();
+  selectVariant(button);
+});
 document.querySelectorAll('.add-to-order').forEach(button=>{
   button.addEventListener('click',()=>{const card=button.closest('.combo-card');if(card)addToOrder(card,button);});
 });
@@ -1043,8 +1180,8 @@ orderItems?.addEventListener('click',e=>{
   const id=button.closest('.order-item')?.dataset.id;
   const item=order.get(id);
   if(!item) return;
-  if(button.dataset.action==='increase'&&!isBusinessOpen()){
-    showClosedOrderNotice();
+  if(button.dataset.action==='increase'&&!canAcceptOrder()){
+    showBusinessToast(scheduleValidation().message);
     updatePixPayment();
     return;
   }
@@ -1079,6 +1216,14 @@ paymentInputs.forEach(input=>input.addEventListener('change',()=>{
   resetPixState();
   renderOrder();
 }));
+scheduleInputs.forEach(input=>input.addEventListener('change',()=>{
+  resetPixState();
+  renderOrder();
+}));
+[scheduleDate,scheduleTime].filter(Boolean).forEach(input=>input.addEventListener('change',()=>{
+  resetPixState();
+  renderOrder();
+}));
 pixCreate?.addEventListener('click',createPixCharge);
 pixCopy?.addEventListener('click',async()=>{
   const code=pixCode?.value||'';
@@ -1109,9 +1254,10 @@ orderClear?.addEventListener('click',()=>{
   if(window.matchMedia('(max-width:900px)').matches)setOrderOpen(false);
 });
 orderSend?.addEventListener('click',()=>{
-  if(!isBusinessOpen()){
+  const scheduleCheck=scheduleValidation();
+  if(!scheduleCheck.valid){
     setOrderOpen(true);
-    showClosedOrderNotice();
+    showBusinessToast(scheduleCheck.message);
     updatePixPayment();
     return;
   }
@@ -1142,6 +1288,7 @@ orderSend?.addEventListener('click',()=>{
   if(opened) opened.opener=null;
   if(!opened) window.location.assign(url);
 });
+setupScheduleControls();
 initSecurityConfig();
 renderOrder();
 

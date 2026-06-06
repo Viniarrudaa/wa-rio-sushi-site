@@ -36,6 +36,7 @@ const orderPersistenceEnabled=String(process.env.ORDER_STORE||'file').toLowerCas
 const orderStoreFile=path.resolve(__dirname,process.env.ORDER_STORE_FILE||path.join('data','orders.json'));
 const orderStoreTtlMs=Math.max(1,Number(process.env.ORDER_STORE_TTL_HOURS)||72)*60*60*1000;
 const businessHours={openHour:19,closeHour:23,openDays:[0,3,4,5,6],timeZone:'America/Sao_Paulo'};
+const scheduleLeadMinutes=30;
 let orderPersistTimer=null;
 
 loadOrderStore();
@@ -360,7 +361,7 @@ function deliveryFeeFor(neighborhood){
   return deliveryFeeByNeighborhood[normalized]??8;
 }
 
-function normalizeOrder(body){
+function normalizeOrder(body,schedule){
   const submittedAmount=normalizeAmount(body?.amount);
   const address={
     street:safeText(body?.address?.street,140),
@@ -394,7 +395,8 @@ function normalizeOrder(body){
     deliveryFee,
     customerName:safeText(body?.customerName,80)||'Cliente WA RIO',
     items,
-    address
+    address,
+    schedule
   };
 }
 
@@ -512,6 +514,47 @@ function closedOrderMessage(date=new Date()){
   return `Atendimento encerrado por hoje. ${schedule}`;
 }
 
+function scheduleDateObject(dateValue){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(dateValue||''))) return null;
+  const date=new Date(`${dateValue}T12:00:00-03:00`);
+  return Number.isNaN(date.getTime())?null:date;
+}
+
+function scheduleTimestamp(dateValue,timeValue){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(dateValue||''))||!/^\d{2}:\d{2}$/.test(String(timeValue||''))) return NaN;
+  return Date.parse(`${dateValue}T${timeValue}:00-03:00`);
+}
+
+function isBusinessTime(timeValue){
+  const match=String(timeValue||'').match(/^(\d{2}):(\d{2})$/);
+  if(!match) return false;
+  const minutes=Number(match[1])*60+Number(match[2]);
+  return Number.isFinite(minutes)&&minutes>=businessHours.openHour*60&&minutes<businessHours.closeHour*60;
+}
+
+function formatScheduleDate(dateValue){
+  const date=scheduleDateObject(dateValue);
+  if(!date) return '';
+  return new Intl.DateTimeFormat('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'}).format(date).replace('.','');
+}
+
+function normalizeSchedule(value){
+  const mode=safeText(value?.mode,40);
+  if(mode!=='scheduled') return {mode:'immediate',label:'Assim que possivel'};
+  const date=safeText(value?.date,10);
+  const time=safeText(value?.time,5);
+  const dateObject=scheduleDateObject(date);
+  const timestamp=scheduleTimestamp(date,time);
+  if(!dateObject||!isBusinessDay(dateObject)||!isBusinessTime(time)) return null;
+  if(!Number.isFinite(timestamp)||timestamp<Date.now()+scheduleLeadMinutes*60*1000) return null;
+  return {
+    mode:'scheduled',
+    date,
+    time,
+    label:`${formatScheduleDate(date)} as ${time}`
+  };
+}
+
 function buildWhatsappMessage(order){
   const addressParts=[
     `${order.address.street}, no ${order.address.number}`,
@@ -525,6 +568,7 @@ function buildWhatsappMessage(order){
     'Pedido:',
     ...order.items.map(item=>`- ${item.qty}x ${item.name} - ${formatMoney(item.total)}`),
     `Endereco: ${addressParts.join(' - ')}`,
+    `Agendamento: ${order.schedule?.mode==='scheduled'?order.schedule.label:'Assim que possivel'}`,
     'Pagamento: Pix aprovado',
     `Total: ${formatMoney(order.amount)}`,
     `Codigo do pagamento: ${order.mpOrderId||order.paymentId}`
@@ -532,14 +576,16 @@ function buildWhatsappMessage(order){
 }
 
 async function createPixOrder(req,res){
-  if(!isBusinessOpen()){
+  const body=await readJson(req);
+  const schedule=normalizeSchedule(body?.schedule);
+  if(!schedule) return sendJson(res,400,{error:'Agendamento invalido.'});
+  if(schedule.mode!=='scheduled'&&!isBusinessOpen()){
     return sendJson(res,409,{error:closedOrderMessage()});
   }
-  const body=await readJson(req);
   if(!await verifyTurnstileToken(body?.turnstileToken,req)){
     return sendJson(res,403,{error:'Confirme a verificacao anti-bot para gerar o Pix.'});
   }
-  const order=normalizeOrder(body);
+  const order=normalizeOrder(body,schedule);
   if(!order) return sendJson(res,400,{error:'Pedido invalido ou valor divergente.'});
   const mpOrder=await mercadoPago('/v1/orders',{
     method:'POST',
