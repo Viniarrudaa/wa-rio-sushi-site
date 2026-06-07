@@ -97,17 +97,17 @@ function setNavMenuOpen(open){
 navToggle?.addEventListener('click',()=>setNavMenuOpen(!navbar.classList.contains('is-menu-open')));
 document.querySelectorAll('a[href^="#"]').forEach(a=>{ a.addEventListener('click',e=>{ const href=a.getAttribute('href'); if(!href||href.length<2)return; const t=document.querySelector(href); if(t){e.preventDefault();setNavMenuOpen(false);t.scrollIntoView({behavior:'smooth'});} }); });
 document.addEventListener('click',e=>{if(navbar?.classList.contains('is-menu-open')&&!navbar.contains(e.target))setNavMenuOpen(false);});
-const seasonalCountdown=document.querySelector('[data-countdown="namorados"]');
+const namoradosCountdown=document.querySelector('[data-countdown="namorados"]');
 const namoradosCountdownEls={
   days:document.getElementById('namoradosDays'),
-  hours:document.getElementById('namoradosHours'),
-  minutes:document.getElementById('namoradosMinutes')
+  label:document.getElementById('namoradosCountdownLabel'),
+  timeLeft:document.getElementById('namoradosTimeLeft')
 };
 const namoradosStart=Date.parse('2026-06-12T00:00:00-03:00');
 const namoradosEnd=Date.parse('2026-06-13T00:00:00-03:00');
 function setCountdownValue(el,value){if(el) el.textContent=String(Math.max(0,value)).padStart(2,'0');}
 function updateNamoradosCountdown(){
-  if(!seasonalCountdown) return;
+  if(!namoradosCountdown) return;
   const now=Date.now();
   const isToday=now>=namoradosStart&&now<namoradosEnd;
   const target=isToday?namoradosEnd:namoradosStart;
@@ -115,13 +115,18 @@ function updateNamoradosCountdown(){
   const days=Math.floor(remaining/86400000);
   const hours=Math.floor((remaining%86400000)/3600000);
   const minutes=Math.floor((remaining%3600000)/60000);
+  namoradosCountdown.classList.toggle('is-today',isToday);
+  if(isToday){
+    if(namoradosCountdownEls.label) namoradosCountdownEls.label.textContent='Hoje';
+    if(namoradosCountdownEls.days) namoradosCountdownEls.days.textContent='12/06';
+    if(namoradosCountdownEls.timeLeft) namoradosCountdownEls.timeLeft.textContent='reserve';
+    namoradosCountdown.setAttribute('aria-label',`Hoje é Dia dos Namorados. Restam ${hours} horas e ${minutes} minutos para reservar.`);
+    return;
+  }
   setCountdownValue(namoradosCountdownEls.days,days);
-  setCountdownValue(namoradosCountdownEls.hours,hours);
-  setCountdownValue(namoradosCountdownEls.minutes,minutes);
-  seasonalCountdown.classList.toggle('is-today',isToday);
-  const label=seasonalCountdown.querySelector('.seasonal-countdown-label');
-  if(label) label.textContent=isToday?'Hoje':'Faltam';
-  seasonalCountdown.setAttribute('aria-label',isToday?`Hoje é Dia dos Namorados. Restam ${hours} horas e ${minutes} minutos para reservar.`:`Faltam ${days} dias, ${hours} horas e ${minutes} minutos para o Dia dos Namorados.`);
+  if(namoradosCountdownEls.label) namoradosCountdownEls.label.textContent='Faltam';
+  if(namoradosCountdownEls.timeLeft) namoradosCountdownEls.timeLeft.textContent=`${days===1?'dia':'dias'} e ${hours}h`;
+  namoradosCountdown.setAttribute('aria-label',`Faltam ${days} dias, ${hours} horas e ${minutes} minutos para o Dia dos Namorados.`);
 }
 updateNamoradosCountdown();
 window.setInterval(updateNamoradosCountdown,60000);
@@ -184,9 +189,9 @@ const menuProducts=[
   {id:'joe-joe',name:'Joe Joe',label:'Joe Joe',category:'joe',desc:'Peças cremosas e delicadas para adicionar um toque especial ao pedido.',variants:[{id:'1',label:'1 un',price:3},{id:'2',label:'2 un',price:5},{id:'4',label:'4 un',price:10}],meta:['Especial','Cremoso'],image:'joejoe_cardapio_optimized.jpg'}
 ];
 const promoProducts=[
-  {id:'promo-wa-rio-1',name:'Promo Combo WA RIO 1',label:'Promoção',category:'promocoes',badge:'Destaque',desc:'31 peças com filadélfia, hot, uramaki e peças especiais para dividir.',variants:[{id:'31',label:'31 peças',price:55.9}],meta:['Mais pedido','Para dividir'],image:'wario1_cardapio_optimized.jpg'},
-  {id:'promo-mix-joes',name:'Promo Mix Joes',label:'Promoção',category:'promocoes',badge:'Especial',desc:'12 peças autorais com joes, gunkans, tataki de salmão e geleias especiais.',variants:[{id:'12',label:'12 peças',price:35.9}],meta:['Autorais','Joes'],image:'mixdejoe_cardapio_optimized.jpg'},
-  {id:'promo-hot-20',name:'Promo Hot Filadélfia',label:'Promoção',category:'promocoes',badge:'Hot',desc:'20 unidades de hot filadélfia crocante para completar o pedido.',variants:[{id:'20',label:'20 un',price:23}],meta:['Crocante','Queridinho'],image:'Hot_roll_cardapio_optimized.jpg'}
+  {id:'promo-wa-rio-1',name:'Especial WA RIO 1',label:'Dia dos Namorados',category:'promocoes',badge:'Para casal',desc:'31 peças com filadélfia, hot, uramaki e peças especiais para dividir.',variants:[{id:'31',label:'31 peças',price:55.9}],meta:['Mais pedido','12/06'],image:'wario1_cardapio_optimized.jpg'},
+  {id:'promo-mix-joes',name:'Mix Joes Especial',label:'Dia dos Namorados',category:'promocoes',badge:'Autorais',desc:'12 peças autorais com joes, gunkans, tataki de salmão e geleias especiais.',variants:[{id:'12',label:'12 peças',price:35.9}],meta:['Joes','Especial'],image:'mixdejoe_cardapio_optimized.jpg'},
+  {id:'promo-hot-20',name:'Hot Filadélfia Especial',label:'Dia dos Namorados',category:'promocoes',badge:'Hot',desc:'20 unidades de hot filadélfia crocante para completar o pedido especial.',variants:[{id:'20',label:'20 un',price:23}],meta:['Crocante','Completar pedido'],image:'Hot_roll_cardapio_optimized.jpg'}
 ];
 function variantSummary(item){return `${safeText(item.name,120)}: ${item.variants.map(variant=>`${safeText(variant.label,40)} - ${formatMoney(variant.price)}`).join(', ')}`;}
 function variantButtons(item){
