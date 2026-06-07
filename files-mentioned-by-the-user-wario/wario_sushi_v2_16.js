@@ -1207,8 +1207,7 @@ function addToOrder(card,button){
   resetPixState();
   renderOrder();
   if(!isOpen){
-    setOrderOpen(true);
-    showBusinessToast('Item adicionado. Escolha o dia e hor\u00e1rio para agendar a entrega.');
+    showBusinessToast('Item adicionado. Toque em Ver pedido quando quiser escolher o agendamento.');
   }
   if(orderBar){
     orderBar.classList.add('is-pulsing');
