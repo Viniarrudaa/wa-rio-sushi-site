@@ -725,7 +725,7 @@ function canAutoCreatePixCharge(){
   return selectedPaymentMethod().value==='pix'
     &&orderQty()>0
     &&isTurnstileReady()
-    &&['idle','error'].includes(pixState.status)
+    &&pixState.status==='idle'
     &&!pixState.paymentId
     &&Boolean(pixOrderAmount())
     &&scheduleValidation().valid;

@@ -308,6 +308,9 @@ const productCatalog=new Map([
   ['combo-mix-joes-12',{name:'Combo Mix Joes (12 un)',price:35.9}],
   ['combo-wa-rio-1-31',{name:'Combo WA RIO 1 (31 un)',price:55.9}],
   ['combo-wa-rio-2-36',{name:'Combo WA RIO 2 (36 un)',price:76.9}],
+  ['promo-wa-rio-1-31',{name:'Especial WA RIO 1 (31 pecas)',price:55.9}],
+  ['promo-mix-joes-12',{name:'Mix Joes Especial (12 pecas)',price:35.9}],
+  ['promo-hot-20-20',{name:'Hot Filadelfia Especial (20 un)',price:23}],
   ['filadelfia-roll-10',{name:'Filadelfia Roll (10 un)',price:16.9}],
   ['filadelfia-roll-20',{name:'Filadelfia Roll (20 un)',price:23}],
   ['filadelfia-roll-30',{name:'Filadelfia Roll (30 un)',price:31}],
@@ -363,6 +366,7 @@ function deliveryFeeFor(neighborhood){
 }
 
 function normalizeOrder(body,schedule){
+  normalizeOrder.lastError='';
   const submittedAmount=normalizeAmount(body?.amount);
   const address={
     street:safeText(body?.address?.street,140),
@@ -371,21 +375,37 @@ function normalizeOrder(body,schedule){
     neighborhood:safeText(body?.address?.neighborhood,80),
     cep:safeText(body?.address?.cep,12)
   };
-  if(!address.street||!address.number||!address.neighborhood) return null;
+  if(!address.street||!address.number||!address.neighborhood){
+    normalizeOrder.lastError='Preencha endereco, numero e bairro antes de gerar o Pix.';
+    return null;
+  }
   const deliveryFee=deliveryFeeFor(address.neighborhood);
-  if(typeof deliveryFee!=='number') return null;
+  if(typeof deliveryFee!=='number'){
+    normalizeOrder.lastError='Esse bairro ainda nao esta em uma area atendida pelo delivery.';
+    return null;
+  }
   const submittedItems=Array.isArray(body?.items)?body.items.slice(0,30):[];
   const items=submittedItems.map(item=>{
     const id=safeText(item.id,80);
     const product=productCatalog.get(id);
-    if(!product) return null;
+    if(!product){
+      normalizeOrder.lastError='Um item do cardapio nao foi reconhecido. Atualize a pagina e tente novamente.';
+      return null;
+    }
     const qty=Math.max(1,Math.min(20,Number(item.qty)||1));
     return {id,name:product.name,qty,price:product.price,total:Math.round(product.price*qty*100)/100};
   });
-  if(!items.length||items.some(item=>!item)) return null;
+  if(!items.length){
+    normalizeOrder.lastError='Adicione pelo menos um item ao pedido antes de gerar o Pix.';
+    return null;
+  }
+  if(items.some(item=>!item)) return null;
   const subtotal=Math.round(items.reduce((sum,item)=>sum+item.total,0)*100)/100;
   const amount=Math.round((subtotal+deliveryFee)*100)/100;
-  if(!submittedAmount||Math.abs(submittedAmount-amount)>0.01) return null;
+  if(!submittedAmount||Math.abs(submittedAmount-amount)>0.01){
+    normalizeOrder.lastError='O total do pedido mudou. Atualize o carrinho e tente gerar o Pix novamente.';
+    return null;
+  }
   return {
     orderId:`WR-${Date.now()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`,
     orderToken:crypto.randomBytes(24).toString('hex'),
@@ -610,14 +630,32 @@ function formatScheduleDate(dateValue){
 }
 
 function normalizeSchedule(value){
+  normalizeSchedule.lastError='';
   const mode=safeText(value?.mode,40);
-  if(mode!=='scheduled') return null;
+  if(mode!=='scheduled'){
+    normalizeSchedule.lastError='Escolha data e horario para a entrega.';
+    return null;
+  }
   const date=safeText(value?.date,10);
   const time=safeText(value?.time,5);
   const dateObject=scheduleDateObject(date);
   const timestamp=scheduleTimestamp(date,time);
-  if(!dateObject||!isBusinessDay(dateObject)||!isBusinessTime(time)) return null;
-  if(!Number.isFinite(timestamp)||timestamp<Date.now()+scheduleLeadMinutes*60*1000) return null;
+  if(!dateObject){
+    normalizeSchedule.lastError='Escolha uma data valida para a entrega.';
+    return null;
+  }
+  if(!isBusinessDay(dateObject)){
+    normalizeSchedule.lastError='Escolha uma data de quarta a domingo.';
+    return null;
+  }
+  if(!isBusinessTime(time)){
+    normalizeSchedule.lastError='Escolha um horario entre 19h e 23h.';
+    return null;
+  }
+  if(!Number.isFinite(timestamp)||timestamp<Date.now()+scheduleLeadMinutes*60*1000){
+    normalizeSchedule.lastError=`Escolha um horario com pelo menos ${scheduleLeadMinutes} minutos de antecedencia.`;
+    return null;
+  }
   return {
     mode:'scheduled',
     date,
@@ -649,12 +687,20 @@ function buildWhatsappMessage(order){
 async function createPixOrder(req,res){
   const body=await readJson(req);
   const schedule=normalizeSchedule(body?.schedule);
-  if(!schedule) return sendJson(res,400,{error:'Agendamento invalido.'});
+  if(!schedule){
+    const error=normalizeSchedule.lastError||'Agendamento invalido.';
+    console.warn('Pix recusado por agendamento invalido:',error);
+    return sendJson(res,400,{error});
+  }
   if(!await verifyTurnstileToken(body?.turnstileToken,req)){
     return sendJson(res,403,{error:'Confirme a verificacao anti-bot para gerar o Pix.'});
   }
   const order=normalizeOrder(body,schedule);
-  if(!order) return sendJson(res,400,{error:'Pedido invalido ou valor divergente.'});
+  if(!order){
+    const error=normalizeOrder.lastError||'Pedido invalido ou valor divergente.';
+    console.warn('Pix recusado por pedido invalido:',error);
+    return sendJson(res,400,{error});
+  }
   const mpOrder=await mercadoPago('/v1/orders',{
     method:'POST',
     headers:{'X-Idempotency-Key':order.orderId},
