@@ -1002,9 +1002,14 @@ footer{background:linear-gradient(90deg,#240000 0%,#5E0000 45%,#7A0000 100%);bor
   .combo-variant-option strong{display:none;}
   .combo-meta,.combo-card.is-featured .combo-meta,.combo-list .combo-card:not(.is-featured) .combo-meta{display:none;}
   .combo-cta,.combo-card.is-featured .combo-cta,.combo-list .combo-card:not(.is-featured) .combo-cta{position:absolute;right:12px;bottom:12px;width:42px;min-width:42px;min-height:42px;padding:0;margin:0;border-radius:50%;font-size:0;letter-spacing:0;box-shadow:0 12px 24px rgba(122,0,0,.34),inset 0 1px 0 rgba(255,255,255,.14);}
+  .promo-card .promo-cta.combo-cta{position:relative;right:auto;bottom:auto;width:100%;min-width:0;min-height:36px;padding:0 12px;margin:0;border-radius:7px;font-size:7.7px;letter-spacing:.95px;gap:7px;}
   .combo-cta-plus{font-size:26px;font-weight:300;}
+  .promo-card .promo-cta .combo-cta-plus{position:relative;inset:auto;display:inline-flex;width:auto;height:auto;align-items:center;justify-content:center;font-size:14px;line-height:1;pointer-events:none;}
+  .promo-card .promo-cta .combo-cta-text{display:inline;position:relative;z-index:1;}
   .combo-cta-text{display:none;}
   .combo-cta.is-added::after{content:'OK';position:relative;z-index:1;font-family:var(--body-font);font-size:9px;font-weight:900;letter-spacing:.4px;}
+  .promo-card .promo-cta.is-added .combo-cta-plus{display:inline-flex;}
+  .promo-card .promo-cta.is-added::after{content:none;display:none;}
   body:not(.order-open) .order-bar.is-visible{left:16px;right:16px;bottom:14px;transform:translate(0,0);opacity:1;pointer-events:auto;width:auto;min-height:62px;border-radius:14px;padding:0 10px 0 16px;gap:10px;}
   .order-bar span{font-size:8px;letter-spacing:1.2px;}
   .order-bar strong{font-size:12px;}
@@ -1024,6 +1029,7 @@ footer{background:linear-gradient(90deg,#240000 0%,#5E0000 45%,#7A0000 100%);bor
   .combo-card-price,.combo-card.is-featured .combo-card-price,.combo-list .combo-card:not(.is-featured) .combo-card-price{font-size:17px;}
   .combo-variant-option,.combo-card.is-featured .combo-variant-option{min-height:26px;padding:0 7px;}
   .combo-cta,.combo-card.is-featured .combo-cta,.combo-list .combo-card:not(.is-featured) .combo-cta{right:10px;bottom:10px;width:40px;min-width:40px;min-height:40px;}
+  .promo-card .promo-cta.combo-cta{right:auto;bottom:auto;width:100%;min-width:0;min-height:36px;}
 }
 
 .combo-card-price,.combo-price,.combo-variant-option strong,.order-item-price,.order-total strong,.order-total-final strong{
@@ -1188,7 +1194,16 @@ footer{background:linear-gradient(90deg,#240000 0%,#5E0000 45%,#7A0000 100%);bor
     line-height:1;
     pointer-events:none;
   }
+  .promo-card .promo-cta .combo-cta-plus{
+    position:relative;
+    inset:auto;
+    display:inline-flex;
+    width:auto;
+    height:auto;
+    font-size:14px;
+  }
   .combo-cta.is-added .combo-cta-plus{display:none;}
+  .promo-card .promo-cta.is-added .combo-cta-plus{display:inline-flex;}
   .combo-card[data-has-variants="false"] .combo-variants{display:none;}
   .combo-cta.is-added::after{
     content:'OK';
@@ -1202,6 +1217,10 @@ footer{background:linear-gradient(90deg,#240000 0%,#5E0000 45%,#7A0000 100%);bor
     font-size:9px;
     font-weight:900;
     letter-spacing:.4px;
+  }
+  .promo-card .promo-cta.is-added::after{
+    content:none;
+    display:none;
   }
   .combo-cta.is-closed-notice::after{
     content:'!';
