@@ -416,7 +416,8 @@ const turnstileState={
   siteKey:'',
   token:'',
   widgetId:null,
-  scriptPromise:null
+  scriptPromise:null,
+  size:''
 };
 const pixState={
   paymentId:'',
@@ -695,6 +696,9 @@ function loadTurnstileScript(){
   });
   return turnstileState.scriptPromise;
 }
+function turnstileWidgetSize(){
+  return window.matchMedia('(max-width:420px)').matches?'compact':'flexible';
+}
 async function renderTurnstile(){
   if(!turnstileState.enabled||!turnstileBox||!turnstileWidget) return;
   turnstileBox.hidden=false;
@@ -702,9 +706,13 @@ async function renderTurnstile(){
   try{
     const turnstile=await loadTurnstileScript();
     if(turnstileState.widgetId!==null) return;
+    const widgetSize=turnstileWidgetSize();
+    turnstileState.size=widgetSize;
+    turnstileBox.classList.toggle('is-compact',widgetSize==='compact');
     turnstileState.widgetId=turnstile.render(turnstileWidget,{
       sitekey:turnstileState.siteKey,
       theme:'dark',
+      size:widgetSize,
       callback:token=>{
         turnstileState.token=String(token||'');
         setTurnstileStatus('ready','Verificacao concluida. Pix liberado para gerar.');
