@@ -97,6 +97,34 @@ function setNavMenuOpen(open){
 navToggle?.addEventListener('click',()=>setNavMenuOpen(!navbar.classList.contains('is-menu-open')));
 document.querySelectorAll('a[href^="#"]').forEach(a=>{ a.addEventListener('click',e=>{ const href=a.getAttribute('href'); if(!href||href.length<2)return; const t=document.querySelector(href); if(t){e.preventDefault();setNavMenuOpen(false);t.scrollIntoView({behavior:'smooth'});} }); });
 document.addEventListener('click',e=>{if(navbar?.classList.contains('is-menu-open')&&!navbar.contains(e.target))setNavMenuOpen(false);});
+const seasonalCountdown=document.querySelector('[data-countdown="namorados"]');
+const namoradosCountdownEls={
+  days:document.getElementById('namoradosDays'),
+  hours:document.getElementById('namoradosHours'),
+  minutes:document.getElementById('namoradosMinutes')
+};
+const namoradosStart=Date.parse('2026-06-12T00:00:00-03:00');
+const namoradosEnd=Date.parse('2026-06-13T00:00:00-03:00');
+function setCountdownValue(el,value){if(el) el.textContent=String(Math.max(0,value)).padStart(2,'0');}
+function updateNamoradosCountdown(){
+  if(!seasonalCountdown) return;
+  const now=Date.now();
+  const isToday=now>=namoradosStart&&now<namoradosEnd;
+  const target=isToday?namoradosEnd:namoradosStart;
+  const remaining=Math.max(0,target-now);
+  const days=Math.floor(remaining/86400000);
+  const hours=Math.floor((remaining%86400000)/3600000);
+  const minutes=Math.floor((remaining%3600000)/60000);
+  setCountdownValue(namoradosCountdownEls.days,days);
+  setCountdownValue(namoradosCountdownEls.hours,hours);
+  setCountdownValue(namoradosCountdownEls.minutes,minutes);
+  seasonalCountdown.classList.toggle('is-today',isToday);
+  const label=seasonalCountdown.querySelector('.seasonal-countdown-label');
+  if(label) label.textContent=isToday?'Hoje':'Faltam';
+  seasonalCountdown.setAttribute('aria-label',isToday?`Hoje é Dia dos Namorados. Restam ${hours} horas e ${minutes} minutos para reservar.`:`Faltam ${days} dias, ${hours} horas e ${minutes} minutos para o Dia dos Namorados.`);
+}
+updateNamoradosCountdown();
+window.setInterval(updateNamoradosCountdown,60000);
 const whatsappPhone='5521982225443';
 const moneyFormatter=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
 const formatMoney=value=>moneyFormatter.format(Number(value)||0);
