@@ -155,6 +155,11 @@ const menuProducts=[
   {id:'niguiri',name:'Sushi Niguiri',label:'Niguiri',category:'niguiri',desc:'Arroz temperado e salmão em corte delicado, servido em opções para completar a seleção.',variants:[{id:'1',label:'1 un',price:3},{id:'2',label:'2 un',price:5},{id:'4',label:'4 un',price:9}],meta:['Salmão','Clássico'],image:'sushinigiri_cardapio_optimized.jpg'},
   {id:'joe-joe',name:'Joe Joe',label:'Joe Joe',category:'joe',desc:'Peças cremosas e delicadas para adicionar um toque especial ao pedido.',variants:[{id:'1',label:'1 un',price:3},{id:'2',label:'2 un',price:5},{id:'4',label:'4 un',price:10}],meta:['Especial','Cremoso'],image:'joejoe_cardapio_optimized.jpg'}
 ];
+const promoProducts=[
+  {id:'promo-wa-rio-1',name:'Promo Combo WA RIO 1',label:'Promoção',category:'promocoes',badge:'Destaque',desc:'31 peças com filadélfia, hot, uramaki e peças especiais para dividir.',variants:[{id:'31',label:'31 peças',price:55.9}],meta:['Mais pedido','Para dividir'],image:'wario1_cardapio_optimized.jpg'},
+  {id:'promo-mix-joes',name:'Promo Mix Joes',label:'Promoção',category:'promocoes',badge:'Especial',desc:'12 peças autorais com joes, gunkans, tataki de salmão e geleias especiais.',variants:[{id:'12',label:'12 peças',price:35.9}],meta:['Autorais','Joes'],image:'mixdejoe_cardapio_optimized.jpg'},
+  {id:'promo-hot-20',name:'Promo Hot Filadélfia',label:'Promoção',category:'promocoes',badge:'Hot',desc:'20 unidades de hot filadélfia crocante para completar o pedido.',variants:[{id:'20',label:'20 un',price:23}],meta:['Crocante','Queridinho'],image:'Hot_roll_cardapio_optimized.jpg'}
+];
 function variantSummary(item){return `${safeText(item.name,120)}: ${item.variants.map(variant=>`${safeText(variant.label,40)} - ${formatMoney(variant.price)}`).join(', ')}`;}
 function variantButtons(item){
   return item.variants.map((variant,index)=>{
@@ -169,6 +174,37 @@ const comboGrid=document.getElementById('combosGrid');
 const comboFeature=document.getElementById('comboFeature');
 const comboList=document.getElementById('comboList');
 const comboVisibleCount=document.getElementById('comboVisibleCount');
+const promoList=document.getElementById('promoList');
+function renderPromotions(){
+  if(!promoList) return;
+  promoList.innerHTML=promoProducts.map(item=>{
+    const firstVariant=item.variants[0];
+    const firstPrice=Number(firstVariant.price)||0;
+    const itemName=escapeHtml(item.name);
+    const itemNameAttr=escapeAttr(item.name);
+    const itemLabelAttr=escapeAttr(item.label);
+    const variantId=escapeAttr(firstVariant.id);
+    const variantLabel=escapeHtml(firstVariant.label);
+    const variantLabelAttr=escapeAttr(firstVariant.label);
+    const imageSrc=escapeAttr(safeImageSrc(item.image));
+    const badge=item.badge?escapeHtml(item.badge):'';
+    return `
+      <article class="promo-card" data-id="${escapeAttr(item.id)}" data-name="${itemNameAttr}" data-label="${itemLabelAttr}" data-price="${firstPrice.toFixed(2)}" data-variant-id="${variantId}" data-variant-label="${variantLabelAttr}" data-has-variants="false" data-category="${escapeAttr(item.category)}">
+        <img src="${imageSrc}" alt="${itemNameAttr}" loading="lazy">
+        <div class="promo-body">
+          <span class="promo-badge">${badge}</span>
+          <div class="promo-name">${itemName}</div>
+          <p>${escapeHtml(item.desc)}</p>
+          <div class="promo-foot">
+            <span>${variantLabel}</span>
+            <strong>${formatMoney(firstPrice)}</strong>
+          </div>
+          <div class="promo-meta">${item.meta.map(meta=>`<span>${escapeHtml(meta)}</span>`).join('')}</div>
+          <button class="combo-cta promo-cta add-to-order" type="button" aria-pressed="false" aria-label="Adicionar ${itemNameAttr} ao pedido"><span class="combo-cta-plus" aria-hidden="true">+</span><span class="combo-cta-text">Adicionar</span></button>
+        </div>
+      </article>`;
+  }).join('');
+}
 function renderMenu(){
   const tabs=document.querySelector('.menu-tabs');
   if(tabs){
@@ -214,6 +250,7 @@ function renderMenu(){
     }).join('');
   }
 }
+renderPromotions();
 renderMenu();
 const comboCards=[...document.querySelectorAll('.combo-card')];
 function optionCount(total){return total===1?'1 opção':`${total} opções`;}
@@ -975,6 +1012,7 @@ function itemFromCard(card){
     productId:card.dataset.id,
     name:hasVariants?`${card.dataset.name} (${variantLabel})`:card.dataset.name,
     label:`${card.dataset.label||'Seleção WA RIO'} • ${variantLabel}`,
+    category:card.dataset.category||'cardapio',
     price,
     pieces:variantLabel,
     image:image?.currentSrc||image?.src||'',
@@ -1014,7 +1052,7 @@ function setAddButtonClosed(button){
 function updateOrderSelectionState(){
   const total=orderQty();
   orderBar?.classList.toggle('has-items',total>0);
-  document.querySelectorAll('.combo-card').forEach(card=>{
+  document.querySelectorAll('.combo-card,.promo-card').forEach(card=>{
     const button=card.querySelector('.add-to-order');
     if(!button) return;
     const item=itemFromCard(card);
@@ -1138,7 +1176,7 @@ function renderOrder(){
   window.requestAnimationFrame(updateOrderScrollCue);
 }
 function selectVariant(button){
-  const card=button.closest('.combo-card');
+  const card=button.closest('.combo-card,.promo-card');
   if(!card) return;
   card.querySelectorAll('.combo-variant-option').forEach(option=>option.classList.toggle('is-selected',option===button));
   card.dataset.price=button.dataset.variantPrice;
@@ -1237,7 +1275,7 @@ document.addEventListener('click',event=>{
   selectVariant(button);
 });
 document.querySelectorAll('.add-to-order').forEach(button=>{
-  button.addEventListener('click',()=>{const card=button.closest('.combo-card');if(card)addToOrder(card,button);});
+  button.addEventListener('click',()=>{const card=button.closest('.combo-card,.promo-card');if(card)addToOrder(card,button);});
 });
 document.querySelectorAll('a[href*="wa.me/5521982225443"]').forEach(link=>{
   link.addEventListener('click',()=>{
@@ -1393,4 +1431,4 @@ renderOrder();
 })();
 // scroll reveal
 const obs=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('is-revealed');obs.unobserve(e.target);}});},{threshold:0.1});
-document.querySelectorAll('.combo-card,.dep-card,.bf-content,.ps-card').forEach(el=>{el.classList.add('reveal-target');obs.observe(el);});
+document.querySelectorAll('.combo-card,.promo-card,.dep-card,.bf-content,.ps-card').forEach(el=>{el.classList.add('reveal-target');obs.observe(el);});
