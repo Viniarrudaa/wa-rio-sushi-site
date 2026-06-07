@@ -429,6 +429,7 @@ const addressHelp=document.getElementById('addressHelp');
 const addressInputs=[customerName,deliveryStreet,deliveryNumber,deliveryComplement,deliveryNeighborhood,deliveryReference].filter(Boolean);
 const scheduleFields=document.getElementById('scheduleFields');
 const scheduleDate=document.getElementById('scheduleDate');
+const scheduleDateDisplay=document.getElementById('scheduleDateDisplay');
 const scheduleTime=document.getElementById('scheduleTime');
 const scheduleStatus=document.getElementById('scheduleStatus');
 const deliveryState={status:'empty',cep:'',area:null};
@@ -590,6 +591,12 @@ function formatScheduleDate(dateValue){
   if(!date) return '';
   return new Intl.DateTimeFormat('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'}).format(date).replace('.', '');
 }
+function updateScheduleDateDisplay(){
+  if(!scheduleDateDisplay) return;
+  const formatted=formatScheduleDate(scheduleDate?.value);
+  scheduleDateDisplay.textContent=formatted?formatted.replace(/^./,char=>char.toUpperCase()):'Escolha a data';
+  scheduleDateDisplay.dataset.empty=formatted?'false':'true';
+}
 function findNextScheduleSlot(){
   const now=Date.now();
   const minTime=now+scheduleLeadMinutes*60_000;
@@ -612,6 +619,7 @@ function setupScheduleControls(){
       scheduleDate.value=next.date;
       if(scheduleTime) scheduleTime.dataset.defaultTime=next.time;
     }
+    updateScheduleDateDisplay();
   }
   if(scheduleTime&&!scheduleTime.options.length){
     scheduleTime.innerHTML=scheduleTimes().map(time=>`<option value="${time}">${time}</option>`).join('');
@@ -1382,8 +1390,10 @@ paymentInputs.forEach(input=>input.addEventListener('change',()=>{
   sendAnalyticsEvent('payment_method_selected',{payment_method:selectedPaymentMethod().value,cart_items:orderQty(),value:orderGrandTotal()});
   renderOrder();
 }));
+scheduleDate?.addEventListener('input',updateScheduleDateDisplay);
 [scheduleDate,scheduleTime].filter(Boolean).forEach(input=>input.addEventListener('change',()=>{
   resetPixState();
+  if(input===scheduleDate) updateScheduleDateDisplay();
   const schedule=schedulePayload();
   sendAnalyticsEvent('schedule_selected',{date:schedule.date,time:schedule.time,label:schedule.label,cart_items:orderQty(),value:orderGrandTotal()});
   renderOrder();
