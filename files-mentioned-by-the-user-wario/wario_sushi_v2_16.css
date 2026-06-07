@@ -461,12 +461,14 @@ mix-blend-mode:screen;opacity:.68;}
 .insta-item:hover .insta-overlay{opacity:1;}
 
 /* AREAS ATENDIDAS */
-.delivery-areas{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.35fr);gap:44px;align-items:center;padding:84px 60px;background:linear-gradient(135deg,#070504 0%,#030303 58%,#100706 100%);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
-.delivery-areas-copy{max-width:470px;}
+.delivery-areas{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.45fr);gap:54px;align-items:center;padding:88px 60px;background:linear-gradient(135deg,#070504 0%,#030303 58%,#100706 100%);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.delivery-areas-copy{max-width:500px;}
 .delivery-areas-copy .sec-title{margin-bottom:16px;}
 .delivery-areas-copy p{font-family:var(--body-font);font-size:14px;line-height:1.85;color:rgba(210,191,176,.74);font-weight:300;}
-.delivery-area-list{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;}
-.delivery-area-list span{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:0 15px;border:1px solid rgba(212,168,67,.18);border-radius:999px;background:rgba(255,255,255,.035);font-family:var(--body-font);font-size:10px;font-weight:850;letter-spacing:1.15px;text-transform:uppercase;color:rgba(245,235,222,.76);box-shadow:inset 0 1px 0 rgba(255,255,255,.035);}
+.delivery-area-list{display:grid;grid-template-columns:repeat(3,minmax(145px,1fr));gap:12px;width:min(100%,730px);justify-self:end;}
+.delivery-area-list span{position:relative;display:flex;align-items:center;justify-content:flex-start;min-height:48px;padding:12px 16px 12px 38px;border:1px solid rgba(212,168,67,.16);border-radius:8px;background:linear-gradient(135deg,rgba(255,255,255,.055),rgba(255,255,255,.018));font-family:var(--body-font);font-size:13px;font-weight:650;line-height:1.25;letter-spacing:0;text-transform:none;color:rgba(245,235,222,.86);box-shadow:0 16px 34px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.05);}
+.delivery-area-list span::before{content:'';position:absolute;left:16px;top:50%;width:7px;height:7px;border-radius:50%;background:var(--gold-light);box-shadow:0 0 0 4px rgba(230,176,64,.09);transform:translateY(-50%);}
+.delivery-area-list span:first-child{border-color:rgba(230,176,64,.28);background:linear-gradient(135deg,rgba(200,146,42,.12),rgba(255,255,255,.026));color:#fff;}
 
 /* WHATSAPP */
 .whatsapp-section{padding:96px 60px;text-align:center;background:#000;position:relative;overflow:hidden;}
@@ -731,8 +733,9 @@ footer{background:linear-gradient(90deg,#240000 0%,#5E0000 45%,#7A0000 100%);bor
   .delivery-areas{grid-template-columns:1fr;gap:24px;padding:52px 24px;text-align:center;}
   .delivery-areas-copy{max-width:360px;margin:0 auto;}
   .delivery-areas-copy p{font-size:12.5px;line-height:1.7;}
-  .delivery-area-list{justify-content:center;gap:8px;}
-  .delivery-area-list span{min-height:34px;padding:0 12px;font-size:8.4px;letter-spacing:.9px;}
+  .delivery-area-list{grid-template-columns:repeat(2,minmax(0,1fr));justify-self:center;width:100%;max-width:430px;gap:8px;}
+  .delivery-area-list span{min-height:40px;padding:9px 10px 9px 30px;border-radius:7px;font-size:11px;font-weight:650;line-height:1.25;text-align:left;}
+  .delivery-area-list span::before{left:12px;width:5px;height:5px;box-shadow:0 0 0 3px rgba(230,176,64,.08);}
   .order-legal-note{font-size:10px;line-height:1.55;}
   .legal-header{padding:0 22px;min-height:72px;}
   .legal-logo img{height:52px;}
