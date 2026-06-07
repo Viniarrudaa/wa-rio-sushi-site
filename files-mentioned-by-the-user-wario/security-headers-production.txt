@@ -2,7 +2,7 @@
 # O arquivo HTML ja inclui uma CSP por meta tag, mas estes headers no servidor
 # sao mais fortes e cobrem diretivas que o navegador ignora quando vêm via meta.
 
-Content-Security-Policy: default-src 'self'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-Pdwf9f7BmDWe4dD63iUff1TmwlLIN74NdCoz221f/fw=' https://challenges.cloudflare.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://viacep.com.br https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; frame-ancestors 'none'; form-action 'none'; upgrade-insecure-requests
+Content-Security-Policy: default-src 'self'; base-uri 'none'; object-src 'none'; script-src 'self' 'sha256-Pdwf9f7BmDWe4dD63iUff1TmwlLIN74NdCoz221f/fw=' https://challenges.cloudflare.com https://www.googletagmanager.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://www.google-analytics.com https://www.googletagmanager.com; connect-src 'self' https://viacep.com.br https://challenges.cloudflare.com https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com; frame-src https://challenges.cloudflare.com; frame-ancestors 'none'; form-action 'none'; upgrade-insecure-requests
 Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
 X-Content-Type-Options: nosniff
 X-Frame-Options: DENY

@@ -1,6 +1,50 @@
 const navbar = document.getElementById('navbar');
 const navToggle=document.getElementById('navToggle');
 const navLinks=[...document.querySelectorAll('#navbarMenu a[href^="#"]')];
+const analyticsState={measurementId:'',ready:false,loaded:false,queue:[]};
+function normalizeAnalyticsValue(value){
+  if(typeof value==='number'&&Number.isFinite(value)) return Math.round(value*100)/100;
+  if(typeof value==='boolean'||value==null) return value;
+  return safeText(value,120);
+}
+function analyticsPayload(params={}){
+  return Object.fromEntries(Object.entries(params).map(([key,value])=>[key,normalizeAnalyticsValue(value)]).filter(([,value])=>value!==''&&value!==undefined&&value!==null));
+}
+function sendAnalyticsEvent(name,params={}){
+  const eventName=safeText(name,40);
+  if(!eventName) return;
+  const payload=analyticsPayload(params);
+  if(!analyticsState.ready||typeof window.gtag!=='function'){
+    analyticsState.queue.push([eventName,payload]);
+    analyticsState.queue=analyticsState.queue.slice(-25);
+    return;
+  }
+  window.gtag('event',eventName,payload);
+}
+function flushAnalyticsQueue(){
+  if(!analyticsState.ready||typeof window.gtag!=='function') return;
+  const queue=analyticsState.queue.splice(0);
+  queue.forEach(([name,params])=>window.gtag('event',name,params));
+}
+function loadAnalytics(measurementId){
+  const id=safeText(measurementId,32).toUpperCase();
+  if(analyticsState.loaded||!/^G-[A-Z0-9]+$/.test(id)) return;
+  analyticsState.loaded=true;
+  analyticsState.measurementId=id;
+  window.dataLayer=window.dataLayer||[];
+  window.gtag=function(){window.dataLayer.push(arguments);};
+  window.gtag('js',new Date());
+  window.gtag('config',id,{send_page_view:true});
+  const script=document.createElement('script');
+  script.async=true;
+  script.src=`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(id)}`;
+  script.onload=()=>{
+    analyticsState.ready=true;
+    flushAnalyticsQueue();
+  };
+  script.onerror=()=>{analyticsState.loaded=false;};
+  document.head.appendChild(script);
+}
 const navSections=[...new Set(navLinks.map(link=>link.getAttribute('href')).filter(href=>href&&href.length>1))]
   .map(href=>document.querySelector(href))
   .filter(Boolean);
@@ -658,6 +702,7 @@ async function initSecurityConfig(){
     const response=await fetch(pixApi.security,{headers:{Accept:'application/json'}});
     if(!response.ok) return;
     const data=await response.json();
+    if(data.gaMeasurementId) loadAnalytics(data.gaMeasurementId);
     if(!data.turnstileEnabled||!data.turnstileSiteKey) return;
     turnstileState.enabled=true;
     turnstileState.siteKey=String(data.turnstileSiteKey);
@@ -778,10 +823,14 @@ async function checkPixStatus(){
     const response=await fetch(`${pixApi.status(pixState.paymentId)}?token=${encodeURIComponent(pixState.orderToken)}`,{headers:{Accept:'application/json'}});
     if(!response.ok) throw new Error('Falha ao consultar Pix');
     const data=await response.json();
+    const wasApproved=pixState.approved;
     pixState.status=data.status||pixState.status;
     pixState.approved=data.status==='approved';
     if(data.whatsappMessage) pixState.whatsappMessage=String(data.whatsappMessage);
-    if(pixState.approved) stopPixPolling();
+    if(pixState.approved){
+      if(!wasApproved) sendAnalyticsEvent('pix_approved',{payment_id:pixState.paymentId,value:orderGrandTotal(),cart_items:orderQty()});
+      stopPixPolling();
+    }
     renderOrder();
   }catch(error){
     pixState.status='error';
@@ -807,6 +856,7 @@ async function createPixCharge(){
   }
   pixState.status='creating';
   pixState.approved=false;
+  sendAnalyticsEvent('start_pix',{value:amount,cart_items:orderQty(),payment_method:'pix'});
   updatePixPayment();
   try{
     const response=await fetch(pixApi.create,{
@@ -822,6 +872,8 @@ async function createPixCharge(){
     pixState.approved=data.status==='approved';
     pixState.qrCode=String(data.qrCode||'');
     pixState.qrCodeBase64=String(data.qrCodeBase64||'');
+    sendAnalyticsEvent('pix_created',{payment_id:pixState.paymentId,status:pixState.status,value:amount,cart_items:orderQty()});
+    if(pixState.approved) sendAnalyticsEvent('pix_approved',{payment_id:pixState.paymentId,value:amount,cart_items:orderQty()});
     resetTurnstileToken(false);
     if(!pixState.approved) startPixPolling();
     renderOrder();
@@ -858,6 +910,7 @@ function startManualAddress(){
   resetPixState();
   if(deliveryCep) deliveryCep.value='';
   updateDeliveryStatus('manual','Tudo bem. Preencha o endereço completo e a equipe confirma a entrega no WhatsApp.');
+  sendAnalyticsEvent('manual_address_started',{cart_items:orderQty(),value:orderGrandTotal()});
   if(deliveryNeighborhood&&!deliveryNeighborhood.value.trim()) deliveryNeighborhood.focus();
   if(deliveryStreet&&!deliveryStreet.value.trim()) deliveryStreet.focus();
   renderOrder();
@@ -867,6 +920,7 @@ async function verifyDeliveryCep(){
   const digits=normalizeCep(cep);
   if(digits.length!==8){
     updateDeliveryStatus('invalid','Digite o CEP no formato 00000-000.');
+    sendAnalyticsEvent('delivery_area_checked',{status:'invalid_cep'});
     renderOrder();
     return false;
   }
@@ -878,6 +932,7 @@ async function verifyDeliveryCep(){
     const data=await response.json();
     if(data.erro||!data.bairro){
       updateDeliveryStatus('invalid','Não encontramos esse CEP. Confira e tente novamente.');
+      sendAnalyticsEvent('delivery_area_checked',{status:'not_found',cep_prefix:digits.slice(0,5)});
       renderOrder();
       return false;
     }
@@ -892,14 +947,17 @@ async function verifyDeliveryCep(){
         deliveryNeighborhood.dataset.autofilled='true';
       }
       updateDeliveryStatus('served','Entregamos na sua região!',area);
+      sendAnalyticsEvent('delivery_area_checked',{status:'served',neighborhood:area.name,city:area.city,cep_prefix:digits.slice(0,5),fee:currentDeliveryFee()});
       renderOrder();
       return true;
     }
     updateDeliveryStatus('blocked','Infelizmente ainda não entregamos nesse endereço.',area);
+    sendAnalyticsEvent('unsupported_neighborhood',{neighborhood:area.name,city:area.city,cep_prefix:digits.slice(0,5)});
     renderOrder();
     return false;
   }catch(error){
     updateDeliveryStatus('invalid','Não foi possível validar o CEP agora. Tente novamente em instantes.');
+    sendAnalyticsEvent('delivery_area_checked',{status:'cep_lookup_error',cep_prefix:digits.slice(0,5)});
     renderOrder();
     return false;
   }
@@ -970,8 +1028,12 @@ function updateOrderSelectionState(){
   });
 }
 function setOrderOpen(open){
+  const wasOpen=document.body.classList.contains('order-open');
   document.body.classList.toggle('order-open',open);
   orderDrawer?.setAttribute('aria-hidden',open?'false':'true');
+  if(open&&!wasOpen){
+    sendAnalyticsEvent('open_cart',{items:orderQty(),value:orderGrandTotal(),payment_method:selectedPaymentMethod().value});
+  }
   window.requestAnimationFrame(updateOrderScrollCue);
 }
 function updateOrderScrollCue(){
@@ -1094,6 +1156,16 @@ function addToOrder(card,button){
   const item=itemFromCard(card);
   const current=order.get(item.id);
   order.set(item.id,{...item,qty:current?current.qty+1:1});
+  sendAnalyticsEvent('add_to_order',{
+    item_id:item.id,
+    item_name:item.name,
+    item_category:item.category,
+    item_variant:item.label,
+    price:item.price,
+    quantity:current?current.qty+1:1,
+    cart_items:orderQty(),
+    value:orderGrandTotal()
+  });
   resetPixState();
   renderOrder();
   if(!isOpen){
@@ -1170,6 +1242,12 @@ document.querySelectorAll('.add-to-order').forEach(button=>{
 document.querySelectorAll('a[href*="wa.me/5521982225443"]').forEach(link=>{
   link.addEventListener('click',()=>{
     setNavMenuOpen(false);
+    sendAnalyticsEvent('click_whatsapp',{
+      source:link.classList.contains('btn-buffet')?'buffet':link.classList.contains('btn-whatsapp')?'whatsapp_section':link.classList.contains('whatsapp-float')?'floating_button':link.classList.contains('nav-cta')?'nav':'site_link',
+      cart_items:orderQty(),
+      value:orderGrandTotal(),
+      payment_method:selectedPaymentMethod().value
+    });
     if(!isBusinessOpen()&&!link.classList.contains('btn-buffet')){
       showBusinessToast(closedOrderMessage());
     }
@@ -1192,9 +1270,11 @@ orderItems?.addEventListener('click',e=>{
     updatePixPayment();
     return;
   }
-  if(button.dataset.action==='increase') item.qty+=1;
-  if(button.dataset.action==='decrease') item.qty-=1;
-  if(button.dataset.action==='remove'||item.qty<=0) order.delete(id);
+  const action=button.dataset.action;
+  if(action==='increase') item.qty+=1;
+  if(action==='decrease') item.qty-=1;
+  if(action==='remove'||item.qty<=0) order.delete(id);
+  sendAnalyticsEvent('cart_item_changed',{action,item_id:id,item_name:item.name,quantity:Math.max(0,item.qty),cart_items:orderQty(),value:orderGrandTotal()});
   resetPixState();
   renderOrder();
 });
@@ -1221,10 +1301,13 @@ addressInputs.forEach(input=>{
 });
 paymentInputs.forEach(input=>input.addEventListener('change',()=>{
   resetPixState();
+  sendAnalyticsEvent('payment_method_selected',{payment_method:selectedPaymentMethod().value,cart_items:orderQty(),value:orderGrandTotal()});
   renderOrder();
 }));
 [scheduleDate,scheduleTime].filter(Boolean).forEach(input=>input.addEventListener('change',()=>{
   resetPixState();
+  const schedule=schedulePayload();
+  sendAnalyticsEvent('schedule_selected',{date:schedule.date,time:schedule.time,label:schedule.label,cart_items:orderQty(),value:orderGrandTotal()});
   renderOrder();
 }));
 pixCreate?.addEventListener('click',createPixCharge);
@@ -1233,6 +1316,7 @@ pixCopy?.addEventListener('click',async()=>{
   if(!code) return;
   try{
     await navigator.clipboard.writeText(code);
+    sendAnalyticsEvent('pix_code_copied',{payment_id:pixState.paymentId,value:orderGrandTotal(),cart_items:orderQty()});
     if(pixStatus){
       pixStatus.className='pix-status is-ready';
       pixStatus.textContent='Código Pix copiado. Agora é só colar no app do banco.';
@@ -1247,6 +1331,7 @@ pixCopy?.addEventListener('click',async()=>{
   }
 });
 orderClear?.addEventListener('click',()=>{
+  sendAnalyticsEvent('clear_cart',{cart_items:orderQty(),value:orderGrandTotal()});
   order.clear();
   orderNote.value='';
   resetPixState();
@@ -1285,6 +1370,7 @@ orderSend?.addEventListener('click',()=>{
   const now=Date.now();
   if(now-lastOrderSendAt<orderSendCooldownMs) return;
   lastOrderSendAt=now;
+  sendAnalyticsEvent('send_order_whatsapp',{cart_items:orderQty(),value:orderGrandTotal(),payment_method:selectedPaymentMethod().value,pix_approved:pixState.approved});
   const message=requiresPixApproval()&&pixState.whatsappMessage?pixState.whatsappMessage:buildWhatsappMessage();
   const url=`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message)}`;
   const opened=window.open(url,'_blank','noopener,noreferrer');

@@ -26,11 +26,13 @@ TURNSTILE_SECRET_KEY=SUA_SECRET_KEY
 ORDER_STORE=file
 ORDER_STORE_FILE=/data/orders.json
 ORDER_STORE_TTL_HOURS=72
+GA_MEASUREMENT_ID=G-SEU_ID_DO_GA4
 ```
 
 5. Crie um Volume no Railway e monte em `/data`.
    - Sem volume, o arquivo de pedidos pode ser perdido em redeploy/restart.
    - Para comecar com mais seguranca, use o volume.
+6. Em Google Analytics 4, crie um fluxo Web para o dominio e copie o ID iniciado por `G-` para `GA_MEASUREMENT_ID`.
 
 ## 2. Cloudflare
 

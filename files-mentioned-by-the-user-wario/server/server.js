@@ -30,6 +30,7 @@ const requestLog=new Map();
 const trustProxy=String(process.env.TRUST_PROXY||'').toLowerCase()==='true';
 const turnstileSiteKey=process.env.TURNSTILE_SITE_KEY||'';
 const turnstileSecretKey=process.env.TURNSTILE_SECRET_KEY||'';
+const gaMeasurementId=String(process.env.GA_MEASUREMENT_ID||'').trim();
 const turnstileRequired=String(process.env.TURNSTILE_REQUIRED||'').toLowerCase()==='true'||(isProduction&&Boolean(turnstileSiteKey&&turnstileSecretKey));
 const turnstileEnabled=Boolean(turnstileSiteKey&&turnstileSecretKey&&turnstileRequired);
 const orderPersistenceEnabled=String(process.env.ORDER_STORE||'file').toLowerCase()!=='memory';
@@ -140,11 +141,11 @@ function setSecurityHeaders(req,res){
     "default-src 'self'",
     "base-uri 'none'",
     "object-src 'none'",
-    "script-src 'self' 'sha256-Pdwf9f7BmDWe4dD63iUff1TmwlLIN74NdCoz221f/fw=' https://challenges.cloudflare.com",
+    "script-src 'self' 'sha256-Pdwf9f7BmDWe4dD63iUff1TmwlLIN74NdCoz221f/fw=' https://challenges.cloudflare.com https://www.googletagmanager.com",
     "style-src 'self' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
-    "img-src 'self' data:",
-    "connect-src 'self' https://viacep.com.br https://challenges.cloudflare.com",
+    "img-src 'self' data: https://www.google-analytics.com https://www.googletagmanager.com",
+    "connect-src 'self' https://viacep.com.br https://challenges.cloudflare.com https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com",
     "frame-src https://challenges.cloudflare.com",
     "frame-ancestors 'none'",
     "form-action 'none'",
@@ -232,7 +233,8 @@ function hasJsonContentType(req){
 function securityConfig(){
   return {
     turnstileEnabled,
-    turnstileSiteKey:turnstileEnabled?turnstileSiteKey:''
+    turnstileSiteKey:turnstileEnabled?turnstileSiteKey:'',
+    gaMeasurementId:/^G-[A-Z0-9]+$/i.test(gaMeasurementId)?gaMeasurementId:''
   };
 }
 
