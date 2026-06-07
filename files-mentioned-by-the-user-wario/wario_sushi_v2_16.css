@@ -77,6 +77,16 @@ nav.is-menu-open .nav-toggle span:nth-child(1){width:18px;transform:translateY(6
 nav.is-menu-open .nav-toggle span:nth-child(2){opacity:0;width:6px;}
 nav.is-menu-open .nav-toggle span:nth-child(3){width:18px;transform:translateY(-6px) rotate(-45deg);}
 
+/* SEASONAL BANNER */
+.seasonal-banner{position:relative;z-index:90;display:flex;align-items:center;justify-content:space-between;gap:22px;min-height:74px;margin-top:76px;padding:12px 60px;border-bottom:1px solid rgba(230,176,64,.18);background:linear-gradient(90deg,#120706 0%,#3b0807 42%,#0a0605 100%);box-shadow:0 16px 42px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.045);overflow:hidden;}
+.seasonal-banner::before{content:'';position:absolute;left:60px;right:60px;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(230,176,64,.62),rgba(214,50,40,.34),transparent);}
+.seasonal-banner-copy{position:relative;z-index:1;display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:center;gap:11px 16px;min-width:0;}
+.seasonal-kicker{display:inline-flex;align-items:center;justify-content:center;min-height:28px;padding:0 10px;border:1px solid rgba(230,176,64,.28);border-radius:999px;background:rgba(230,176,64,.075);font-family:var(--body-font);font-size:8px;font-weight:900;letter-spacing:1.35px;text-transform:uppercase;color:var(--gold-light);white-space:nowrap;}
+.seasonal-banner strong{font-family:var(--body-font);font-size:18px;font-weight:850;line-height:1.1;color:#fff;letter-spacing:0;white-space:nowrap;}
+.seasonal-banner p{min-width:0;font-family:var(--body-font);font-size:12px;font-weight:500;line-height:1.55;color:rgba(245,235,222,.70);}
+.seasonal-cta{position:relative;z-index:1;display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 16px;border:1px solid rgba(255,216,126,.34);border-radius:8px;background:linear-gradient(135deg,#e5b542 0%,#c8922a 50%,#9f7418 100%);box-shadow:0 12px 28px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.22);color:#160b04;font-family:var(--body-font);font-size:9px;font-weight:900;letter-spacing:1.25px;text-transform:uppercase;text-decoration:none;white-space:nowrap;transition:transform .24s ease,box-shadow .24s ease,filter .24s ease;}
+.seasonal-cta:hover{transform:translateY(-1px);filter:brightness(1.04);box-shadow:0 16px 34px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.26);}
+
 /* HERO */
 .hero{min-height:100vh;position:relative;overflow:hidden;display:flex;align-items:center;background:#050505;padding:120px 60px 80px;}
 .hero-content{position:relative;z-index:3;width:38%;max-width:480px;animation:fadeUp 0.9s ease both;}
@@ -547,6 +557,12 @@ footer{background:linear-gradient(90deg,#240000 0%,#5E0000 45%,#7A0000 100%);bor
   .business-toast{top:76px;width:calc(100% - 24px);min-height:48px;padding:12px 14px;font-size:11.5px;border-radius:10px;}
   nav{padding:0 20px;}
   nav ul{display:none;}
+  .seasonal-banner{margin-top:74px;padding:14px 20px;align-items:flex-start;flex-direction:column;gap:12px;}
+  .seasonal-banner::before{left:20px;right:20px;}
+  .seasonal-banner-copy{grid-template-columns:1fr;gap:6px;}
+  .seasonal-banner strong{font-size:17px;white-space:normal;}
+  .seasonal-banner p{font-size:11.5px;line-height:1.55;max-width:430px;}
+  .seasonal-cta{width:min(100%,330px);min-height:42px;}
   .hero{padding:100px 24px 60px;}
   .hero-image{width:100%;opacity:0.18;}
   .hero-content{width:100%;}
@@ -573,6 +589,11 @@ footer{background:linear-gradient(90deg,#240000 0%,#5E0000 45%,#7A0000 100%);bor
 }
 @media(max-width:600px){
   .footer-top{grid-template-columns:1fr;}
+  .seasonal-banner{padding:13px 18px;}
+  .seasonal-kicker{min-height:26px;font-size:7.4px;}
+  .seasonal-banner strong{font-size:16px;}
+  .seasonal-banner p{font-size:11px;}
+  .seasonal-cta{width:100%;font-size:8.2px;letter-spacing:1.05px;}
   .bf-stat{flex:0 0 100%;}
 }
 

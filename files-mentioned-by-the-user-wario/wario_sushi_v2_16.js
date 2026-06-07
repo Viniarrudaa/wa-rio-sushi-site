@@ -1288,7 +1288,7 @@ document.querySelectorAll('a[href*="wa.me/5521982225443"]').forEach(link=>{
   link.addEventListener('click',()=>{
     setNavMenuOpen(false);
     sendAnalyticsEvent('click_whatsapp',{
-      source:link.classList.contains('btn-buffet')?'buffet':link.classList.contains('btn-whatsapp')?'whatsapp_section':link.classList.contains('whatsapp-float')?'floating_button':link.classList.contains('nav-cta')?'nav':'site_link',
+      source:link.classList.contains('btn-buffet')?'buffet':link.classList.contains('btn-whatsapp')?'whatsapp_section':link.classList.contains('whatsapp-float')?'floating_button':link.classList.contains('nav-cta')?'nav':link.classList.contains('seasonal-cta')?'namorados_banner':'site_link',
       cart_items:orderQty(),
       value:orderGrandTotal(),
       payment_method:selectedPaymentMethod().value
