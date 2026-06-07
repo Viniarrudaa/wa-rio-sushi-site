@@ -433,8 +433,20 @@ async function mercadoPago(pathname,options={}){
   return data;
 }
 
+function firstNonEmpty(...values){
+  for(const value of values){
+    if(value!==undefined&&value!==null&&String(value).trim()) return String(value);
+  }
+  return '';
+}
+
 function orderPayment(mpOrder){
-  return mpOrder?.transactions?.payments?.[0]||{};
+  const payments=[
+    ...(Array.isArray(mpOrder?.transactions?.payments)?mpOrder.transactions.payments:[]),
+    ...(Array.isArray(mpOrder?.transaction?.payments)?mpOrder.transaction.payments:[]),
+    ...(Array.isArray(mpOrder?.payments)?mpOrder.payments:[])
+  ];
+  return payments[0]||{};
 }
 
 function normalizedOrderStatus(mpOrder){
@@ -449,15 +461,18 @@ function normalizedOrderStatus(mpOrder){
 function pixResponse(mpOrder,order){
   const payment=orderPayment(mpOrder);
   const paymentMethod=payment.payment_method||{};
+  const qrCode=firstNonEmpty(paymentMethod.qr_code,payment.qr_code,mpOrder.qr_code,mpOrder.qr_data);
+  const qrCodeBase64=firstNonEmpty(paymentMethod.qr_code_base64,payment.qr_code_base64,mpOrder.qr_code_base64);
+  const ticketUrl=firstNonEmpty(paymentMethod.ticket_url,payment.ticket_url,mpOrder.ticket_url);
   return {
     orderId:order.orderId,
     orderToken:order.orderToken,
     paymentId:String(mpOrder.id),
     status:normalizedOrderStatus(mpOrder),
     statusDetail:payment.status_detail||mpOrder.status_detail||'',
-    qrCode:paymentMethod.qr_code||'',
-    qrCodeBase64:paymentMethod.qr_code_base64||'',
-    ticketUrl:paymentMethod.ticket_url||''
+    qrCode,
+    qrCodeBase64,
+    ticketUrl
   };
 }
 
@@ -609,9 +624,17 @@ async function createPixOrder(req,res){
       }
     })
   });
-  orders.set(String(mpOrder.id),{...order,mpOrderId:String(mpOrder.id),status:normalizedOrderStatus(mpOrder)});
+  const responseBody=pixResponse(mpOrder,order);
+  if(!responseBody.qrCode&&!responseBody.ticketUrl){
+    console.warn('Mercado Pago retornou Pix sem QR/copia-e-cola.',{
+      paymentId:responseBody.paymentId,
+      status:responseBody.status,
+      statusDetail:responseBody.statusDetail
+    });
+  }
+  orders.set(String(mpOrder.id),{...order,mpOrderId:String(mpOrder.id),status:responseBody.status});
   scheduleOrderPersist();
-  return sendJson(res,200,pixResponse(mpOrder,order));
+  return sendJson(res,200,responseBody);
 }
 
 async function getPixStatus(req,res,paymentId,url){

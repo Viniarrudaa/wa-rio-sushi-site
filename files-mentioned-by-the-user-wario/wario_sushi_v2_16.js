@@ -411,6 +411,8 @@ const pixCode=document.getElementById('pixCode');
 const pixCreate=document.getElementById('pixCreate');
 const pixCopy=document.getElementById('pixCopy');
 const pixQrImage=document.getElementById('pixQrImage');
+const pixTicketLink=document.getElementById('pixTicketLink');
+const pixSuccess=document.getElementById('pixSuccess');
 const pixStatus=document.getElementById('pixStatus');
 const turnstileBox=document.getElementById('turnstileBox');
 const turnstileWidget=document.getElementById('turnstileWidget');
@@ -460,7 +462,9 @@ const pixState={
   approved:false,
   qrCode:'',
   qrCodeBase64:'',
+  ticketUrl:'',
   whatsappMessage:'',
+  errorMessage:'',
   pollTimer:null
 };
 const deliveryFeeByNeighborhood={
@@ -713,7 +717,9 @@ function resetPixState(){
   pixState.approved=false;
   pixState.qrCode='';
   pixState.qrCodeBase64='';
+  pixState.ticketUrl='';
   pixState.whatsappMessage='';
+  pixState.errorMessage='';
   resetTurnstileToken(false);
 }
 function isTurnstileReady(){return !turnstileState.enabled||Boolean(turnstileState.token);}
@@ -799,13 +805,21 @@ async function initSecurityConfig(){
   }
 }
 function pixStatusText(status){
+  if(status==='error'&&pixState.errorMessage) return pixState.errorMessage;
+  const hasPixPaymentData=Boolean(pixState.qrCode||pixState.qrCodeBase64);
   return {
     idle:'Gere o Pix e pague no app do banco. O WhatsApp libera automaticamente depois da confirmação.',
     creating:'Gerando cobrança Pix segura...',
-    pending:'Pix gerado. Após o pagamento, aguarde alguns segundos para liberar o WhatsApp.',
-    approved:'Pagamento aprovado. Agora envie o pedido confirmado pelo WhatsApp.',
+    pending:hasPixPaymentData?'Pix gerado. Pague pelo QR Code ou copia e cola; a confirmação libera o WhatsApp automaticamente.':pixState.ticketUrl?'Pix gerado. Abra o pagamento no Mercado Pago para concluir com segurança.':'Pix criado, mas o Mercado Pago não retornou os dados do QR. Tente gerar novamente.',
+    approved:'Pagamento aprovado com sucesso. Seu pedido já pode ser enviado pelo WhatsApp.',
     error:'Não foi possível gerar ou confirmar o Pix agora. Tente novamente.'
   }[status]||'Aguardando pagamento Pix.';
+}
+function pixQrDataUrl(base64){
+  const value=String(base64||'').trim();
+  if(!value) return '';
+  const mime=value.startsWith('/9j/')?'image/jpeg':'image/png';
+  return `data:${mime};base64,${value}`;
 }
 function updatePixPayment(){
   if(!pixPayment||!pixCode||!pixCopy||!pixStatus) return;
@@ -815,6 +829,11 @@ function updatePixPayment(){
   if(!showPix){
     pixCode.value='';
     pixCopy.disabled=true;
+    if(pixSuccess) pixSuccess.hidden=true;
+    if(pixTicketLink){
+      pixTicketLink.hidden=true;
+      pixTicketLink.removeAttribute('href');
+    }
     if(pixCreate) pixCreate.disabled=true;
     if(pixQrImage){
       pixQrImage.hidden=true;
@@ -829,6 +848,11 @@ function updatePixPayment(){
     pixCode.value='';
     if(pixCreate) pixCreate.disabled=true;
     pixCopy.disabled=true;
+    if(pixSuccess) pixSuccess.hidden=true;
+    if(pixTicketLink){
+      pixTicketLink.hidden=true;
+      pixTicketLink.removeAttribute('href');
+    }
     if(pixQrImage){
       pixQrImage.hidden=true;
       pixQrImage.removeAttribute('src');
@@ -843,6 +867,11 @@ function updatePixPayment(){
     pixCode.value='';
     if(pixCreate) pixCreate.disabled=true;
     pixCopy.disabled=true;
+    if(pixSuccess) pixSuccess.hidden=true;
+    if(pixTicketLink){
+      pixTicketLink.hidden=true;
+      pixTicketLink.removeAttribute('href');
+    }
     if(pixQrImage){
       pixQrImage.hidden=true;
       pixQrImage.removeAttribute('src');
@@ -854,11 +883,21 @@ function updatePixPayment(){
   if(pixAmount) pixAmount.textContent=formatMoney(amount);
   pixCode.value=pixState.qrCode;
   pixCopy.disabled=!pixState.qrCode;
+  if(pixSuccess) pixSuccess.hidden=!pixState.approved;
   if(turnstileState.enabled) renderTurnstile();
   if(pixCreate) pixCreate.disabled=pixState.status==='creating'||pixState.approved||!isTurnstileReady();
+  if(pixTicketLink){
+    if(pixState.ticketUrl&&!pixState.approved){
+      pixTicketLink.href=pixState.ticketUrl;
+      pixTicketLink.hidden=false;
+    }else{
+      pixTicketLink.hidden=true;
+      pixTicketLink.removeAttribute('href');
+    }
+  }
   if(pixQrImage){
     if(pixState.qrCodeBase64){
-      pixQrImage.src=`data:image/png;base64,${pixState.qrCodeBase64}`;
+      pixQrImage.src=pixQrDataUrl(pixState.qrCodeBase64);
       pixQrImage.hidden=false;
     }else{
       pixQrImage.hidden=true;
@@ -914,12 +953,16 @@ async function checkPixStatus(){
     pixState.approved=data.status==='approved';
     if(data.whatsappMessage) pixState.whatsappMessage=String(data.whatsappMessage);
     if(pixState.approved){
-      if(!wasApproved) sendAnalyticsEvent('pix_approved',{payment_id:pixState.paymentId,value:orderGrandTotal(),cart_items:orderQty()});
+      if(!wasApproved){
+        sendAnalyticsEvent('pix_approved',{payment_id:pixState.paymentId,value:orderGrandTotal(),cart_items:orderQty()});
+        showBusinessToast('Pagamento aprovado com sucesso. Agora é só enviar o pedido pelo WhatsApp.');
+      }
       stopPixPolling();
     }
     renderOrder();
   }catch(error){
     pixState.status='error';
+    pixState.errorMessage='Não foi possível confirmar o Pix agora. Se você já pagou, aguarde alguns segundos e tente novamente.';
     updatePixPayment();
   }
 }
@@ -942,6 +985,7 @@ async function createPixCharge(){
   }
   pixState.status='creating';
   pixState.approved=false;
+  pixState.errorMessage='';
   sendAnalyticsEvent('start_pix',{value:amount,cart_items:orderQty(),payment_method:'pix'});
   updatePixPayment();
   try{
@@ -958,13 +1002,18 @@ async function createPixCharge(){
     pixState.approved=data.status==='approved';
     pixState.qrCode=String(data.qrCode||'');
     pixState.qrCodeBase64=String(data.qrCodeBase64||'');
+    pixState.ticketUrl=String(data.ticketUrl||'');
     sendAnalyticsEvent('pix_created',{payment_id:pixState.paymentId,status:pixState.status,value:amount,cart_items:orderQty()});
-    if(pixState.approved) sendAnalyticsEvent('pix_approved',{payment_id:pixState.paymentId,value:amount,cart_items:orderQty()});
+    if(pixState.approved){
+      sendAnalyticsEvent('pix_approved',{payment_id:pixState.paymentId,value:amount,cart_items:orderQty()});
+      showBusinessToast('Pagamento aprovado com sucesso. Agora é só enviar o pedido pelo WhatsApp.');
+    }
     resetTurnstileToken(false);
     if(!pixState.approved) startPixPolling();
     renderOrder();
   }catch(error){
     pixState.status='error';
+    pixState.errorMessage=error.message||'Não foi possível gerar o Pix agora. Confira os dados e tente novamente.';
     resetTurnstileToken(false);
     updatePixPayment();
   }
