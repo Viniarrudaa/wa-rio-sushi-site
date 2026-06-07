@@ -476,6 +476,23 @@ function pixResponse(mpOrder,order){
   };
 }
 
+async function ensurePixQrImage(responseBody){
+  if(responseBody.qrCodeBase64||!responseBody.qrCode) return responseBody;
+  try{
+    const QRCode=await import('qrcode');
+    const dataUrl=await QRCode.default.toDataURL(responseBody.qrCode,{
+      errorCorrectionLevel:'M',
+      margin:2,
+      scale:6,
+      type:'image/png'
+    });
+    responseBody.qrCodeBase64=String(dataUrl).split(',')[1]||'';
+  }catch(error){
+    console.warn('Nao foi possivel gerar QR local a partir do copia-e-cola Pix:',error.message);
+  }
+  return responseBody;
+}
+
 function formatMoney(value){
   return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(value)||0);
 }
@@ -624,8 +641,8 @@ async function createPixOrder(req,res){
       }
     })
   });
-  const responseBody=pixResponse(mpOrder,order);
-  if(!responseBody.qrCode&&!responseBody.ticketUrl){
+  const responseBody=await ensurePixQrImage(pixResponse(mpOrder,order));
+  if(!responseBody.qrCode&&!responseBody.qrCodeBase64){
     console.warn('Mercado Pago retornou Pix sem QR/copia-e-cola.',{
       paymentId:responseBody.paymentId,
       status:responseBody.status,

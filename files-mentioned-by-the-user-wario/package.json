@@ -10,5 +10,7 @@
     "start": "node server/server.js",
     "check": "node --check wario_sushi_v2_16.js && node --check server/server.js"
   },
-  "dependencies": {}
+  "dependencies": {
+    "qrcode": "1.5.4"
+  }
 }

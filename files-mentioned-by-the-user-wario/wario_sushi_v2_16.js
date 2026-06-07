@@ -411,7 +411,6 @@ const pixCode=document.getElementById('pixCode');
 const pixCreate=document.getElementById('pixCreate');
 const pixCopy=document.getElementById('pixCopy');
 const pixQrImage=document.getElementById('pixQrImage');
-const pixTicketLink=document.getElementById('pixTicketLink');
 const pixSuccess=document.getElementById('pixSuccess');
 const pixStatus=document.getElementById('pixStatus');
 const turnstileBox=document.getElementById('turnstileBox');
@@ -462,7 +461,6 @@ const pixState={
   approved:false,
   qrCode:'',
   qrCodeBase64:'',
-  ticketUrl:'',
   whatsappMessage:'',
   errorMessage:'',
   pollTimer:null
@@ -717,12 +715,26 @@ function resetPixState(){
   pixState.approved=false;
   pixState.qrCode='';
   pixState.qrCodeBase64='';
-  pixState.ticketUrl='';
   pixState.whatsappMessage='';
   pixState.errorMessage='';
   resetTurnstileToken(false);
 }
 function isTurnstileReady(){return !turnstileState.enabled||Boolean(turnstileState.token);}
+function canAutoCreatePixCharge(){
+  return selectedPaymentMethod().value==='pix'
+    &&orderQty()>0
+    &&isTurnstileReady()
+    &&['idle','error'].includes(pixState.status)
+    &&!pixState.paymentId
+    &&Boolean(pixOrderAmount())
+    &&scheduleValidation().valid;
+}
+function maybeAutoCreatePixCharge(){
+  if(!canAutoCreatePixCharge()) return;
+  window.setTimeout(()=>{
+    if(canAutoCreatePixCharge()) createPixCharge();
+  },120);
+}
 function setTurnstileStatus(status,message){
   if(!turnstileBox||!turnstileHint) return;
   turnstileBox.classList.toggle('is-ready',status==='ready');
@@ -762,8 +774,9 @@ async function renderTurnstile(){
       size:widgetSize,
       callback:token=>{
         turnstileState.token=String(token||'');
-        setTurnstileStatus('ready','Verificacao concluida. Pix liberado para gerar.');
+        setTurnstileStatus('ready','Verificacao concluida. Gerando Pix seguro...');
         updatePixPayment();
+        maybeAutoCreatePixCharge();
       },
       'expired-callback':()=>{
         turnstileState.token='';
@@ -810,7 +823,7 @@ function pixStatusText(status){
   return {
     idle:'Gere o Pix e pague no app do banco. O WhatsApp libera automaticamente depois da confirmação.',
     creating:'Gerando cobrança Pix segura...',
-    pending:hasPixPaymentData?'Pix gerado. Pague pelo QR Code ou copia e cola; a confirmação libera o WhatsApp automaticamente.':pixState.ticketUrl?'Pix gerado. Abra o pagamento no Mercado Pago para concluir com segurança.':'Pix criado, mas o Mercado Pago não retornou os dados do QR. Tente gerar novamente.',
+    pending:hasPixPaymentData?'Pix gerado. Pague pelo QR Code ou copia e cola; a confirmação libera o WhatsApp automaticamente.':'Pix criado, mas o QR não foi retornado. Tente gerar novamente.',
     approved:'Pagamento aprovado com sucesso. Seu pedido já pode ser enviado pelo WhatsApp.',
     error:'Não foi possível gerar ou confirmar o Pix agora. Tente novamente.'
   }[status]||'Aguardando pagamento Pix.';
@@ -830,10 +843,6 @@ function updatePixPayment(){
     pixCode.value='';
     pixCopy.disabled=true;
     if(pixSuccess) pixSuccess.hidden=true;
-    if(pixTicketLink){
-      pixTicketLink.hidden=true;
-      pixTicketLink.removeAttribute('href');
-    }
     if(pixCreate) pixCreate.disabled=true;
     if(pixQrImage){
       pixQrImage.hidden=true;
@@ -849,10 +858,6 @@ function updatePixPayment(){
     if(pixCreate) pixCreate.disabled=true;
     pixCopy.disabled=true;
     if(pixSuccess) pixSuccess.hidden=true;
-    if(pixTicketLink){
-      pixTicketLink.hidden=true;
-      pixTicketLink.removeAttribute('href');
-    }
     if(pixQrImage){
       pixQrImage.hidden=true;
       pixQrImage.removeAttribute('src');
@@ -868,10 +873,6 @@ function updatePixPayment(){
     if(pixCreate) pixCreate.disabled=true;
     pixCopy.disabled=true;
     if(pixSuccess) pixSuccess.hidden=true;
-    if(pixTicketLink){
-      pixTicketLink.hidden=true;
-      pixTicketLink.removeAttribute('href');
-    }
     if(pixQrImage){
       pixQrImage.hidden=true;
       pixQrImage.removeAttribute('src');
@@ -886,15 +887,6 @@ function updatePixPayment(){
   if(pixSuccess) pixSuccess.hidden=!pixState.approved;
   if(turnstileState.enabled) renderTurnstile();
   if(pixCreate) pixCreate.disabled=pixState.status==='creating'||pixState.approved||!isTurnstileReady();
-  if(pixTicketLink){
-    if(pixState.ticketUrl&&!pixState.approved){
-      pixTicketLink.href=pixState.ticketUrl;
-      pixTicketLink.hidden=false;
-    }else{
-      pixTicketLink.hidden=true;
-      pixTicketLink.removeAttribute('href');
-    }
-  }
   if(pixQrImage){
     if(pixState.qrCodeBase64){
       pixQrImage.src=pixQrDataUrl(pixState.qrCodeBase64);
@@ -1002,7 +994,6 @@ async function createPixCharge(){
     pixState.approved=data.status==='approved';
     pixState.qrCode=String(data.qrCode||'');
     pixState.qrCodeBase64=String(data.qrCodeBase64||'');
-    pixState.ticketUrl=String(data.ticketUrl||'');
     sendAnalyticsEvent('pix_created',{payment_id:pixState.paymentId,status:pixState.status,value:amount,cart_items:orderQty()});
     if(pixState.approved){
       sendAnalyticsEvent('pix_approved',{payment_id:pixState.paymentId,value:amount,cart_items:orderQty()});
