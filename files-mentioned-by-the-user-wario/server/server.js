@@ -440,6 +440,28 @@ function firstNonEmpty(...values){
   return '';
 }
 
+function findFirstStringField(value,fieldNames,depth=0,seen=new WeakSet()){
+  if(!value||typeof value!=='object'||depth>8) return '';
+  if(seen.has(value)) return '';
+  seen.add(value);
+  if(Array.isArray(value)){
+    for(const item of value){
+      const found=findFirstStringField(item,fieldNames,depth+1,seen);
+      if(found) return found;
+    }
+    return '';
+  }
+  for(const name of fieldNames){
+    const candidate=value[name];
+    if(candidate!==undefined&&candidate!==null&&String(candidate).trim()) return String(candidate);
+  }
+  for(const child of Object.values(value)){
+    const found=findFirstStringField(child,fieldNames,depth+1,seen);
+    if(found) return found;
+  }
+  return '';
+}
+
 function orderPayment(mpOrder){
   const payments=[
     ...(Array.isArray(mpOrder?.transactions?.payments)?mpOrder.transactions.payments:[]),
@@ -461,9 +483,25 @@ function normalizedOrderStatus(mpOrder){
 function pixResponse(mpOrder,order){
   const payment=orderPayment(mpOrder);
   const paymentMethod=payment.payment_method||{};
-  const qrCode=firstNonEmpty(paymentMethod.qr_code,payment.qr_code,mpOrder.qr_code,mpOrder.qr_data);
-  const qrCodeBase64=firstNonEmpty(paymentMethod.qr_code_base64,payment.qr_code_base64,mpOrder.qr_code_base64);
-  const ticketUrl=firstNonEmpty(paymentMethod.ticket_url,payment.ticket_url,mpOrder.ticket_url);
+  const qrCode=firstNonEmpty(
+    paymentMethod.qr_code,
+    payment.qr_code,
+    mpOrder.qr_code,
+    mpOrder.qr_data,
+    findFirstStringField(mpOrder,['qr_code','qr_data'])
+  );
+  const qrCodeBase64=firstNonEmpty(
+    paymentMethod.qr_code_base64,
+    payment.qr_code_base64,
+    mpOrder.qr_code_base64,
+    findFirstStringField(mpOrder,['qr_code_base64','qr_code_based64'])
+  );
+  const ticketUrl=firstNonEmpty(
+    paymentMethod.ticket_url,
+    payment.ticket_url,
+    mpOrder.ticket_url,
+    findFirstStringField(mpOrder,['ticket_url'])
+  );
   return {
     orderId:order.orderId,
     orderToken:order.orderToken,

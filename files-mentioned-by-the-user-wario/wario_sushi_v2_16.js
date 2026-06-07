@@ -452,6 +452,7 @@ const turnstileState={
   token:'',
   widgetId:null,
   scriptPromise:null,
+  rendering:false,
   size:''
 };
 const pixState={
@@ -761,10 +762,11 @@ function turnstileWidgetSize(){
 async function renderTurnstile(){
   if(!turnstileState.enabled||!turnstileBox||!turnstileWidget) return;
   turnstileBox.hidden=false;
+  if(turnstileState.widgetId!==null||turnstileState.rendering) return;
+  turnstileState.rendering=true;
   setTurnstileStatus('idle','Confirme a verificacao para gerar o Pix.');
   try{
     const turnstile=await loadTurnstileScript();
-    if(turnstileState.widgetId!==null) return;
     const widgetSize=turnstileWidgetSize();
     turnstileState.size=widgetSize;
     turnstileBox.classList.toggle('is-compact',widgetSize==='compact');
@@ -791,6 +793,8 @@ async function renderTurnstile(){
     });
   }catch(error){
     setTurnstileStatus('error','Verificacao anti-bot indisponivel no momento.');
+  }finally{
+    turnstileState.rendering=false;
   }
 }
 function resetTurnstileToken(shouldUpdate=true){
@@ -831,6 +835,7 @@ function pixStatusText(status){
 function pixQrDataUrl(base64){
   const value=String(base64||'').trim();
   if(!value) return '';
+  if(/^data:image\//i.test(value)) return value;
   const mime=value.startsWith('/9j/')?'image/jpeg':'image/png';
   return `data:${mime};base64,${value}`;
 }
