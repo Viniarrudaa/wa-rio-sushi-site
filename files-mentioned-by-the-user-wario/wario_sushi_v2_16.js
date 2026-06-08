@@ -843,10 +843,13 @@ function updatePixPayment(){
   if(!pixPayment||!pixCode||!pixCopy||!pixStatus) return;
   const method=selectedPaymentMethod();
   const showPix=method.value==='pix'&&orderQty()>0;
+  const hasPixResult=Boolean(pixState.paymentId||pixState.qrCode||pixState.qrCodeBase64||pixState.approved);
   pixPayment.hidden=!showPix;
+  pixPayment.classList.toggle('has-pix-result',showPix&&hasPixResult);
   if(!showPix){
     pixCode.value='';
     pixCopy.disabled=true;
+    if(turnstileBox) turnstileBox.hidden=true;
     if(pixSuccess) pixSuccess.hidden=true;
     if(pixCreate) pixCreate.disabled=true;
     if(pixQrImage){
@@ -862,6 +865,7 @@ function updatePixPayment(){
     pixCode.value='';
     if(pixCreate) pixCreate.disabled=true;
     pixCopy.disabled=true;
+    if(turnstileBox) turnstileBox.hidden=true;
     if(pixSuccess) pixSuccess.hidden=true;
     if(pixQrImage){
       pixQrImage.hidden=true;
@@ -877,6 +881,7 @@ function updatePixPayment(){
     pixCode.value='';
     if(pixCreate) pixCreate.disabled=true;
     pixCopy.disabled=true;
+    if(turnstileBox) turnstileBox.hidden=true;
     if(pixSuccess) pixSuccess.hidden=true;
     if(pixQrImage){
       pixQrImage.hidden=true;
@@ -890,7 +895,8 @@ function updatePixPayment(){
   pixCode.value=pixState.qrCode;
   pixCopy.disabled=!pixState.qrCode;
   if(pixSuccess) pixSuccess.hidden=!pixState.approved;
-  if(turnstileState.enabled) renderTurnstile();
+  if(turnstileBox) turnstileBox.hidden=!turnstileState.enabled||hasPixResult;
+  if(turnstileState.enabled&&!hasPixResult) renderTurnstile();
   if(pixCreate) pixCreate.disabled=pixState.status==='creating'||pixState.approved||!isTurnstileReady();
   if(pixQrImage){
     if(pixState.qrCodeBase64){
@@ -903,6 +909,17 @@ function updatePixPayment(){
   }
   pixStatus.className=`pix-status ${pixState.approved?'is-ready':pixState.status==='error'?'is-warning':''}`.trim();
   pixStatus.textContent=pixStatusText(pixState.status);
+}
+function scrollPixResultIntoView(){
+  if(!orderContent||!pixPayment) return;
+  window.requestAnimationFrame(()=>{
+    const target=pixState.qrCodeBase64&&pixQrImage&&!pixQrImage.hidden?pixQrImage:pixPayment;
+    const contentRect=orderContent.getBoundingClientRect();
+    const targetRect=target.getBoundingClientRect();
+    const top=orderContent.scrollTop+(targetRect.top-contentRect.top)-18;
+    orderContent.scrollTo({top:Math.max(0,top),behavior:'smooth'});
+    window.setTimeout(updateOrderScrollCue,360);
+  });
 }
 function updatePaymentHelp(){
   if(!paymentHelp) return;
@@ -1007,6 +1024,7 @@ async function createPixCharge(){
     resetTurnstileToken(false);
     if(!pixState.approved) startPixPolling();
     renderOrder();
+    scrollPixResultIntoView();
   }catch(error){
     pixState.status='error';
     pixState.errorMessage=error.message||'Não foi possível gerar o Pix agora. Confira os dados e tente novamente.';
