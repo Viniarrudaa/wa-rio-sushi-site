@@ -26,7 +26,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="wario_sushi_v2_16.css?v=48">
+<link rel="stylesheet" href="wario_sushi_v2_16.css?v=50">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Restaurant","name":"WA RIO Sushi","alternateName":"Wariosushi","url":"https://wariosushi.com.br/","image":"https://wariosushi.com.br/hero_desktop_wa_rio_optimized.jpg","logo":"https://wariosushi.com.br/favicon_wario.png","telephone":"+5521982225443","servesCuisine":["Sushi","Comida japonesa"],"priceRange":"$$","currenciesAccepted":"BRL","paymentAccepted":"Pix, cartao de debito, cartao de credito, dinheiro","address":{"@type":"PostalAddress","addressLocality":"Rio de Janeiro","addressRegion":"RJ","addressCountry":"BR","addressSubLocality":"Cachambi"},"areaServed":[{"@type":"Place","name":"Cachambi"},{"@type":"Place","name":"M\u00e9ier"},{"@type":"Place","name":"Engenho de Dentro"},{"@type":"Place","name":"Pilares"},{"@type":"Place","name":"Riachuelo"},{"@type":"Place","name":"Maria da Gra\u00e7a"},{"@type":"Place","name":"Higien\u00f3polis"},{"@type":"Place","name":"Engenho Novo"},{"@type":"Place","name":"Del Castilho"},{"@type":"Place","name":"Aboli\u00e7\u00e3o"},{"@type":"Place","name":"Piedade"}],"openingHoursSpecification":[{"@type":"OpeningHoursSpecification","dayOfWeek":["Wednesday","Thursday","Friday","Saturday","Sunday"],"opens":"19:00","closes":"23:00"}],"acceptsReservations":false,"sameAs":["https://www.instagram.com/wariosushi/"],"potentialAction":{"@type":"OrderAction","target":{"@type":"EntryPoint","urlTemplate":"https://wa.me/5521982225443","inLanguage":"pt-BR","actionPlatform":["http://schema.org/DesktopWebPlatform","http://schema.org/MobileWebPlatform"]}}}</script>
 </head>
 <body>
@@ -558,6 +558,18 @@
           <span>Agendamento</span>
           <strong>Quando entregar?</strong>
         </div>
+        <div class="schedule-options" role="radiogroup" aria-label="Quando entregar">
+          <label class="schedule-option" for="scheduleNow">
+            <input id="scheduleNow" type="radio" name="scheduleMode" value="now" checked>
+            <span>Entregar agora</span>
+            <small>Dispon&iacute;vel durante o hor&aacute;rio de atendimento</small>
+          </label>
+          <label class="schedule-option" for="scheduleScheduled">
+            <input id="scheduleScheduled" type="radio" name="scheduleMode" value="scheduled">
+            <span>Agendar</span>
+            <small>Escolha data e hor&aacute;rio para receber</small>
+          </label>
+        </div>
         <div class="schedule-fields" id="scheduleFields">
           <label class="schedule-field" for="scheduleDate">Data
             <span class="schedule-date-shell">
@@ -644,6 +656,6 @@
   <span class="order-bar-action">Ver pedido</span>
 </button>
 
-<script src="wario_sushi_v2_16.js?v=48" defer></script>
+<script src="wario_sushi_v2_16.js?v=50" defer></script>
 </body>
 </html>

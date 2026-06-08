@@ -429,6 +429,7 @@ const deliveryReference=document.getElementById('deliveryReference');
 const addressHelp=document.getElementById('addressHelp');
 const addressInputs=[customerName,deliveryStreet,deliveryNumber,deliveryComplement,deliveryNeighborhood,deliveryReference].filter(Boolean);
 const scheduleFields=document.getElementById('scheduleFields');
+const scheduleModeInputs=[...document.querySelectorAll('input[name="scheduleMode"]')];
 const scheduleDate=document.getElementById('scheduleDate');
 const scheduleDateDisplay=document.getElementById('scheduleDateDisplay');
 const scheduleTime=document.getElementById('scheduleTime');
@@ -629,7 +630,34 @@ function setupScheduleControls(){
     if(scheduleTime.dataset.defaultTime) scheduleTime.value=scheduleTime.dataset.defaultTime;
   }
 }
-function schedulePayload(){
+function checkedScheduleMode(){
+  return safeText(scheduleModeInputs.find(input=>input.checked)?.value,20)||'now';
+}
+function updateScheduleModeAvailability(isOpen=isBusinessOpen()){
+  const nowInput=scheduleModeInputs.find(input=>input.value==='now');
+  const scheduledInput=scheduleModeInputs.find(input=>input.value==='scheduled');
+  if(nowInput){
+    nowInput.disabled=!isOpen;
+    nowInput.closest('.schedule-option')?.classList.toggle('is-disabled',!isOpen);
+  }
+  if(!isOpen&&nowInput?.checked&&scheduledInput) scheduledInput.checked=true;
+  if(isOpen&&!scheduleModeInputs.some(input=>input.checked)&&nowInput) nowInput.checked=true;
+}
+function selectedScheduleMode(isOpen=isBusinessOpen()){
+  updateScheduleModeAvailability(isOpen);
+  const mode=checkedScheduleMode();
+  return mode==='scheduled'||!isOpen?'scheduled':'now';
+}
+function schedulePayload(isOpen=isBusinessOpen()){
+  const mode=selectedScheduleMode(isOpen);
+  if(mode==='now'){
+    return {
+      mode:'now',
+      date:'',
+      time:'',
+      label:'Entrega agora'
+    };
+  }
   const date=safeText(scheduleDate?.value,10);
   const time=safeText(scheduleTime?.value,5);
   return {
@@ -641,7 +669,11 @@ function schedulePayload(){
 }
 function scheduleValidation(isOpen=isBusinessOpen()){
   setupScheduleControls();
-  const payload=schedulePayload();
+  const payload=schedulePayload(isOpen);
+  if(payload.mode==='now'){
+    if(!isOpen) return {valid:false,status:'warning',message:'Agora estamos fechados. Escolha um agendamento para receber no horario de atendimento.',payload};
+    return {valid:true,status:'success',message:'Entrega para agora. O pedido segue direto durante o horario de atendimento.',payload};
+  }
   const date=scheduleDateObject(payload.date);
   if(!date) return {valid:false,status:'warning',message:'Escolha uma data para agendar a entrega.',payload};
   if(!isBusinessDay(date)) return {valid:false,status:'warning',message:'Escolha uma data de quarta a domingo.',payload};
@@ -654,7 +686,8 @@ function scheduleValidation(isOpen=isBusinessOpen()){
 }
 function updateScheduleUi(isOpen=isBusinessOpen()){
   setupScheduleControls();
-  if(scheduleFields) scheduleFields.hidden=false;
+  const mode=selectedScheduleMode(isOpen);
+  if(scheduleFields) scheduleFields.hidden=mode!=='scheduled';
   if(!scheduleStatus) return;
   const validation=scheduleValidation(isOpen);
   scheduleStatus.className=`schedule-status is-${validation.status}`.trim();
@@ -665,13 +698,18 @@ function canAcceptOrder(isOpen=isBusinessOpen()){
 }
 function selectScheduledMode(){
   setupScheduleControls();
+  const scheduledInput=scheduleModeInputs.find(input=>input.value==='scheduled');
+  if(scheduledInput) scheduledInput.checked=true;
+  if(scheduleFields) scheduleFields.hidden=false;
 }
 function updateOrderSupport(isOpen=isBusinessOpen()){
   if(!orderSupport) return;
   const validation=scheduleValidation(isOpen);
   orderSupport.classList.toggle('is-warning',!validation.valid);
   orderSupport.textContent=validation.valid
-    ? `Pedido agendado para ${validation.payload.label}.`
+    ? validation.payload.mode==='now'
+      ? 'Pedido para entregar agora.'
+      : `Pedido agendado para ${validation.payload.label}.`
     : validation.message;
 }
 function showBusinessToast(message=closedOrderMessage()){
@@ -906,11 +944,10 @@ function updatePixPayment(){
   pixCode.value=pixState.qrCode;
   pixCopy.disabled=!pixState.qrCode;
   if(pixSuccess) pixSuccess.hidden=!pixState.approved;
-  if(turnstileBox) turnstileBox.hidden=!turnstileState.enabled||pixState.approved;
+  if(turnstileBox) turnstileBox.hidden=!turnstileState.enabled||pixState.approved||Boolean(qrSource);
   if(turnstileState.enabled&&!pixState.approved&&!qrSource) renderTurnstile();
   if(pixCreate) pixCreate.disabled=pixState.status==='creating'||pixState.approved||!isTurnstileReady();
   if(pixQrImage){
-    pixQrImage.hidden=true;
     pixQrImage.onload=()=>{
       if(pixQrImage.src){
         pixQrImage.hidden=false;
@@ -920,17 +957,23 @@ function updatePixPayment(){
       }
     };
     pixQrImage.onerror=()=>{
+      const fallbackSource=pixQrFallbackUrl(pixState.qrCode);
+      if(fallbackSource&&pixQrImage.src!==fallbackSource){
+        pixQrImage.src=fallbackSource;
+        return;
+      }
       pixQrImage.hidden=true;
-      if(pixState.qrCodeBase64){
-        pixQrImage.removeAttribute('src');
+      if(pixState.qrCode){
         pixStatus.className='pix-status is-warning';
         pixStatus.textContent='Nao foi possivel carregar o QR agora. O copia e cola continua disponivel.';
       }
-      if(turnstileBox&&!pixState.approved) turnstileBox.hidden=false;
+      if(turnstileBox&&!pixState.approved&&!pixState.qrCode) turnstileBox.hidden=false;
     };
     if(qrSource){
-      pixQrImage.src=qrSource;
+      if(pixQrImage.src!==qrSource) pixQrImage.src=qrSource;
+      pixQrImage.hidden=!(pixQrImage.complete&&pixQrImage.naturalWidth>0);
     }else{
+      pixQrImage.hidden=true;
       pixQrImage.removeAttribute('src');
     }
   }
@@ -1306,7 +1349,7 @@ function renderOrder(){
   updateScheduleUi(isOpen);
   if(orderSend){
     orderSend.disabled=!canSendOrder(isOpen);
-    orderSend.textContent=!canAcceptOrder(isOpen)?'Escolha um agendamento':total>0&&requiresPixApproval()&&!pixState.approved?'Aguardando pagamento Pix':'Enviar pedido pelo WhatsApp';
+    orderSend.textContent=!canAcceptOrder(isOpen)?'Escolha quando entregar':total>0&&requiresPixApproval()&&!pixState.approved?'Aguardando pagamento Pix':'Enviar pedido pelo WhatsApp';
   }
   updateOrderSupport(isOpen);
   updateAddressHelp();
@@ -1400,7 +1443,7 @@ function buildWhatsappMessage(){
     'Pedido:',
     ...lines,
     `Endereço: ${addressLine}`,
-    `Agendamento: ${schedule.label}`,
+    `Entrega: ${schedule.label}`,
     `Pagamento: ${paymentLabel}`,
     `Total: ${totalLine}`,
     note?`Obs: ${note}`:''
@@ -1486,6 +1529,13 @@ scheduleDate?.addEventListener('input',updateScheduleDateDisplay);
   if(input===scheduleDate) updateScheduleDateDisplay();
   const schedule=schedulePayload();
   sendAnalyticsEvent('schedule_selected',{date:schedule.date,time:schedule.time,label:schedule.label,cart_items:orderQty(),value:orderGrandTotal()});
+  renderOrder();
+}));
+scheduleModeInputs.forEach(input=>input.addEventListener('change',()=>{
+  resetPixState();
+  updateScheduleUi();
+  const schedule=schedulePayload();
+  sendAnalyticsEvent('schedule_mode_selected',{mode:schedule.mode,label:schedule.label,cart_items:orderQty(),value:orderGrandTotal()});
   renderOrder();
 }));
 pixCreate?.addEventListener('click',createPixCharge);

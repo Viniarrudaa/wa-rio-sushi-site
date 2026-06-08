@@ -632,6 +632,18 @@ function formatScheduleDate(dateValue){
 function normalizeSchedule(value){
   normalizeSchedule.lastError='';
   const mode=safeText(value?.mode,40);
+  if(mode==='now'){
+    if(!isBusinessOpen()){
+      normalizeSchedule.lastError='Agora estamos fechados. Escolha um agendamento para receber no horario de atendimento.';
+      return null;
+    }
+    return {
+      mode:'now',
+      date:'',
+      time:'',
+      label:'Entrega agora'
+    };
+  }
   if(mode!=='scheduled'){
     normalizeSchedule.lastError='Escolha data e horario para a entrega.';
     return null;
@@ -677,7 +689,7 @@ function buildWhatsappMessage(order){
     'Pedido:',
     ...order.items.map(item=>`- ${item.qty}x ${item.name} - ${formatMoney(item.total)}`),
     `Endereco: ${addressParts.join(' - ')}`,
-    `Agendamento: ${order.schedule?.label||'Nao informado'}`,
+    `Entrega: ${order.schedule?.label||'Nao informado'}`,
     'Pagamento: Pix aprovado',
     `Total: ${formatMoney(order.amount)}`,
     `Codigo do pagamento: ${order.mpOrderId||order.paymentId}`
