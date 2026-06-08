@@ -223,9 +223,7 @@ const menuProducts=[
   {id:'joe-joe',name:'Joe Joe',label:'Joe Joe',category:'joe',desc:'Peças cremosas e delicadas para adicionar um toque especial ao pedido.',variants:[{id:'1',label:'1 un',price:3},{id:'2',label:'2 un',price:5},{id:'4',label:'4 un',price:10}],meta:['Especial','Cremoso'],image:'joejoe_cardapio_optimized.jpg'}
 ];
 const promoProducts=[
-  {id:'promo-wa-rio-1',name:'Especial WA RIO 1',label:'Dia dos Namorados',category:'promocoes',badge:'Para casal',desc:'31 peças com filadélfia, hot, uramaki e peças especiais para dividir.',variants:[{id:'31',label:'31 peças',price:55.9}],meta:['Mais pedido','12/06'],image:'wario1_cardapio_optimized.jpg'},
-  {id:'promo-mix-joes',name:'Mix Joes Especial',label:'Dia dos Namorados',category:'promocoes',badge:'Autorais',desc:'12 peças autorais com joes, gunkans, tataki de salmão e geleias especiais.',variants:[{id:'12',label:'12 peças',price:35.9}],meta:['Joes','Especial'],image:'mixdejoe_cardapio_optimized.jpg'},
-  {id:'promo-hot-20',name:'Hot Filadélfia Especial',label:'Dia dos Namorados',category:'promocoes',badge:'Hot',desc:'20 unidades de hot filadélfia crocante para completar o pedido especial.',variants:[{id:'20',label:'20 un',price:23}],meta:['Crocante','Completar pedido'],image:'Hot_roll_cardapio_optimized.jpg'}
+  {id:'promo-namorados-35',name:'Combo Dia dos Namorados 35 peças',label:'Dia dos Namorados',category:'promocoes',badge:'35 peças + doce',desc:'Combo especial para casal com salmão, joes, gunkan, filadélfia, uramaki, hot e banana crocante com Nutella.',composition:'Itens inclusos no Combo Dia dos Namorados:',details:['2 Niguiri de salmão selado','2 Niguiri de salmão','2 Joe c/ geleia de maracujá','2 Joe Joe de salmão','2 Gunkan c/ tataki','5 Filadélfia roll','5 Uramaki de salmão','5 Hot especial','10 Hot Filadélfia','4 Banana crocante com Nutella'],variants:[{id:'35',label:'35 peças + 4 bananas',price:79}],meta:['Para casal','12/06'],image:'promo_namorados_combo_35_optimized.jpg'}
 ];
 function variantSummary(item){return `${safeText(item.name,120)}: ${item.variants.map(variant=>`${safeText(variant.label,40)} - ${formatMoney(variant.price)}`).join(', ')}`;}
 function variantButtons(item){
@@ -244,6 +242,7 @@ const comboVisibleCount=document.getElementById('comboVisibleCount');
 const promoList=document.getElementById('promoList');
 function renderPromotions(){
   if(!promoList) return;
+  promoList.classList.toggle('has-single-promo',promoProducts.length===1);
   promoList.innerHTML=promoProducts.map(item=>{
     const firstVariant=item.variants[0];
     const firstPrice=Number(firstVariant.price)||0;
@@ -262,6 +261,8 @@ function renderPromotions(){
           <span class="promo-badge">${badge}</span>
           <div class="promo-name">${itemName}</div>
           <p>${escapeHtml(item.desc)}</p>
+          ${item.composition?`<p class="promo-composition">${escapeHtml(item.composition)}</p>`:''}
+          ${detailList(item)}
           <div class="promo-foot">
             <span>${variantLabel}</span>
             <strong>${formatMoney(firstPrice)}</strong>
