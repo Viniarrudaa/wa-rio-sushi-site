@@ -839,11 +839,22 @@ function pixQrDataUrl(base64){
   const mime=value.startsWith('/9j/')?'image/jpeg':'image/png';
   return `data:${mime};base64,${value}`;
 }
+function pixQrFallbackUrl(code){
+  const value=String(code||'').trim();
+  if(!value) return '';
+  return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=2&data=${encodeURIComponent(value)}`;
+}
+function pixQrSource(){
+  if(pixState.qrCodeBase64) return pixQrDataUrl(pixState.qrCodeBase64);
+  if(pixState.qrCode) return pixQrFallbackUrl(pixState.qrCode);
+  return '';
+}
 function updatePixPayment(){
   if(!pixPayment||!pixCode||!pixCopy||!pixStatus) return;
   const method=selectedPaymentMethod();
   const showPix=method.value==='pix'&&orderQty()>0;
-  const hasPixResult=Boolean(pixState.paymentId||pixState.qrCode||pixState.qrCodeBase64||pixState.approved);
+  const qrSource=pixQrSource();
+  const hasPixResult=Boolean(pixState.qrCode||pixState.qrCodeBase64||pixState.approved);
   pixPayment.hidden=!showPix;
   pixPayment.classList.toggle('has-pix-result',showPix&&hasPixResult);
   if(!showPix){
@@ -895,15 +906,31 @@ function updatePixPayment(){
   pixCode.value=pixState.qrCode;
   pixCopy.disabled=!pixState.qrCode;
   if(pixSuccess) pixSuccess.hidden=!pixState.approved;
-  if(turnstileBox) turnstileBox.hidden=!turnstileState.enabled||hasPixResult;
-  if(turnstileState.enabled&&!hasPixResult) renderTurnstile();
+  if(turnstileBox) turnstileBox.hidden=!turnstileState.enabled||pixState.approved;
+  if(turnstileState.enabled&&!pixState.approved&&!qrSource) renderTurnstile();
   if(pixCreate) pixCreate.disabled=pixState.status==='creating'||pixState.approved||!isTurnstileReady();
   if(pixQrImage){
-    if(pixState.qrCodeBase64){
-      pixQrImage.src=pixQrDataUrl(pixState.qrCodeBase64);
-      pixQrImage.hidden=false;
-    }else{
+    pixQrImage.hidden=true;
+    pixQrImage.onload=()=>{
+      if(pixQrImage.src){
+        pixQrImage.hidden=false;
+        if(turnstileBox&&!pixState.approved) turnstileBox.hidden=true;
+        pixPayment.classList.add('has-pix-result');
+        scrollPixResultIntoView();
+      }
+    };
+    pixQrImage.onerror=()=>{
       pixQrImage.hidden=true;
+      if(pixState.qrCodeBase64){
+        pixQrImage.removeAttribute('src');
+        pixStatus.className='pix-status is-warning';
+        pixStatus.textContent='Nao foi possivel carregar o QR agora. O copia e cola continua disponivel.';
+      }
+      if(turnstileBox&&!pixState.approved) turnstileBox.hidden=false;
+    };
+    if(qrSource){
+      pixQrImage.src=qrSource;
+    }else{
       pixQrImage.removeAttribute('src');
     }
   }

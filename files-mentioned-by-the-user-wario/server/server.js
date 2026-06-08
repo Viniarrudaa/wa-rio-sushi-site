@@ -144,7 +144,7 @@ function setSecurityHeaders(req,res){
     "script-src 'self' 'sha256-Pdwf9f7BmDWe4dD63iUff1TmwlLIN74NdCoz221f/fw=' https://challenges.cloudflare.com https://www.googletagmanager.com",
     "style-src 'self' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
-    "img-src 'self' data: https://www.google-analytics.com https://www.googletagmanager.com",
+    "img-src 'self' data: https://www.google-analytics.com https://www.googletagmanager.com https://api.qrserver.com",
     "connect-src 'self' https://viacep.com.br https://challenges.cloudflare.com https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com",
     "frame-src https://challenges.cloudflare.com",
     "frame-ancestors 'none'",
