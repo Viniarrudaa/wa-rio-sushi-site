@@ -146,9 +146,24 @@ function escapeHtml(value){
 function escapeAttr(value){return escapeHtml(value).replace(/`/g,'&#96;');}
 const depMarquee=document.querySelector('.dep-marquee');
 const googleReviews=[
+  {initials:'CE',author:'Carlos Eduardo',text:'Pratos bem preparados, sabores equilibrados e peixe fresco.'},
+  {initials:'LM',author:'leandra machado',text:'Amei, super saboroso e pontual, tem meu coração.'},
+  {initials:'GR',author:'Guilherme Reis',text:'Melhor japonês da Zona Norte que experimentei, nota 10.'},
+  {initials:'LF',author:'LF',text:'Sushi de ótima qualidade e preço justo, referência na Zona Norte.'},
+  {initials:'LU',author:'lulu',text:'Comida maravilhosa e atendimento impecável.'},
   {initials:'VF',author:'Vitória França',text:'Entrega rápida, atendimento atencioso e pratos muito bem preparados.'},
   {initials:'TG',author:'Thiago Gomes',text:'Comida muito saborosa, ingredientes frescos e atendimento excelente.'},
-  {initials:'VA',author:'Victória Arruda',text:'Tudo super fresco, com muito capricho e delicioso.'}
+  {initials:'VA',author:'Victória Arruda',text:'Tudo super fresco, com muito capricho e delicioso.'},
+  {initials:'LA',author:'Lucas Antunes',text:'Comida excelente e ótimo atendimento.'},
+  {initials:'RF',author:'Ryan Figueredo',text:'Melhor sushi do RJ.'},
+  {initials:'SL',author:'sophia lemos',text:'Eu amei, gostei muito.'},
+  {initials:'RS',author:'renata santos',text:'Excelente, atendimento top, voltarei mais vezes.'},
+  {initials:'MR',author:'Marina Rodrigues',text:'Melhor sushi que já comi, comida fresca e de qualidade.'},
+  {initials:'LS',author:'Luis Silva',text:'Comi demais, uma delícia.'},
+  {initials:'VI',author:'Vinicius Arruda',text:'Avaliou com 5 estrelas no Google.'},
+  {initials:'JA',author:'Jhone Alves',text:'Avaliou com 5 estrelas no Google.'},
+  {initials:'LR',author:'Luiz Felipe Ribeiro',text:'Avaliou com 5 estrelas no Google.'},
+  {initials:'JO',author:'Jhonata Alves',text:'Avaliou com 5 estrelas no Google.'}
 ];
 function renderGoogleReviews(){
   if(!depMarquee) return;
