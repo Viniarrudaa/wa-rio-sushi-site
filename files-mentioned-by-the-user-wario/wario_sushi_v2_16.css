@@ -497,6 +497,21 @@ mix-blend-mode:screen;opacity:.68;}
 .insta-item:hover img{transform:scale(1.06);filter:brightness(0.65) saturate(1.2);}
 .insta-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);opacity:0;transition:opacity 0.4s;}
 .insta-item:hover .insta-overlay{opacity:1;}
+.sushi-gallery{margin-top:66px;}
+.sushi-gallery-copy{text-align:center;max-width:680px;margin:0 auto 34px;}
+.sushi-gallery-copy h3{margin-top:10px;font-family:var(--title-font);font-size:clamp(26px,4vw,48px);font-weight:650;line-height:1.05;color:var(--white);}
+.sushi-gallery-copy h3 em{font-style:italic;color:var(--gold-light);font-weight:400;}
+.sushi-gallery-copy p{max-width:520px;margin:14px auto 0;font-family:var(--body-font);font-size:13px;line-height:1.75;color:rgba(210,191,176,.74);font-weight:300;}
+.sushi-gallery-wrap{margin:0 -60px;overflow:hidden;-webkit-mask-image:linear-gradient(to right,transparent 0%,black 8%,black 92%,transparent 100%);mask-image:linear-gradient(to right,transparent 0%,black 8%,black 92%,transparent 100%);}
+.sushi-gallery-track{display:flex;gap:18px;width:max-content;animation:marqueeScroll 74s linear infinite;}
+.sushi-gallery-track:hover{animation-play-state:paused;}
+.sushi-gallery-card{position:relative;display:block;flex:0 0 auto;width:246px;aspect-ratio:3/4;overflow:hidden;border:1px solid rgba(212,168,67,.16);border-radius:6px;background:#0b0908;box-shadow:0 18px 44px rgba(0,0,0,.36);text-decoration:none;isolation:isolate;transition:transform .34s ease,border-color .34s ease,box-shadow .34s ease;}
+.sushi-gallery-card::before{content:'';position:absolute;z-index:2;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(0,0,0,.72) 100%);pointer-events:none;}
+.sushi-gallery-card::after{content:'';position:absolute;z-index:3;left:12px;right:12px;top:12px;height:1px;background:linear-gradient(90deg,transparent,rgba(230,176,64,.56),transparent);opacity:.72;pointer-events:none;}
+.sushi-gallery-card img{width:100%;height:100%;object-fit:cover;filter:brightness(.86) saturate(1.08);transform:scale(1.01);transition:transform .52s ease,filter .52s ease;}
+.sushi-gallery-card span{position:absolute;z-index:4;left:14px;right:14px;bottom:14px;display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:0 10px;border:1px solid rgba(230,176,64,.30);border-radius:999px;background:rgba(5,5,5,.62);box-shadow:0 12px 24px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-family:var(--body-font);font-size:8px;font-weight:900;letter-spacing:1.1px;text-transform:uppercase;color:#f4d18a;text-align:center;white-space:nowrap;}
+.sushi-gallery-card:hover{transform:translateY(-4px);border-color:rgba(230,176,64,.36);box-shadow:0 24px 54px rgba(0,0,0,.46),0 0 30px rgba(212,168,67,.10);}
+.sushi-gallery-card:hover img{transform:scale(1.07);filter:brightness(.70) saturate(1.18);}
 
 /* AREAS ATENDIDAS */
 .delivery-areas{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.45fr);gap:54px;align-items:center;padding:88px 60px;background:linear-gradient(135deg,#070504 0%,#030303 58%,#100706 100%);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
@@ -610,6 +625,12 @@ footer{background:linear-gradient(90deg,#240000 0%,#5E0000 45%,#7A0000 100%);bor
   .ps-divider{display:none;}
   .insta-grid{grid-template-columns:repeat(2,1fr);}
   .prova-social,.insta-section{padding:60px 24px;}
+  .sushi-gallery{margin-top:48px;}
+  .sushi-gallery-copy{margin-bottom:24px;}
+  .sushi-gallery-copy p{font-size:12px;line-height:1.65;}
+  .sushi-gallery-wrap{margin:0 -24px;}
+  .sushi-gallery-track{gap:14px;animation-duration:68s;}
+  .sushi-gallery-card{width:214px;}
   .depoimentos{padding:60px 0;}
   .dep-header{padding:0 24px;}
   .dep-rating-proof{max-width:100%;min-height:40px;padding:0 14px;gap:8px;}
@@ -628,6 +649,10 @@ footer{background:linear-gradient(90deg,#240000 0%,#5E0000 45%,#7A0000 100%);bor
   .seasonal-banner strong{font-size:11.6px;}
   .seasonal-pulse{display:none;}
   .seasonal-cta{min-height:32px;padding:0 10px;font-size:7.2px;letter-spacing:.75px;}
+  .sushi-gallery-copy h3{font-size:28px;}
+  .sushi-gallery-copy p{max-width:310px;}
+  .sushi-gallery-card{width:190px;border-radius:5px;}
+  .sushi-gallery-card span{left:10px;right:10px;bottom:10px;min-height:30px;font-size:7.3px;letter-spacing:.85px;}
   .bf-stat{flex:0 0 100%;}
 }
 
@@ -1311,5 +1336,5 @@ footer{background:linear-gradient(90deg,#240000 0%,#5E0000 45%,#7A0000 100%);bor
 
 @media (prefers-reduced-motion:reduce){
   .brand-intro{display:none;}
-  .logo-img,.logo-link::before,.logo-link::after,nav>a:first-child::before,nav>a:first-child::after,.brand-intro-mark,.brand-intro-mark::after,.order-bar.is-pulsing{animation:none!important;}
+  .logo-img,.logo-link::before,.logo-link::after,nav>a:first-child::before,nav>a:first-child::after,.brand-intro-mark,.brand-intro-mark::after,.order-bar.is-pulsing,.dep-marquee,.sushi-gallery-track{animation:none!important;}
 }
