@@ -144,6 +144,25 @@ function escapeHtml(value){
   }[char]));
 }
 function escapeAttr(value){return escapeHtml(value).replace(/`/g,'&#96;');}
+const depMarquee=document.querySelector('.dep-marquee');
+const googleReviews=[
+  {initials:'VF',author:'Vitória França',text:'Entrega rápida, atendimento atencioso e pratos muito bem preparados.'},
+  {initials:'TG',author:'Thiago Gomes',text:'Comida muito saborosa, ingredientes frescos e atendimento excelente.'},
+  {initials:'VA',author:'Victória Arruda',text:'Tudo super fresco, com muito capricho e delicioso.'}
+];
+function renderGoogleReviews(){
+  if(!depMarquee) return;
+  const cards=[...googleReviews,...googleReviews];
+  depMarquee.innerHTML=cards.map(review=>`
+    <div class="dep-card dep-card-google">
+      <div class="dep-top">
+        <span class="dep-avatar" aria-hidden="true">${escapeHtml(review.initials)}</span>
+        <div><div class="dep-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><span class="dep-author">${escapeHtml(review.author)}</span></div>
+      </div>
+      <p class="dep-text">"${escapeHtml(review.text)}"</p>
+    </div>
+  `).join('');
+}
 function safeText(value,max=240){
   return String(value??'')
     .replace(/[\u0000-\u001F\u007F]/g,' ')
@@ -1605,6 +1624,7 @@ orderSend?.addEventListener('click',()=>{
   if(opened) opened.opener=null;
   if(!opened) window.location.assign(url);
 });
+renderGoogleReviews();
 setupScheduleControls();
 initSecurityConfig();
 renderOrder();
