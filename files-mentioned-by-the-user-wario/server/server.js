@@ -308,6 +308,7 @@ const productCatalog=new Map([
   ['combo-mix-joes-12',{name:'Combo Mix Joes (12 un)',price:35.9}],
   ['combo-wa-rio-1-31',{name:'Combo WA RIO 1 (31 un)',price:55.9}],
   ['combo-wa-rio-2-36',{name:'Combo WA RIO 2 (36 un)',price:76.9}],
+  ['promo-namorados-35-35',{name:'Combo Love + sobremesa gratis (35 pecas + 4 bananas)',price:79}],
   ['promo-wa-rio-1-31',{name:'Especial WA RIO 1 (31 pecas)',price:55.9}],
   ['promo-mix-joes-12',{name:'Mix Joes Especial (12 pecas)',price:35.9}],
   ['promo-hot-20-20',{name:'Hot Filadelfia Especial (20 un)',price:23}],

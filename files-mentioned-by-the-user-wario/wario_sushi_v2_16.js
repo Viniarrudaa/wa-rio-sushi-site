@@ -223,7 +223,7 @@ const menuProducts=[
   {id:'joe-joe',name:'Joe Joe',label:'Joe Joe',category:'joe',desc:'Peças cremosas e delicadas para adicionar um toque especial ao pedido.',variants:[{id:'1',label:'1 un',price:3},{id:'2',label:'2 un',price:5},{id:'4',label:'4 un',price:10}],meta:['Especial','Cremoso'],image:'joejoe_cardapio_optimized.jpg'}
 ];
 const promoProducts=[
-  {id:'promo-namorados-35',name:'Combo Dia dos Namorados 35 peças',label:'Dia dos Namorados',category:'promocoes',badge:'35 peças + doce',desc:'Combo especial para casal com salmão, joes, gunkan, filadélfia, uramaki, hot e banana crocante com Nutella.',composition:'Itens inclusos no Combo Dia dos Namorados:',details:['2 Niguiri de salmão selado','2 Niguiri de salmão','2 Joe c/ geleia de maracujá','2 Joe Joe de salmão','2 Gunkan c/ tataki','5 Filadélfia roll','5 Uramaki de salmão','5 Hot especial','10 Hot Filadélfia','4 Banana crocante com Nutella'],variants:[{id:'35',label:'35 peças + 4 bananas',price:79}],meta:['Para casal','12/06'],image:'promo_namorados_combo_35_optimized.jpg'}
+  {id:'promo-namorados-35',name:'Combo Love + sobremesa grátis',label:'Dia dos Namorados',category:'promocoes',badge:'35 peças + doce',desc:'Combo especial para casal com salmão, joes, gunkan, filadélfia, uramaki, hot e sobremesa grátis.',composition:'Itens inclusos no Combo Love:',details:['2 Niguiri de salmão selado','2 Niguiri de salmão','2 Joe c/ geleia de maracujá','2 Joe Joe de salmão','2 Gunkan c/ tataki','5 Filadélfia roll','5 Uramaki de salmão','5 Hot especial','10 Hot Filadélfia','4 Banana crocante com Nutella'],variants:[{id:'35',label:'35 peças + 4 bananas',price:79}],meta:['Para casal','Sobremesa grátis'],image:'promo_namorados_combo_35_optimized.jpg'}
 ];
 function variantSummary(item){return `${safeText(item.name,120)}: ${item.variants.map(variant=>`${safeText(variant.label,40)} - ${formatMoney(variant.price)}`).join(', ')}`;}
 function variantButtons(item){
@@ -898,9 +898,9 @@ function pixStatusText(status){
   if(status==='error'&&pixState.errorMessage) return pixState.errorMessage;
   const hasPixPaymentData=Boolean(pixState.qrCode||pixState.qrCodeBase64);
   return {
-    idle:'Gere o Pix e pague no app do banco. O WhatsApp libera automaticamente depois da confirmação.',
+    idle:'Gere o Pix para aparecer o QR Code e o código copia e cola.',
     creating:'Gerando cobrança Pix segura...',
-    pending:hasPixPaymentData?'Pix gerado. Pague pelo QR Code ou copia e cola; a confirmação libera o WhatsApp automaticamente.':'Pix criado, mas o QR não foi retornado. Tente gerar novamente.',
+    pending:hasPixPaymentData?'Pix gerado. Use o QR Code ou copie o código abaixo no app do banco.':'Pix criado, mas o QR não foi retornado. Tente gerar novamente.',
     approved:'Pagamento aprovado com sucesso. Seu pedido já pode ser enviado pelo WhatsApp.',
     error:'Não foi possível gerar ou confirmar o Pix agora. Tente novamente.'
   }[status]||'Aguardando pagamento Pix.';
