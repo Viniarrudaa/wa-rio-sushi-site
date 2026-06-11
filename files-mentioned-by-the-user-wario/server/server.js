@@ -30,7 +30,6 @@ const requestLog=new Map();
 const trustProxy=String(process.env.TRUST_PROXY||'').toLowerCase()==='true';
 const turnstileSiteKey=process.env.TURNSTILE_SITE_KEY||'';
 const turnstileSecretKey=process.env.TURNSTILE_SECRET_KEY||'';
-const gaMeasurementId=String(process.env.GA_MEASUREMENT_ID||'').trim();
 const turnstileRequired=String(process.env.TURNSTILE_REQUIRED||'').toLowerCase()==='true'||(isProduction&&Boolean(turnstileSiteKey&&turnstileSecretKey));
 const turnstileEnabled=Boolean(turnstileSiteKey&&turnstileSecretKey&&turnstileRequired);
 const orderPersistenceEnabled=String(process.env.ORDER_STORE||'file').toLowerCase()!=='memory';
@@ -141,11 +140,11 @@ function setSecurityHeaders(req,res){
     "default-src 'self'",
     "base-uri 'none'",
     "object-src 'none'",
-    "script-src 'self' 'sha256-Pdwf9f7BmDWe4dD63iUff1TmwlLIN74NdCoz221f/fw=' https://challenges.cloudflare.com https://www.googletagmanager.com",
+    "script-src 'self' https://challenges.cloudflare.com",
     "style-src 'self' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
-    "img-src 'self' data: https://www.google-analytics.com https://www.googletagmanager.com https://api.qrserver.com",
-    "connect-src 'self' https://viacep.com.br https://challenges.cloudflare.com https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com",
+    "img-src 'self' data:",
+    "connect-src 'self' https://viacep.com.br https://challenges.cloudflare.com",
     "frame-src https://challenges.cloudflare.com",
     "frame-ancestors 'none'",
     "form-action 'none'",
@@ -233,8 +232,7 @@ function hasJsonContentType(req){
 function securityConfig(){
   return {
     turnstileEnabled,
-    turnstileSiteKey:turnstileEnabled?turnstileSiteKey:'',
-    gaMeasurementId:/^G-[A-Z0-9]+$/i.test(gaMeasurementId)?gaMeasurementId:''
+    turnstileSiteKey:turnstileEnabled?turnstileSiteKey:''
   };
 }
 
@@ -304,14 +302,10 @@ function normalizeText(value){
 }
 
 const productCatalog=new Map([
-  ['combo-du-chef-36',{name:'Combo Du Chef (36 un)',price:65}],
+  ['combo-du-chef-36',{name:'Promoção do Dia dos Namorados (36 un)',price:65}],
   ['combo-mix-joes-12',{name:'Combo Mix Joes (12 un)',price:35.9}],
   ['combo-wa-rio-1-31',{name:'Combo WA RIO 1 (31 un)',price:55.9}],
   ['combo-wa-rio-2-36',{name:'Combo WA RIO 2 (36 un)',price:76.9}],
-  ['promo-namorados-35-35',{name:'Combo Love + sobremesa gratis (35 pecas + 4 bananas)',price:79}],
-  ['promo-wa-rio-1-31',{name:'Especial WA RIO 1 (31 pecas)',price:55.9}],
-  ['promo-mix-joes-12',{name:'Mix Joes Especial (12 pecas)',price:35.9}],
-  ['promo-hot-20-20',{name:'Hot Filadelfia Especial (20 un)',price:23}],
   ['filadelfia-roll-10',{name:'Filadelfia Roll (10 un)',price:16.9}],
   ['filadelfia-roll-20',{name:'Filadelfia Roll (20 un)',price:23}],
   ['filadelfia-roll-30',{name:'Filadelfia Roll (30 un)',price:31}],
@@ -347,17 +341,18 @@ const deliveryFeeByNeighborhood={
   'maria da graca':7
 };
 const deliveryNeighborhoods=[
-  'cachambi',
   'meier',
+  'cachambi',
   'engenho de dentro',
   'pilares',
-  'riachuelo',
+  'abolicao',
   'maria da graca',
   'higienopolis',
+  'todos os santos',
+  'engenhao',
+  'cardim',
   'engenho novo',
-  'del castilho',
-  'abolicao',
-  'piedade'
+  'riachuelo'
 ];
 
 function deliveryFeeFor(neighborhood){
@@ -367,7 +362,6 @@ function deliveryFeeFor(neighborhood){
 }
 
 function normalizeOrder(body,schedule){
-  normalizeOrder.lastError='';
   const submittedAmount=normalizeAmount(body?.amount);
   const address={
     street:safeText(body?.address?.street,140),
@@ -376,37 +370,21 @@ function normalizeOrder(body,schedule){
     neighborhood:safeText(body?.address?.neighborhood,80),
     cep:safeText(body?.address?.cep,12)
   };
-  if(!address.street||!address.number||!address.neighborhood){
-    normalizeOrder.lastError='Preencha endereco, numero e bairro antes de gerar o Pix.';
-    return null;
-  }
+  if(!address.street||!address.number||!address.neighborhood) return null;
   const deliveryFee=deliveryFeeFor(address.neighborhood);
-  if(typeof deliveryFee!=='number'){
-    normalizeOrder.lastError='Esse bairro ainda nao esta em uma area atendida pelo delivery.';
-    return null;
-  }
+  if(typeof deliveryFee!=='number') return null;
   const submittedItems=Array.isArray(body?.items)?body.items.slice(0,30):[];
   const items=submittedItems.map(item=>{
     const id=safeText(item.id,80);
     const product=productCatalog.get(id);
-    if(!product){
-      normalizeOrder.lastError='Um item do cardapio nao foi reconhecido. Atualize a pagina e tente novamente.';
-      return null;
-    }
+    if(!product) return null;
     const qty=Math.max(1,Math.min(20,Number(item.qty)||1));
     return {id,name:product.name,qty,price:product.price,total:Math.round(product.price*qty*100)/100};
   });
-  if(!items.length){
-    normalizeOrder.lastError='Adicione pelo menos um item ao pedido antes de gerar o Pix.';
-    return null;
-  }
-  if(items.some(item=>!item)) return null;
+  if(!items.length||items.some(item=>!item)) return null;
   const subtotal=Math.round(items.reduce((sum,item)=>sum+item.total,0)*100)/100;
   const amount=Math.round((subtotal+deliveryFee)*100)/100;
-  if(!submittedAmount||Math.abs(submittedAmount-amount)>0.01){
-    normalizeOrder.lastError='O total do pedido mudou. Atualize o carrinho e tente gerar o Pix novamente.';
-    return null;
-  }
+  if(!submittedAmount||Math.abs(submittedAmount-amount)>0.01) return null;
   return {
     orderId:`WR-${Date.now()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`,
     orderToken:crypto.randomBytes(24).toString('hex'),
@@ -454,42 +432,8 @@ async function mercadoPago(pathname,options={}){
   return data;
 }
 
-function firstNonEmpty(...values){
-  for(const value of values){
-    if(value!==undefined&&value!==null&&String(value).trim()) return String(value);
-  }
-  return '';
-}
-
-function findFirstStringField(value,fieldNames,depth=0,seen=new WeakSet()){
-  if(!value||typeof value!=='object'||depth>8) return '';
-  if(seen.has(value)) return '';
-  seen.add(value);
-  if(Array.isArray(value)){
-    for(const item of value){
-      const found=findFirstStringField(item,fieldNames,depth+1,seen);
-      if(found) return found;
-    }
-    return '';
-  }
-  for(const name of fieldNames){
-    const candidate=value[name];
-    if(candidate!==undefined&&candidate!==null&&String(candidate).trim()) return String(candidate);
-  }
-  for(const child of Object.values(value)){
-    const found=findFirstStringField(child,fieldNames,depth+1,seen);
-    if(found) return found;
-  }
-  return '';
-}
-
 function orderPayment(mpOrder){
-  const payments=[
-    ...(Array.isArray(mpOrder?.transactions?.payments)?mpOrder.transactions.payments:[]),
-    ...(Array.isArray(mpOrder?.transaction?.payments)?mpOrder.transaction.payments:[]),
-    ...(Array.isArray(mpOrder?.payments)?mpOrder.payments:[])
-  ];
-  return payments[0]||{};
+  return mpOrder?.transactions?.payments?.[0]||{};
 }
 
 function normalizedOrderStatus(mpOrder){
@@ -504,52 +448,16 @@ function normalizedOrderStatus(mpOrder){
 function pixResponse(mpOrder,order){
   const payment=orderPayment(mpOrder);
   const paymentMethod=payment.payment_method||{};
-  const qrCode=firstNonEmpty(
-    paymentMethod.qr_code,
-    payment.qr_code,
-    mpOrder.qr_code,
-    mpOrder.qr_data,
-    findFirstStringField(mpOrder,['qr_code','qr_data'])
-  );
-  const qrCodeBase64=firstNonEmpty(
-    paymentMethod.qr_code_base64,
-    payment.qr_code_base64,
-    mpOrder.qr_code_base64,
-    findFirstStringField(mpOrder,['qr_code_base64','qr_code_based64'])
-  );
-  const ticketUrl=firstNonEmpty(
-    paymentMethod.ticket_url,
-    payment.ticket_url,
-    mpOrder.ticket_url,
-    findFirstStringField(mpOrder,['ticket_url'])
-  );
   return {
     orderId:order.orderId,
     orderToken:order.orderToken,
     paymentId:String(mpOrder.id),
     status:normalizedOrderStatus(mpOrder),
     statusDetail:payment.status_detail||mpOrder.status_detail||'',
-    qrCode,
-    qrCodeBase64,
-    ticketUrl
+    qrCode:paymentMethod.qr_code||'',
+    qrCodeBase64:paymentMethod.qr_code_base64||'',
+    ticketUrl:paymentMethod.ticket_url||''
   };
-}
-
-async function ensurePixQrImage(responseBody){
-  if(responseBody.qrCodeBase64||!responseBody.qrCode) return responseBody;
-  try{
-    const QRCode=await import('qrcode');
-    const dataUrl=await QRCode.default.toDataURL(responseBody.qrCode,{
-      errorCorrectionLevel:'M',
-      margin:2,
-      scale:6,
-      type:'image/png'
-    });
-    responseBody.qrCodeBase64=String(dataUrl).split(',')[1]||'';
-  }catch(error){
-    console.warn('Nao foi possivel gerar QR local a partir do copia-e-cola Pix:',error.message);
-  }
-  return responseBody;
 }
 
 function formatMoney(value){
@@ -631,44 +539,14 @@ function formatScheduleDate(dateValue){
 }
 
 function normalizeSchedule(value){
-  normalizeSchedule.lastError='';
   const mode=safeText(value?.mode,40);
-  if(mode==='now'){
-    if(!isBusinessOpen()){
-      normalizeSchedule.lastError='Agora estamos fechados. Escolha um agendamento para receber no horario de atendimento.';
-      return null;
-    }
-    return {
-      mode:'now',
-      date:'',
-      time:'',
-      label:'Entrega agora'
-    };
-  }
-  if(mode!=='scheduled'){
-    normalizeSchedule.lastError='Escolha data e horario para a entrega.';
-    return null;
-  }
+  if(mode!=='scheduled') return {mode:'immediate',label:'Assim que possivel'};
   const date=safeText(value?.date,10);
   const time=safeText(value?.time,5);
   const dateObject=scheduleDateObject(date);
   const timestamp=scheduleTimestamp(date,time);
-  if(!dateObject){
-    normalizeSchedule.lastError='Escolha uma data valida para a entrega.';
-    return null;
-  }
-  if(!isBusinessDay(dateObject)){
-    normalizeSchedule.lastError='Escolha uma data de quarta a domingo.';
-    return null;
-  }
-  if(!isBusinessTime(time)){
-    normalizeSchedule.lastError='Escolha um horario entre 19h e 23h.';
-    return null;
-  }
-  if(!Number.isFinite(timestamp)||timestamp<Date.now()+scheduleLeadMinutes*60*1000){
-    normalizeSchedule.lastError=`Escolha um horario com pelo menos ${scheduleLeadMinutes} minutos de antecedencia.`;
-    return null;
-  }
+  if(!dateObject||!isBusinessDay(dateObject)||!isBusinessTime(time)) return null;
+  if(!Number.isFinite(timestamp)||timestamp<Date.now()+scheduleLeadMinutes*60*1000) return null;
   return {
     mode:'scheduled',
     date,
@@ -690,7 +568,7 @@ function buildWhatsappMessage(order){
     'Pedido:',
     ...order.items.map(item=>`- ${item.qty}x ${item.name} - ${formatMoney(item.total)}`),
     `Endereco: ${addressParts.join(' - ')}`,
-    `Entrega: ${order.schedule?.label||'Nao informado'}`,
+    `Agendamento: ${order.schedule?.mode==='scheduled'?order.schedule.label:'Assim que possivel'}`,
     'Pagamento: Pix aprovado',
     `Total: ${formatMoney(order.amount)}`,
     `Codigo do pagamento: ${order.mpOrderId||order.paymentId}`
@@ -700,20 +578,15 @@ function buildWhatsappMessage(order){
 async function createPixOrder(req,res){
   const body=await readJson(req);
   const schedule=normalizeSchedule(body?.schedule);
-  if(!schedule){
-    const error=normalizeSchedule.lastError||'Agendamento invalido.';
-    console.warn('Pix recusado por agendamento invalido:',error);
-    return sendJson(res,400,{error});
+  if(!schedule) return sendJson(res,400,{error:'Agendamento invalido.'});
+  if(schedule.mode!=='scheduled'&&!isBusinessOpen()){
+    return sendJson(res,409,{error:closedOrderMessage()});
   }
   if(!await verifyTurnstileToken(body?.turnstileToken,req)){
     return sendJson(res,403,{error:'Confirme a verificacao anti-bot para gerar o Pix.'});
   }
   const order=normalizeOrder(body,schedule);
-  if(!order){
-    const error=normalizeOrder.lastError||'Pedido invalido ou valor divergente.';
-    console.warn('Pix recusado por pedido invalido:',error);
-    return sendJson(res,400,{error});
-  }
+  if(!order) return sendJson(res,400,{error:'Pedido invalido ou valor divergente.'});
   const mpOrder=await mercadoPago('/v1/orders',{
     method:'POST',
     headers:{'X-Idempotency-Key':order.orderId},
@@ -738,17 +611,9 @@ async function createPixOrder(req,res){
       }
     })
   });
-  const responseBody=await ensurePixQrImage(pixResponse(mpOrder,order));
-  if(!responseBody.qrCode&&!responseBody.qrCodeBase64){
-    console.warn('Mercado Pago retornou Pix sem QR/copia-e-cola.',{
-      paymentId:responseBody.paymentId,
-      status:responseBody.status,
-      statusDetail:responseBody.statusDetail
-    });
-  }
-  orders.set(String(mpOrder.id),{...order,mpOrderId:String(mpOrder.id),status:responseBody.status});
+  orders.set(String(mpOrder.id),{...order,mpOrderId:String(mpOrder.id),status:normalizedOrderStatus(mpOrder)});
   scheduleOrderPersist();
-  return sendJson(res,200,responseBody);
+  return sendJson(res,200,pixResponse(mpOrder,order));
 }
 
 async function getPixStatus(req,res,paymentId,url){
@@ -861,9 +726,7 @@ async function serveStatic(req,res,url){
       '.jpg':'image/jpeg',
       '.jpeg':'image/jpeg',
       '.webp':'image/webp',
-      '.ico':'image/x-icon',
-      '.xml':'application/xml; charset=utf-8',
-      '.txt':'text/plain; charset=utf-8'
+      '.ico':'image/x-icon'
     }[ext];
     if(!type){
       res.writeHead(404);

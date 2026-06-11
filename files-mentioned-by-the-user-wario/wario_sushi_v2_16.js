@@ -1,50 +1,6 @@
 const navbar = document.getElementById('navbar');
 const navToggle=document.getElementById('navToggle');
 const navLinks=[...document.querySelectorAll('#navbarMenu a[href^="#"]')];
-const analyticsState={measurementId:'',ready:false,loaded:false,queue:[]};
-function normalizeAnalyticsValue(value){
-  if(typeof value==='number'&&Number.isFinite(value)) return Math.round(value*100)/100;
-  if(typeof value==='boolean'||value==null) return value;
-  return safeText(value,120);
-}
-function analyticsPayload(params={}){
-  return Object.fromEntries(Object.entries(params).map(([key,value])=>[key,normalizeAnalyticsValue(value)]).filter(([,value])=>value!==''&&value!==undefined&&value!==null));
-}
-function sendAnalyticsEvent(name,params={}){
-  const eventName=safeText(name,40);
-  if(!eventName) return;
-  const payload=analyticsPayload(params);
-  if(!analyticsState.ready||typeof window.gtag!=='function'){
-    analyticsState.queue.push([eventName,payload]);
-    analyticsState.queue=analyticsState.queue.slice(-25);
-    return;
-  }
-  window.gtag('event',eventName,payload);
-}
-function flushAnalyticsQueue(){
-  if(!analyticsState.ready||typeof window.gtag!=='function') return;
-  const queue=analyticsState.queue.splice(0);
-  queue.forEach(([name,params])=>window.gtag('event',name,params));
-}
-function loadAnalytics(measurementId){
-  const id=safeText(measurementId,32).toUpperCase();
-  if(analyticsState.loaded||!/^G-[A-Z0-9]+$/.test(id)) return;
-  analyticsState.loaded=true;
-  analyticsState.measurementId=id;
-  window.dataLayer=window.dataLayer||[];
-  window.gtag=function(){window.dataLayer.push(arguments);};
-  window.gtag('js',new Date());
-  window.gtag('config',id,{send_page_view:true});
-  const script=document.createElement('script');
-  script.async=true;
-  script.src=`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(id)}`;
-  script.onload=()=>{
-    analyticsState.ready=true;
-    flushAnalyticsQueue();
-  };
-  script.onerror=()=>{analyticsState.loaded=false;};
-  document.head.appendChild(script);
-}
 const navSections=[...new Set(navLinks.map(link=>link.getAttribute('href')).filter(href=>href&&href.length>1))]
   .map(href=>document.querySelector(href))
   .filter(Boolean);
@@ -97,39 +53,6 @@ function setNavMenuOpen(open){
 navToggle?.addEventListener('click',()=>setNavMenuOpen(!navbar.classList.contains('is-menu-open')));
 document.querySelectorAll('a[href^="#"]').forEach(a=>{ a.addEventListener('click',e=>{ const href=a.getAttribute('href'); if(!href||href.length<2)return; const t=document.querySelector(href); if(t){e.preventDefault();setNavMenuOpen(false);t.scrollIntoView({behavior:'smooth'});} }); });
 document.addEventListener('click',e=>{if(navbar?.classList.contains('is-menu-open')&&!navbar.contains(e.target))setNavMenuOpen(false);});
-const namoradosCountdown=document.querySelector('[data-countdown="namorados"]');
-const namoradosCountdownEls={
-  days:document.getElementById('namoradosDays'),
-  label:document.getElementById('namoradosCountdownLabel'),
-  timeLeft:document.getElementById('namoradosTimeLeft')
-};
-const namoradosStart=Date.parse('2026-06-12T00:00:00-03:00');
-const namoradosEnd=Date.parse('2026-06-13T00:00:00-03:00');
-function setCountdownValue(el,value){if(el) el.textContent=String(Math.max(0,value)).padStart(2,'0');}
-function updateNamoradosCountdown(){
-  if(!namoradosCountdown) return;
-  const now=Date.now();
-  const isToday=now>=namoradosStart&&now<namoradosEnd;
-  const target=isToday?namoradosEnd:namoradosStart;
-  const remaining=Math.max(0,target-now);
-  const days=Math.floor(remaining/86400000);
-  const hours=Math.floor((remaining%86400000)/3600000);
-  const minutes=Math.floor((remaining%3600000)/60000);
-  namoradosCountdown.classList.toggle('is-today',isToday);
-  if(isToday){
-    if(namoradosCountdownEls.label) namoradosCountdownEls.label.textContent='Hoje';
-    if(namoradosCountdownEls.days) namoradosCountdownEls.days.textContent='12/06';
-    if(namoradosCountdownEls.timeLeft) namoradosCountdownEls.timeLeft.textContent='reserve';
-    namoradosCountdown.setAttribute('aria-label',`Hoje é Dia dos Namorados. Restam ${hours} horas e ${minutes} minutos para reservar.`);
-    return;
-  }
-  setCountdownValue(namoradosCountdownEls.days,days);
-  if(namoradosCountdownEls.label) namoradosCountdownEls.label.textContent='Faltam';
-  if(namoradosCountdownEls.timeLeft) namoradosCountdownEls.timeLeft.textContent=`${days===1?'dia':'dias'} e ${hours}h`;
-  namoradosCountdown.setAttribute('aria-label',`Faltam ${days} dias, ${hours} horas e ${minutes} minutos para o Dia dos Namorados.`);
-}
-updateNamoradosCountdown();
-window.setInterval(updateNamoradosCountdown,60000);
 const whatsappPhone='5521982225443';
 const moneyFormatter=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
 const formatMoney=value=>moneyFormatter.format(Number(value)||0);
@@ -144,40 +67,6 @@ function escapeHtml(value){
   }[char]));
 }
 function escapeAttr(value){return escapeHtml(value).replace(/`/g,'&#96;');}
-const depMarquee=document.querySelector('.dep-marquee');
-const googleReviews=[
-  {initials:'CE',author:'Carlos Eduardo',text:'Pratos bem preparados, sabores equilibrados e peixe fresco.'},
-  {initials:'LM',author:'leandra machado',text:'Amei, super saboroso e pontual, tem meu coração.'},
-  {initials:'GR',author:'Guilherme Reis',text:'Melhor japonês da Zona Norte que experimentei, nota 10.'},
-  {initials:'LF',author:'LF',text:'Sushi de ótima qualidade e preço justo, referência na Zona Norte.'},
-  {initials:'LU',author:'lulu',text:'Comida maravilhosa e atendimento impecável.'},
-  {initials:'VF',author:'Vitória França',text:'Entrega rápida, atendimento atencioso e pratos muito bem preparados.'},
-  {initials:'TG',author:'Thiago Gomes',text:'Comida muito saborosa, ingredientes frescos e atendimento excelente.'},
-  {initials:'VA',author:'Victória Arruda',text:'Tudo super fresco, com muito capricho e delicioso.'},
-  {initials:'LA',author:'Lucas Antunes',text:'Comida excelente e ótimo atendimento.'},
-  {initials:'RF',author:'Ryan Figueredo',text:'Melhor sushi do RJ.'},
-  {initials:'SL',author:'sophia lemos',text:'Eu amei, gostei muito.'},
-  {initials:'RS',author:'renata santos',text:'Excelente, atendimento top, voltarei mais vezes.'},
-  {initials:'MR',author:'Marina Rodrigues',text:'Melhor sushi que já comi, comida fresca e de qualidade.'},
-  {initials:'LS',author:'Luis Silva',text:'Comi demais, uma delícia.'},
-  {initials:'VI',author:'Vinicius Arruda',text:'Avaliou com 5 estrelas no Google.'},
-  {initials:'JA',author:'Jhone Alves',text:'Avaliou com 5 estrelas no Google.'},
-  {initials:'LR',author:'Luiz Felipe Ribeiro',text:'Avaliou com 5 estrelas no Google.'},
-  {initials:'JO',author:'Jhonata Alves',text:'Avaliou com 5 estrelas no Google.'}
-];
-function renderGoogleReviews(){
-  if(!depMarquee) return;
-  const cards=[...googleReviews,...googleReviews];
-  depMarquee.innerHTML=cards.map(review=>`
-    <div class="dep-card dep-card-google">
-      <div class="dep-top">
-        <span class="dep-avatar" aria-hidden="true">${escapeHtml(review.initials)}</span>
-        <div><div class="dep-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><span class="dep-author">${escapeHtml(review.author)}</span></div>
-      </div>
-      <p class="dep-text">"${escapeHtml(review.text)}"</p>
-    </div>
-  `).join('');
-}
 function safeText(value,max=240){
   return String(value??'')
     .replace(/[\u0000-\u001F\u007F]/g,' ')
@@ -207,7 +96,7 @@ const menuCategories=[
   ['especiais','Especiais']
 ];
 const menuProducts=[
-  {id:'combo-du-chef',name:'Combo Du Chef',label:'Combos',category:'combos',badge:'36 peças',desc:'36 peças para dividir com hot, salmão, peças especiais e sashimi.',composition:'Itens inclusos no Combo Du Chef:',details:['20 Hot Filadélfia','5 Filadélfia','2 Sushi nigiri','3 Gunkan c/ tataki de salmão','2 Joe Joe','4 Sashimi de salmão'],variants:[{id:'36',label:'36 un',price:65}],meta:['36 peças','Chef'],image:'duchef_Cardapio_optimized.jpg'},
+  {id:'combo-du-chef',name:'Promoção do Dia dos Namorados',label:'Combos',category:'combos',badge:'36 peças',desc:'36 peças para dividir com hot, salmão, peças especiais, sashimi e uma sobremesa grátis para completar o pedido.',composition:'Itens inclusos na Promoção:',details:['20 Hot Filadélfia','5 Filadélfia','2 Sushi nigiri','3 Gunkan c/ tataki de salmão','2 Joe Joe','4 Sashimi de salmão','Sobremesa grátis'],variants:[{id:'36',label:'36 un',price:65}],meta:['36 peças','Sobremesa grátis'],image:'duchef_Cardapio_optimized.jpg'},
   {id:'combo-mix-joes',name:'Combo Mix Joes',label:'Combos',category:'combos',badge:'12 peças',desc:'12 peças autorais para quem gosta de joes, gunkans e geleias especiais.',composition:'Itens inclusos no Mix Joes:',details:['4 Joe de salmão c/ cream cheese','4 Gunkan c/ tataki de salmão','2 Joe c/ geleia de pimenta','2 Joe c/ geleia de maracujá'],variants:[{id:'12',label:'12 un',price:35.9}],meta:['12 peças','Joes'],image:'mixdejoe_cardapio_optimized.jpg'},
   {id:'combo-wa-rio-1',name:'Combo WA RIO 1',label:'Combos',category:'combos',badge:'31 peças',desc:'31 peças com filadélfia, hot, uramaki e peças especiais da casa.',composition:'Itens inclusos no WA RIO 1:',details:['10 Filadélfia','10 Hot Filadélfia','5 Uramaki de salmão','2 Joe c/ geleia de maracujá','2 Nigiri de salmão','2 Gunkan de tataki de salmão'],variants:[{id:'31',label:'31 un',price:55.9}],meta:['31 peças','WA RIO'],image:'wario1_cardapio_optimized.jpg'},
   {id:'combo-wa-rio-2',name:'Combo WA RIO 2',label:'Combos',category:'combos',badge:'36 peças',desc:'36 peças premium com sashimi, nigiri, joes, uramakis, filadélfia e hot.',composition:'Itens inclusos no WA RIO 2:',details:['4 Sashimi de salmão','4 Nigiri de salmão','2 Nigiri skin','2 Joe c/ cream cheese','4 Uramaki de salmão','4 Uramaki especial','10 Filadélfia roll','10 Hot Filadélfia'],variants:[{id:'36',label:'36 un',price:76.9}],meta:['36 peças','Premium'],image:'wario2_cardapio_optimized.jpg'},
@@ -221,9 +110,6 @@ const menuProducts=[
   {id:'sashimi',name:'Sashimi',label:'Sashimi',category:'sashimi',desc:'Cortes frescos de salmão para complementar o pedido com leveza e precisão.',variants:[{id:'1',label:'1 un',price:4},{id:'4',label:'4 un',price:14},{id:'5',label:'5 un',price:18}],meta:['Salmão','Cortes'],image:'sashimi_cardapio_optimized.jpg'},
   {id:'niguiri',name:'Sushi Niguiri',label:'Niguiri',category:'niguiri',desc:'Arroz temperado e salmão em corte delicado, servido em opções para completar a seleção.',variants:[{id:'1',label:'1 un',price:3},{id:'2',label:'2 un',price:5},{id:'4',label:'4 un',price:9}],meta:['Salmão','Clássico'],image:'sushinigiri_cardapio_optimized.jpg'},
   {id:'joe-joe',name:'Joe Joe',label:'Joe Joe',category:'joe',desc:'Peças cremosas e delicadas para adicionar um toque especial ao pedido.',variants:[{id:'1',label:'1 un',price:3},{id:'2',label:'2 un',price:5},{id:'4',label:'4 un',price:10}],meta:['Especial','Cremoso'],image:'joejoe_cardapio_optimized.jpg'}
-];
-const promoProducts=[
-  {id:'promo-namorados-35',name:'Combo Love + sobremesa grátis',label:'Dia dos Namorados',category:'promocoes',badge:'35 peças + doce',desc:'Combo especial para casal com salmão, joes, gunkan, filadélfia, uramaki, hot e sobremesa grátis.',composition:'Itens inclusos no Combo Love:',details:['2 Niguiri de salmão selado','2 Niguiri de salmão','2 Joe c/ geleia de maracujá','2 Joe Joe de salmão','2 Gunkan c/ tataki','5 Filadélfia roll','5 Uramaki de salmão','5 Hot especial','10 Hot Filadélfia','4 Banana crocante com Nutella'],variants:[{id:'35',label:'35 peças + 4 bananas',price:79}],meta:['Para casal','Sobremesa grátis'],image:'promo_namorados_combo_35_optimized.jpg'}
 ];
 function variantSummary(item){return `${safeText(item.name,120)}: ${item.variants.map(variant=>`${safeText(variant.label,40)} - ${formatMoney(variant.price)}`).join(', ')}`;}
 function variantButtons(item){
@@ -239,40 +125,6 @@ const comboGrid=document.getElementById('combosGrid');
 const comboFeature=document.getElementById('comboFeature');
 const comboList=document.getElementById('comboList');
 const comboVisibleCount=document.getElementById('comboVisibleCount');
-const promoList=document.getElementById('promoList');
-function renderPromotions(){
-  if(!promoList) return;
-  promoList.classList.toggle('has-single-promo',promoProducts.length===1);
-  promoList.innerHTML=promoProducts.map(item=>{
-    const firstVariant=item.variants[0];
-    const firstPrice=Number(firstVariant.price)||0;
-    const itemName=escapeHtml(item.name);
-    const itemNameAttr=escapeAttr(item.name);
-    const itemLabelAttr=escapeAttr(item.label);
-    const variantId=escapeAttr(firstVariant.id);
-    const variantLabel=escapeHtml(firstVariant.label);
-    const variantLabelAttr=escapeAttr(firstVariant.label);
-    const imageSrc=escapeAttr(safeImageSrc(item.image));
-    const badge=item.badge?escapeHtml(item.badge):'';
-    return `
-      <article class="promo-card" data-id="${escapeAttr(item.id)}" data-name="${itemNameAttr}" data-label="${itemLabelAttr}" data-price="${firstPrice.toFixed(2)}" data-variant-id="${variantId}" data-variant-label="${variantLabelAttr}" data-has-variants="false" data-category="${escapeAttr(item.category)}">
-        <img src="${imageSrc}" alt="${itemNameAttr}" loading="lazy">
-        <div class="promo-body">
-          <span class="promo-badge">${badge}</span>
-          <div class="promo-name">${itemName}</div>
-          <p>${escapeHtml(item.desc)}</p>
-          ${item.composition?`<p class="promo-composition">${escapeHtml(item.composition)}</p>`:''}
-          ${detailList(item)}
-          <div class="promo-foot">
-            <span>${variantLabel}</span>
-            <strong>${formatMoney(firstPrice)}</strong>
-          </div>
-          <div class="promo-meta">${item.meta.map(meta=>`<span>${escapeHtml(meta)}</span>`).join('')}</div>
-          <button class="combo-cta promo-cta add-to-order" type="button" aria-pressed="false" aria-label="Adicionar ${itemNameAttr} ao pedido"><span class="combo-cta-plus" aria-hidden="true">+</span><span class="combo-cta-text">Adicionar</span></button>
-        </div>
-      </article>`;
-  }).join('');
-}
 function renderMenu(){
   const tabs=document.querySelector('.menu-tabs');
   if(tabs){
@@ -318,7 +170,6 @@ function renderMenu(){
     }).join('');
   }
 }
-renderPromotions();
 renderMenu();
 const comboCards=[...document.querySelectorAll('.combo-card')];
 function optionCount(total){return total===1?'1 opção':`${total} opções`;}
@@ -380,7 +231,6 @@ function enableVariantScroller(scroller){
 
   scroller.addEventListener('pointerdown',event=>{
     if(event.button!==0||!canScrollHorizontally()) return;
-    if(event.target.closest('.combo-variant-option')) return;
     isDragging=true;
     moved=false;
     startX=event.clientX;
@@ -422,9 +272,6 @@ document.querySelectorAll('.combo-variants').forEach(enableVariantScroller);
 // order flow
 const order=new Map();
 const orderDrawer=document.getElementById('orderDrawer');
-const orderContent=document.getElementById('orderContent');
-const orderFoot=document.querySelector('.order-foot');
-const orderScrollCue=document.getElementById('orderScrollCue');
 const orderItems=document.getElementById('orderItems');
 const orderEmpty=document.getElementById('orderEmpty');
 const orderSubtotalEl=document.getElementById('orderSubtotal');
@@ -446,7 +293,6 @@ const pixCode=document.getElementById('pixCode');
 const pixCreate=document.getElementById('pixCreate');
 const pixCopy=document.getElementById('pixCopy');
 const pixQrImage=document.getElementById('pixQrImage');
-const pixSuccess=document.getElementById('pixSuccess');
 const pixStatus=document.getElementById('pixStatus');
 const turnstileBox=document.getElementById('turnstileBox');
 const turnstileWidget=document.getElementById('turnstileWidget');
@@ -463,10 +309,9 @@ const deliveryNeighborhood=document.getElementById('deliveryNeighborhood');
 const deliveryReference=document.getElementById('deliveryReference');
 const addressHelp=document.getElementById('addressHelp');
 const addressInputs=[customerName,deliveryStreet,deliveryNumber,deliveryComplement,deliveryNeighborhood,deliveryReference].filter(Boolean);
+const scheduleInputs=[...document.querySelectorAll('input[name="orderSchedule"]')];
 const scheduleFields=document.getElementById('scheduleFields');
-const scheduleModeInputs=[...document.querySelectorAll('input[name="scheduleMode"]')];
 const scheduleDate=document.getElementById('scheduleDate');
-const scheduleDateDisplay=document.getElementById('scheduleDateDisplay');
 const scheduleTime=document.getElementById('scheduleTime');
 const scheduleStatus=document.getElementById('scheduleStatus');
 const deliveryState={status:'empty',cep:'',area:null};
@@ -487,9 +332,7 @@ const turnstileState={
   siteKey:'',
   token:'',
   widgetId:null,
-  scriptPromise:null,
-  rendering:false,
-  size:''
+  scriptPromise:null
 };
 const pixState={
   paymentId:'',
@@ -499,7 +342,6 @@ const pixState={
   qrCode:'',
   qrCodeBase64:'',
   whatsappMessage:'',
-  errorMessage:'',
   pollTimer:null
 };
 const deliveryFeeByNeighborhood={
@@ -508,17 +350,18 @@ const deliveryFeeByNeighborhood={
 };
 const deliveryNeighborhoods=[
   // Edite esta lista para alterar os bairros atendidos.
-  'Cachambi',
   'Méier',
+  'Cachambi',
   'Engenho de Dentro',
   'Pilares',
-  'Riachuelo',
+  'Abolição',
   'Maria da Graça',
   'Higienópolis',
+  'Todos os Santos',
+  'Engenhão',
+  'Cardim',
   'Engenho Novo',
-  'Del Castilho',
-  'Abolição',
-  'Piedade'
+  'Riachuelo'
 ];
 
 function pluralizeItem(total){return total===1?'1 item':`${total} itens`;}
@@ -630,12 +473,6 @@ function formatScheduleDate(dateValue){
   if(!date) return '';
   return new Intl.DateTimeFormat('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'}).format(date).replace('.', '');
 }
-function updateScheduleDateDisplay(){
-  if(!scheduleDateDisplay) return;
-  const formatted=formatScheduleDate(scheduleDate?.value);
-  scheduleDateDisplay.textContent=formatted?formatted.replace(/^./,char=>char.toUpperCase()):'Escolha a data';
-  scheduleDateDisplay.dataset.empty=formatted?'false':'true';
-}
 function findNextScheduleSlot(){
   const now=Date.now();
   const minTime=now+scheduleLeadMinutes*60_000;
@@ -658,40 +495,19 @@ function setupScheduleControls(){
       scheduleDate.value=next.date;
       if(scheduleTime) scheduleTime.dataset.defaultTime=next.time;
     }
-    updateScheduleDateDisplay();
   }
   if(scheduleTime&&!scheduleTime.options.length){
     scheduleTime.innerHTML=scheduleTimes().map(time=>`<option value="${time}">${time}</option>`).join('');
     if(scheduleTime.dataset.defaultTime) scheduleTime.value=scheduleTime.dataset.defaultTime;
   }
 }
-function checkedScheduleMode(){
-  return safeText(scheduleModeInputs.find(input=>input.checked)?.value,20)||'now';
+function selectedScheduleMode(){
+  const checked=scheduleInputs.find(input=>input.checked)||scheduleInputs[0];
+  return safeText(checked?.value,40)||'immediate';
 }
-function updateScheduleModeAvailability(isOpen=isBusinessOpen()){
-  const nowInput=scheduleModeInputs.find(input=>input.value==='now');
-  const scheduledInput=scheduleModeInputs.find(input=>input.value==='scheduled');
-  if(nowInput){
-    nowInput.disabled=!isOpen;
-    nowInput.closest('.schedule-option')?.classList.toggle('is-disabled',!isOpen);
-  }
-  if(!isOpen&&nowInput?.checked&&scheduledInput) scheduledInput.checked=true;
-  if(isOpen&&!scheduleModeInputs.some(input=>input.checked)&&nowInput) nowInput.checked=true;
-}
-function selectedScheduleMode(isOpen=isBusinessOpen()){
-  updateScheduleModeAvailability(isOpen);
-  const mode=checkedScheduleMode();
-  return mode==='scheduled'||!isOpen?'scheduled':'now';
-}
-function schedulePayload(isOpen=isBusinessOpen()){
-  const mode=selectedScheduleMode(isOpen);
-  if(mode==='now'){
-    return {
-      mode:'now',
-      date:'',
-      time:'',
-      label:'Entrega agora'
-    };
+function schedulePayload(){
+  if(selectedScheduleMode()!=='scheduled'){
+    return {mode:'immediate',label:'Assim que poss\u00edvel'};
   }
   const date=safeText(scheduleDate?.value,10);
   const time=safeText(scheduleTime?.value,5);
@@ -704,10 +520,11 @@ function schedulePayload(isOpen=isBusinessOpen()){
 }
 function scheduleValidation(isOpen=isBusinessOpen()){
   setupScheduleControls();
-  const payload=schedulePayload(isOpen);
-  if(payload.mode==='now'){
-    if(!isOpen) return {valid:false,status:'warning',message:'Agora estamos fechados. Escolha um agendamento para receber no horario de atendimento.',payload};
-    return {valid:true,status:'success',message:'Entrega para agora. O pedido segue direto durante o horario de atendimento.',payload};
+  const payload=schedulePayload();
+  if(payload.mode==='immediate'){
+    return isOpen
+      ? {valid:true,status:'success',message:'Pedido imediato liberado durante o atendimento.',payload}
+      : {valid:false,status:'warning',message:'Estamos fechados agora. Escolha "Agendar entrega" para reservar um hor\u00e1rio.',payload};
   }
   const date=scheduleDateObject(payload.date);
   if(!date) return {valid:false,status:'warning',message:'Escolha uma data para agendar a entrega.',payload};
@@ -721,8 +538,8 @@ function scheduleValidation(isOpen=isBusinessOpen()){
 }
 function updateScheduleUi(isOpen=isBusinessOpen()){
   setupScheduleControls();
-  const mode=selectedScheduleMode(isOpen);
-  if(scheduleFields) scheduleFields.hidden=mode!=='scheduled';
+  const scheduled=selectedScheduleMode()==='scheduled';
+  if(scheduleFields) scheduleFields.hidden=!scheduled;
   if(!scheduleStatus) return;
   const validation=scheduleValidation(isOpen);
   scheduleStatus.className=`schedule-status is-${validation.status}`.trim();
@@ -732,19 +549,16 @@ function canAcceptOrder(isOpen=isBusinessOpen()){
   return scheduleValidation(isOpen).valid;
 }
 function selectScheduledMode(){
+  const scheduled=scheduleInputs.find(input=>input.value==='scheduled');
+  if(scheduled) scheduled.checked=true;
   setupScheduleControls();
-  const scheduledInput=scheduleModeInputs.find(input=>input.value==='scheduled');
-  if(scheduledInput) scheduledInput.checked=true;
-  if(scheduleFields) scheduleFields.hidden=false;
 }
 function updateOrderSupport(isOpen=isBusinessOpen()){
   if(!orderSupport) return;
   const validation=scheduleValidation(isOpen);
   orderSupport.classList.toggle('is-warning',!validation.valid);
   orderSupport.textContent=validation.valid
-    ? validation.payload.mode==='now'
-      ? 'Pedido para entregar agora.'
-      : `Pedido agendado para ${validation.payload.label}.`
+    ? (validation.payload.mode==='scheduled'?`Pedido agendado para ${validation.payload.label}.`:'Voc\u00ea ser\u00e1 direcionado para finalizar com a equipe WA RIO.')
     : validation.message;
 }
 function showBusinessToast(message=closedOrderMessage()){
@@ -790,25 +604,9 @@ function resetPixState(){
   pixState.qrCode='';
   pixState.qrCodeBase64='';
   pixState.whatsappMessage='';
-  pixState.errorMessage='';
   resetTurnstileToken(false);
 }
 function isTurnstileReady(){return !turnstileState.enabled||Boolean(turnstileState.token);}
-function canAutoCreatePixCharge(){
-  return selectedPaymentMethod().value==='pix'
-    &&orderQty()>0
-    &&isTurnstileReady()
-    &&pixState.status==='idle'
-    &&!pixState.paymentId
-    &&Boolean(pixOrderAmount())
-    &&scheduleValidation().valid;
-}
-function maybeAutoCreatePixCharge(){
-  if(!canAutoCreatePixCharge()) return;
-  window.setTimeout(()=>{
-    if(canAutoCreatePixCharge()) createPixCharge();
-  },120);
-}
 function setTurnstileStatus(status,message){
   if(!turnstileBox||!turnstileHint) return;
   turnstileBox.classList.toggle('is-ready',status==='ready');
@@ -829,29 +627,21 @@ function loadTurnstileScript(){
   });
   return turnstileState.scriptPromise;
 }
-function turnstileWidgetSize(){
-  return window.matchMedia('(max-width:420px)').matches?'compact':'flexible';
-}
 async function renderTurnstile(){
   if(!turnstileState.enabled||!turnstileBox||!turnstileWidget) return;
+  if(pixPayment&&pixPayment.hidden) return;
   turnstileBox.hidden=false;
-  if(turnstileState.widgetId!==null||turnstileState.rendering) return;
-  turnstileState.rendering=true;
   setTurnstileStatus('idle','Confirme a verificacao para gerar o Pix.');
   try{
     const turnstile=await loadTurnstileScript();
-    const widgetSize=turnstileWidgetSize();
-    turnstileState.size=widgetSize;
-    turnstileBox.classList.toggle('is-compact',widgetSize==='compact');
+    if(turnstileState.widgetId!==null) return;
     turnstileState.widgetId=turnstile.render(turnstileWidget,{
       sitekey:turnstileState.siteKey,
       theme:'dark',
-      size:widgetSize,
       callback:token=>{
         turnstileState.token=String(token||'');
-        setTurnstileStatus('ready','Verificacao concluida. Gerando Pix seguro...');
+        setTurnstileStatus('ready','Verificacao concluida. Pix liberado para gerar.');
         updatePixPayment();
-        maybeAutoCreatePixCharge();
       },
       'expired-callback':()=>{
         turnstileState.token='';
@@ -866,8 +656,6 @@ async function renderTurnstile(){
     });
   }catch(error){
     setTurnstileStatus('error','Verificacao anti-bot indisponivel no momento.');
-  }finally{
-    turnstileState.rendering=false;
   }
 }
 function resetTurnstileToken(shouldUpdate=true){
@@ -884,7 +672,6 @@ async function initSecurityConfig(){
     const response=await fetch(pixApi.security,{headers:{Accept:'application/json'}});
     if(!response.ok) return;
     const data=await response.json();
-    if(data.gaMeasurementId) loadAnalytics(data.gaMeasurementId);
     if(!data.turnstileEnabled||!data.turnstileSiteKey) return;
     turnstileState.enabled=true;
     turnstileState.siteKey=String(data.turnstileSiteKey);
@@ -895,46 +682,22 @@ async function initSecurityConfig(){
   }
 }
 function pixStatusText(status){
-  if(status==='error'&&pixState.errorMessage) return pixState.errorMessage;
-  const hasPixPaymentData=Boolean(pixState.qrCode||pixState.qrCodeBase64);
   return {
     idle:'Gere o Pix para aparecer o QR Code e o código copia e cola.',
     creating:'Gerando cobrança Pix segura...',
-    pending:hasPixPaymentData?'Pix gerado. Use o QR Code ou copie o código abaixo no app do banco.':'Pix criado, mas o QR não foi retornado. Tente gerar novamente.',
-    approved:'Pagamento aprovado com sucesso. Seu pedido já pode ser enviado pelo WhatsApp.',
+    pending:'Pix gerado. Use o QR Code ou copie o código abaixo no app do banco.',
+    approved:'Pagamento aprovado. Agora envie o pedido confirmado pelo WhatsApp.',
     error:'Não foi possível gerar ou confirmar o Pix agora. Tente novamente.'
   }[status]||'Aguardando pagamento Pix.';
-}
-function pixQrDataUrl(base64){
-  const value=String(base64||'').trim();
-  if(!value) return '';
-  if(/^data:image\//i.test(value)) return value;
-  const mime=value.startsWith('/9j/')?'image/jpeg':'image/png';
-  return `data:${mime};base64,${value}`;
-}
-function pixQrFallbackUrl(code){
-  const value=String(code||'').trim();
-  if(!value) return '';
-  return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=2&data=${encodeURIComponent(value)}`;
-}
-function pixQrSource(){
-  if(pixState.qrCodeBase64) return pixQrDataUrl(pixState.qrCodeBase64);
-  if(pixState.qrCode) return pixQrFallbackUrl(pixState.qrCode);
-  return '';
 }
 function updatePixPayment(){
   if(!pixPayment||!pixCode||!pixCopy||!pixStatus) return;
   const method=selectedPaymentMethod();
   const showPix=method.value==='pix'&&orderQty()>0;
-  const qrSource=pixQrSource();
-  const hasPixResult=Boolean(pixState.qrCode||pixState.qrCodeBase64||pixState.approved);
   pixPayment.hidden=!showPix;
-  pixPayment.classList.toggle('has-pix-result',showPix&&hasPixResult);
   if(!showPix){
     pixCode.value='';
     pixCopy.disabled=true;
-    if(turnstileBox) turnstileBox.hidden=true;
-    if(pixSuccess) pixSuccess.hidden=true;
     if(pixCreate) pixCreate.disabled=true;
     if(pixQrImage){
       pixQrImage.hidden=true;
@@ -949,8 +712,6 @@ function updatePixPayment(){
     pixCode.value='';
     if(pixCreate) pixCreate.disabled=true;
     pixCopy.disabled=true;
-    if(turnstileBox) turnstileBox.hidden=true;
-    if(pixSuccess) pixSuccess.hidden=true;
     if(pixQrImage){
       pixQrImage.hidden=true;
       pixQrImage.removeAttribute('src');
@@ -965,8 +726,6 @@ function updatePixPayment(){
     pixCode.value='';
     if(pixCreate) pixCreate.disabled=true;
     pixCopy.disabled=true;
-    if(turnstileBox) turnstileBox.hidden=true;
-    if(pixSuccess) pixSuccess.hidden=true;
     if(pixQrImage){
       pixQrImage.hidden=true;
       pixQrImage.removeAttribute('src');
@@ -978,35 +737,12 @@ function updatePixPayment(){
   if(pixAmount) pixAmount.textContent=formatMoney(amount);
   pixCode.value=pixState.qrCode;
   pixCopy.disabled=!pixState.qrCode;
-  if(pixSuccess) pixSuccess.hidden=!pixState.approved;
-  if(turnstileBox) turnstileBox.hidden=!turnstileState.enabled||pixState.approved||Boolean(qrSource);
-  if(turnstileState.enabled&&!pixState.approved&&!qrSource) renderTurnstile();
+  if(turnstileState.enabled) renderTurnstile();
   if(pixCreate) pixCreate.disabled=pixState.status==='creating'||pixState.approved||!isTurnstileReady();
   if(pixQrImage){
-    pixQrImage.onload=()=>{
-      if(pixQrImage.src){
-        pixQrImage.hidden=false;
-        if(turnstileBox&&!pixState.approved) turnstileBox.hidden=true;
-        pixPayment.classList.add('has-pix-result');
-        scrollPixResultIntoView();
-      }
-    };
-    pixQrImage.onerror=()=>{
-      const fallbackSource=pixQrFallbackUrl(pixState.qrCode);
-      if(fallbackSource&&pixQrImage.src!==fallbackSource){
-        pixQrImage.src=fallbackSource;
-        return;
-      }
-      pixQrImage.hidden=true;
-      if(pixState.qrCode){
-        pixStatus.className='pix-status is-warning';
-        pixStatus.textContent='Nao foi possivel carregar o QR agora. O copia e cola continua disponivel.';
-      }
-      if(turnstileBox&&!pixState.approved&&!pixState.qrCode) turnstileBox.hidden=false;
-    };
-    if(qrSource){
-      if(pixQrImage.src!==qrSource) pixQrImage.src=qrSource;
-      pixQrImage.hidden=!(pixQrImage.complete&&pixQrImage.naturalWidth>0);
+    if(pixState.qrCodeBase64){
+      pixQrImage.src=`data:image/png;base64,${pixState.qrCodeBase64}`;
+      pixQrImage.hidden=false;
     }else{
       pixQrImage.hidden=true;
       pixQrImage.removeAttribute('src');
@@ -1014,17 +750,6 @@ function updatePixPayment(){
   }
   pixStatus.className=`pix-status ${pixState.approved?'is-ready':pixState.status==='error'?'is-warning':''}`.trim();
   pixStatus.textContent=pixStatusText(pixState.status);
-}
-function scrollPixResultIntoView(){
-  if(!orderContent||!pixPayment) return;
-  window.requestAnimationFrame(()=>{
-    const target=pixState.qrCodeBase64&&pixQrImage&&!pixQrImage.hidden?pixQrImage:pixPayment;
-    const contentRect=orderContent.getBoundingClientRect();
-    const targetRect=target.getBoundingClientRect();
-    const top=orderContent.scrollTop+(targetRect.top-contentRect.top)-18;
-    orderContent.scrollTo({top:Math.max(0,top),behavior:'smooth'});
-    window.setTimeout(updateOrderScrollCue,360);
-  });
 }
 function updatePaymentHelp(){
   if(!paymentHelp) return;
@@ -1067,21 +792,13 @@ async function checkPixStatus(){
     const response=await fetch(`${pixApi.status(pixState.paymentId)}?token=${encodeURIComponent(pixState.orderToken)}`,{headers:{Accept:'application/json'}});
     if(!response.ok) throw new Error('Falha ao consultar Pix');
     const data=await response.json();
-    const wasApproved=pixState.approved;
     pixState.status=data.status||pixState.status;
     pixState.approved=data.status==='approved';
     if(data.whatsappMessage) pixState.whatsappMessage=String(data.whatsappMessage);
-    if(pixState.approved){
-      if(!wasApproved){
-        sendAnalyticsEvent('pix_approved',{payment_id:pixState.paymentId,value:orderGrandTotal(),cart_items:orderQty()});
-        showBusinessToast('Pagamento aprovado com sucesso. Agora é só enviar o pedido pelo WhatsApp.');
-      }
-      stopPixPolling();
-    }
+    if(pixState.approved) stopPixPolling();
     renderOrder();
   }catch(error){
     pixState.status='error';
-    pixState.errorMessage='Não foi possível confirmar o Pix agora. Se você já pagou, aguarde alguns segundos e tente novamente.';
     updatePixPayment();
   }
 }
@@ -1104,8 +821,6 @@ async function createPixCharge(){
   }
   pixState.status='creating';
   pixState.approved=false;
-  pixState.errorMessage='';
-  sendAnalyticsEvent('start_pix',{value:amount,cart_items:orderQty(),payment_method:'pix'});
   updatePixPayment();
   try{
     const response=await fetch(pixApi.create,{
@@ -1121,18 +836,11 @@ async function createPixCharge(){
     pixState.approved=data.status==='approved';
     pixState.qrCode=String(data.qrCode||'');
     pixState.qrCodeBase64=String(data.qrCodeBase64||'');
-    sendAnalyticsEvent('pix_created',{payment_id:pixState.paymentId,status:pixState.status,value:amount,cart_items:orderQty()});
-    if(pixState.approved){
-      sendAnalyticsEvent('pix_approved',{payment_id:pixState.paymentId,value:amount,cart_items:orderQty()});
-      showBusinessToast('Pagamento aprovado com sucesso. Agora é só enviar o pedido pelo WhatsApp.');
-    }
     resetTurnstileToken(false);
     if(!pixState.approved) startPixPolling();
     renderOrder();
-    scrollPixResultIntoView();
   }catch(error){
     pixState.status='error';
-    pixState.errorMessage=error.message||'Não foi possível gerar o Pix agora. Confira os dados e tente novamente.';
     resetTurnstileToken(false);
     updatePixPayment();
   }
@@ -1164,7 +872,6 @@ function startManualAddress(){
   resetPixState();
   if(deliveryCep) deliveryCep.value='';
   updateDeliveryStatus('manual','Tudo bem. Preencha o endereço completo e a equipe confirma a entrega no WhatsApp.');
-  sendAnalyticsEvent('manual_address_started',{cart_items:orderQty(),value:orderGrandTotal()});
   if(deliveryNeighborhood&&!deliveryNeighborhood.value.trim()) deliveryNeighborhood.focus();
   if(deliveryStreet&&!deliveryStreet.value.trim()) deliveryStreet.focus();
   renderOrder();
@@ -1174,7 +881,6 @@ async function verifyDeliveryCep(){
   const digits=normalizeCep(cep);
   if(digits.length!==8){
     updateDeliveryStatus('invalid','Digite o CEP no formato 00000-000.');
-    sendAnalyticsEvent('delivery_area_checked',{status:'invalid_cep'});
     renderOrder();
     return false;
   }
@@ -1186,7 +892,6 @@ async function verifyDeliveryCep(){
     const data=await response.json();
     if(data.erro||!data.bairro){
       updateDeliveryStatus('invalid','Não encontramos esse CEP. Confira e tente novamente.');
-      sendAnalyticsEvent('delivery_area_checked',{status:'not_found',cep_prefix:digits.slice(0,5)});
       renderOrder();
       return false;
     }
@@ -1201,17 +906,14 @@ async function verifyDeliveryCep(){
         deliveryNeighborhood.dataset.autofilled='true';
       }
       updateDeliveryStatus('served','Entregamos na sua região!',area);
-      sendAnalyticsEvent('delivery_area_checked',{status:'served',neighborhood:area.name,city:area.city,cep_prefix:digits.slice(0,5),fee:currentDeliveryFee()});
       renderOrder();
       return true;
     }
     updateDeliveryStatus('blocked','Infelizmente ainda não entregamos nesse endereço.',area);
-    sendAnalyticsEvent('unsupported_neighborhood',{neighborhood:area.name,city:area.city,cep_prefix:digits.slice(0,5)});
     renderOrder();
     return false;
   }catch(error){
     updateDeliveryStatus('invalid','Não foi possível validar o CEP agora. Tente novamente em instantes.');
-    sendAnalyticsEvent('delivery_area_checked',{status:'cep_lookup_error',cep_prefix:digits.slice(0,5)});
     renderOrder();
     return false;
   }
@@ -1229,7 +931,6 @@ function itemFromCard(card){
     productId:card.dataset.id,
     name:hasVariants?`${card.dataset.name} (${variantLabel})`:card.dataset.name,
     label:`${card.dataset.label||'Seleção WA RIO'} • ${variantLabel}`,
-    category:card.dataset.category||'cardapio',
     price,
     pieces:variantLabel,
     image:image?.currentSrc||image?.src||'',
@@ -1269,7 +970,7 @@ function setAddButtonClosed(button){
 function updateOrderSelectionState(){
   const total=orderQty();
   orderBar?.classList.toggle('has-items',total>0);
-  document.querySelectorAll('.combo-card,.promo-card').forEach(card=>{
+  document.querySelectorAll('.combo-card').forEach(card=>{
     const button=card.querySelector('.add-to-order');
     if(!button) return;
     const item=itemFromCard(card);
@@ -1283,28 +984,8 @@ function updateOrderSelectionState(){
   });
 }
 function setOrderOpen(open){
-  const wasOpen=document.body.classList.contains('order-open');
   document.body.classList.toggle('order-open',open);
   orderDrawer?.setAttribute('aria-hidden',open?'false':'true');
-  if(open&&!wasOpen){
-    sendAnalyticsEvent('open_cart',{items:orderQty(),value:orderGrandTotal(),payment_method:selectedPaymentMethod().value});
-  }
-  window.requestAnimationFrame(updateOrderScrollCue);
-}
-function updateOrderScrollCue(){
-  if(!orderDrawer||!orderContent||!orderScrollCue) return;
-  if(orderFoot){
-    orderDrawer.style.setProperty('--order-foot-height',`${Math.round(orderFoot.getBoundingClientRect().height)}px`);
-  }
-  const canScroll=orderContent.scrollHeight>orderContent.clientHeight+10;
-  const nearBottom=orderContent.scrollTop+orderContent.clientHeight>=orderContent.scrollHeight-28;
-  const shouldShow=document.body.classList.contains('order-open')&&canScroll&&!nearBottom;
-  orderDrawer.classList.toggle('has-scroll-cue',shouldShow);
-}
-function scrollOrderContentForward(){
-  if(!orderContent) return;
-  orderContent.scrollBy({top:Math.max(180,orderContent.clientHeight*.72),behavior:'smooth'});
-  window.setTimeout(updateOrderScrollCue,260);
 }
 function renderOrder(){
   if(!orderItems) return;
@@ -1384,16 +1065,15 @@ function renderOrder(){
   updateScheduleUi(isOpen);
   if(orderSend){
     orderSend.disabled=!canSendOrder(isOpen);
-    orderSend.textContent=!canAcceptOrder(isOpen)?'Escolha quando entregar':total>0&&requiresPixApproval()&&!pixState.approved?'Aguardando pagamento Pix':'Enviar pedido pelo WhatsApp';
+    orderSend.textContent=!canAcceptOrder(isOpen)?'Escolha um agendamento':total>0&&requiresPixApproval()&&!pixState.approved?'Aguardando pagamento Pix':'Enviar pedido pelo WhatsApp';
   }
   updateOrderSupport(isOpen);
   updateAddressHelp();
   updatePaymentHelp();
   updateOrderSelectionState();
-  window.requestAnimationFrame(updateOrderScrollCue);
 }
 function selectVariant(button){
-  const card=button.closest('.combo-card,.promo-card');
+  const card=button.closest('.combo-card');
   if(!card) return;
   card.querySelectorAll('.combo-variant-option').forEach(option=>option.classList.toggle('is-selected',option===button));
   card.dataset.price=button.dataset.variantPrice;
@@ -1411,20 +1091,11 @@ function addToOrder(card,button){
   const item=itemFromCard(card);
   const current=order.get(item.id);
   order.set(item.id,{...item,qty:current?current.qty+1:1});
-  sendAnalyticsEvent('add_to_order',{
-    item_id:item.id,
-    item_name:item.name,
-    item_category:item.category,
-    item_variant:item.label,
-    price:item.price,
-    quantity:current?current.qty+1:1,
-    cart_items:orderQty(),
-    value:orderGrandTotal()
-  });
   resetPixState();
   renderOrder();
   if(!isOpen){
-    showBusinessToast('Item adicionado. Toque em Ver pedido quando quiser escolher o agendamento.');
+    setOrderOpen(true);
+    showBusinessToast('Item adicionado. Escolha o dia e hor\u00e1rio para agendar a entrega.');
   }
   if(orderBar){
     orderBar.classList.add('is-pulsing');
@@ -1478,7 +1149,7 @@ function buildWhatsappMessage(){
     'Pedido:',
     ...lines,
     `Endereço: ${addressLine}`,
-    `Entrega: ${schedule.label}`,
+    `Agendamento: ${schedule.mode==='scheduled'?schedule.label:'Assim que poss\u00edvel'}`,
     `Pagamento: ${paymentLabel}`,
     `Total: ${totalLine}`,
     note?`Obs: ${note}`:''
@@ -1491,26 +1162,17 @@ document.addEventListener('click',event=>{
   selectVariant(button);
 });
 document.querySelectorAll('.add-to-order').forEach(button=>{
-  button.addEventListener('click',()=>{const card=button.closest('.combo-card,.promo-card');if(card)addToOrder(card,button);});
+  button.addEventListener('click',()=>{const card=button.closest('.combo-card');if(card)addToOrder(card,button);});
 });
 document.querySelectorAll('a[href*="wa.me/5521982225443"]').forEach(link=>{
   link.addEventListener('click',()=>{
     setNavMenuOpen(false);
-    sendAnalyticsEvent('click_whatsapp',{
-      source:link.classList.contains('btn-buffet')?'buffet':link.classList.contains('btn-whatsapp')?'whatsapp_section':link.classList.contains('whatsapp-float')?'floating_button':link.classList.contains('nav-cta')?'nav':link.classList.contains('seasonal-cta')?'namorados_banner':'site_link',
-      cart_items:orderQty(),
-      value:orderGrandTotal(),
-      payment_method:selectedPaymentMethod().value
-    });
     if(!isBusinessOpen()&&!link.classList.contains('btn-buffet')){
       showBusinessToast(closedOrderMessage());
     }
   });
 });
 orderBar?.addEventListener('click',()=>setOrderOpen(true));
-orderContent?.addEventListener('scroll',updateOrderScrollCue,{passive:true});
-orderScrollCue?.addEventListener('click',scrollOrderContentForward);
-window.addEventListener('resize',updateOrderScrollCue);
 document.querySelectorAll('[data-order-close]').forEach(btn=>btn.addEventListener('click',()=>setOrderOpen(false)));
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){setNavMenuOpen(false);setOrderOpen(false);}});
 orderItems?.addEventListener('click',e=>{
@@ -1524,11 +1186,9 @@ orderItems?.addEventListener('click',e=>{
     updatePixPayment();
     return;
   }
-  const action=button.dataset.action;
-  if(action==='increase') item.qty+=1;
-  if(action==='decrease') item.qty-=1;
-  if(action==='remove'||item.qty<=0) order.delete(id);
-  sendAnalyticsEvent('cart_item_changed',{action,item_id:id,item_name:item.name,quantity:Math.max(0,item.qty),cart_items:orderQty(),value:orderGrandTotal()});
+  if(button.dataset.action==='increase') item.qty+=1;
+  if(button.dataset.action==='decrease') item.qty-=1;
+  if(button.dataset.action==='remove'||item.qty<=0) order.delete(id);
   resetPixState();
   renderOrder();
 });
@@ -1555,22 +1215,14 @@ addressInputs.forEach(input=>{
 });
 paymentInputs.forEach(input=>input.addEventListener('change',()=>{
   resetPixState();
-  sendAnalyticsEvent('payment_method_selected',{payment_method:selectedPaymentMethod().value,cart_items:orderQty(),value:orderGrandTotal()});
   renderOrder();
 }));
-scheduleDate?.addEventListener('input',updateScheduleDateDisplay);
+scheduleInputs.forEach(input=>input.addEventListener('change',()=>{
+  resetPixState();
+  renderOrder();
+}));
 [scheduleDate,scheduleTime].filter(Boolean).forEach(input=>input.addEventListener('change',()=>{
   resetPixState();
-  if(input===scheduleDate) updateScheduleDateDisplay();
-  const schedule=schedulePayload();
-  sendAnalyticsEvent('schedule_selected',{date:schedule.date,time:schedule.time,label:schedule.label,cart_items:orderQty(),value:orderGrandTotal()});
-  renderOrder();
-}));
-scheduleModeInputs.forEach(input=>input.addEventListener('change',()=>{
-  resetPixState();
-  updateScheduleUi();
-  const schedule=schedulePayload();
-  sendAnalyticsEvent('schedule_mode_selected',{mode:schedule.mode,label:schedule.label,cart_items:orderQty(),value:orderGrandTotal()});
   renderOrder();
 }));
 pixCreate?.addEventListener('click',createPixCharge);
@@ -1579,7 +1231,6 @@ pixCopy?.addEventListener('click',async()=>{
   if(!code) return;
   try{
     await navigator.clipboard.writeText(code);
-    sendAnalyticsEvent('pix_code_copied',{payment_id:pixState.paymentId,value:orderGrandTotal(),cart_items:orderQty()});
     if(pixStatus){
       pixStatus.className='pix-status is-ready';
       pixStatus.textContent='Código Pix copiado. Agora é só colar no app do banco.';
@@ -1594,7 +1245,6 @@ pixCopy?.addEventListener('click',async()=>{
   }
 });
 orderClear?.addEventListener('click',()=>{
-  sendAnalyticsEvent('clear_cart',{cart_items:orderQty(),value:orderGrandTotal()});
   order.clear();
   orderNote.value='';
   resetPixState();
@@ -1633,14 +1283,12 @@ orderSend?.addEventListener('click',()=>{
   const now=Date.now();
   if(now-lastOrderSendAt<orderSendCooldownMs) return;
   lastOrderSendAt=now;
-  sendAnalyticsEvent('send_order_whatsapp',{cart_items:orderQty(),value:orderGrandTotal(),payment_method:selectedPaymentMethod().value,pix_approved:pixState.approved});
   const message=requiresPixApproval()&&pixState.whatsappMessage?pixState.whatsappMessage:buildWhatsappMessage();
   const url=`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message)}`;
   const opened=window.open(url,'_blank','noopener,noreferrer');
   if(opened) opened.opener=null;
   if(!opened) window.location.assign(url);
 });
-renderGoogleReviews();
 setupScheduleControls();
 initSecurityConfig();
 renderOrder();
@@ -1657,4 +1305,4 @@ renderOrder();
 })();
 // scroll reveal
 const obs=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('is-revealed');obs.unobserve(e.target);}});},{threshold:0.1});
-document.querySelectorAll('.combo-card,.promo-card,.dep-card,.bf-content,.ps-card').forEach(el=>{el.classList.add('reveal-target');obs.observe(el);});
+document.querySelectorAll('.combo-card,.dep-card,.bf-content,.ps-card').forEach(el=>{el.classList.add('reveal-target');obs.observe(el);});
