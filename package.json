@@ -1,16 +1,17 @@
 {
-  "name": "wa-rio-sushi-site",
+  "name": "wario-sushi-admin",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
-  "engines": {
-    "node": "22.x"
-  },
+  "type": "commonjs",
   "scripts": {
-    "start": "node files-mentioned-by-the-user-wario/server/server.js",
-    "check": "node --check files-mentioned-by-the-user-wario/wario_sushi_v2_16.js && node --check files-mentioned-by-the-user-wario/server/server.js"
+    "start": "node server.js"
   },
   "dependencies": {
-    "qrcode": "1.5.4"
+    "bcryptjs": "^2.4.3",
+    "cookie-session": "^2.1.0",
+    "express": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }

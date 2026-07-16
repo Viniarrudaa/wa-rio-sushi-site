@@ -1,6 +1,0 @@
-.env
-server/.env
-server/*.log
-server/data/*.json
-node_modules/
-npm-debug.log*

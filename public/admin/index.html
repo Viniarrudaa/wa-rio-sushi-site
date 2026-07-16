@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>WA RIO Sushi | Admin</title>
+<link rel="icon" href="../favicon.ico?v=5" sizes="any">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<div id="loginScreen" class="admin-login-wrap">
+  <form id="loginForm" class="admin-login-card">
+    <div class="admin-login-brand">WA RIO <em>Admin</em></div>
+    <p class="admin-login-sub">Entre com a senha para gerenciar o cardápio.</p>
+    <input type="password" id="loginPassword" placeholder="Senha" autocomplete="current-password" required>
+    <button type="submit" class="admin-btn admin-btn-primary">Entrar</button>
+    <p id="loginError" class="admin-login-error" hidden></p>
+  </form>
+</div>
+
+<div id="app" class="admin-app" hidden>
+  <header class="admin-header">
+    <div class="admin-header-brand">WA RIO <em>Admin</em></div>
+    <div class="admin-header-actions">
+      <a href="/" target="_blank" class="admin-btn admin-btn-ghost">Ver site →</a>
+      <button id="logoutBtn" class="admin-btn admin-btn-ghost">Sair</button>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <section class="admin-toolbar">
+      <div class="admin-tabs" id="kindTabs">
+        <button class="admin-tab is-active" data-kind="product">Cardápio</button>
+        <button class="admin-tab" data-kind="promo">Promoções</button>
+      </div>
+      <div class="admin-toolbar-right">
+        <select id="categoryFilter" class="admin-select"></select>
+        <button id="newItemBtn" class="admin-btn admin-btn-primary">+ Novo item</button>
+      </div>
+    </section>
+
+    <div id="statusBanner" class="admin-status" hidden></div>
+
+    <section id="itemsGrid" class="admin-items-grid"></section>
+  </main>
+</div>
+
+<div id="editorOverlay" class="admin-overlay" hidden>
+  <div class="admin-editor">
+    <div class="admin-editor-head">
+      <h2 id="editorTitle">Editar item</h2>
+      <button id="editorClose" class="admin-icon-btn" aria-label="Fechar">×</button>
+    </div>
+    <form id="editorForm" class="admin-editor-body">
+      <input type="hidden" id="fId">
+      <input type="hidden" id="fKind">
+
+      <label class="admin-field">
+        <span>Nome do item</span>
+        <input type="text" id="fName" required maxlength="120">
+      </label>
+
+      <div class="admin-field-row">
+        <label class="admin-field">
+          <span>Categoria</span>
+          <select id="fCategory" required></select>
+        </label>
+        <label class="admin-field">
+          <span>Rótulo (ex: "Combos")</span>
+          <input type="text" id="fLabel" maxlength="60">
+        </label>
+      </div>
+
+      <div class="admin-field-row">
+        <label class="admin-field">
+          <span>Selo (ex: "Mais pedido")</span>
+          <input type="text" id="fBadge" maxlength="40">
+        </label>
+        <label class="admin-field">
+          <span>Imagem (nome do arquivo)</span>
+          <input type="text" id="fImage" maxlength="160" placeholder="ex: joejoe_cardapio_optimized.jpg">
+        </label>
+      </div>
+
+      <label class="admin-field">
+        <span>Descrição</span>
+        <textarea id="fDesc" rows="2" maxlength="400"></textarea>
+      </label>
+
+      <label class="admin-field">
+        <span>Composição (título da lista de itens inclusos, opcional)</span>
+        <input type="text" id="fComposition" maxlength="120">
+      </label>
+
+      <label class="admin-field">
+        <span>Itens inclusos (um por linha, opcional)</span>
+        <textarea id="fDetails" rows="3" placeholder="20 Hot Filadélfia&#10;5 Filadélfia"></textarea>
+      </label>
+
+      <label class="admin-field">
+        <span>Tags/meta (separadas por vírgula)</span>
+        <input type="text" id="fMeta" placeholder="Salmão, Frio">
+      </label>
+
+      <div class="admin-field">
+        <div class="admin-field-head">
+          <span>Variantes e preços</span>
+          <button type="button" id="addVariantBtn" class="admin-btn admin-btn-ghost admin-btn-sm">+ Variante</button>
+        </div>
+        <div id="variantsList" class="admin-variants-list"></div>
+      </div>
+
+      <label class="admin-checkbox">
+        <input type="checkbox" id="fSoldOut">
+        <span>Esgotado (fica oculto para o cliente no site)</span>
+      </label>
+
+      <div class="admin-editor-footer">
+        <button type="button" id="deleteBtn" class="admin-btn admin-btn-danger">Excluir item</button>
+        <div class="admin-editor-footer-right">
+          <button type="button" id="cancelBtn" class="admin-btn admin-btn-ghost">Cancelar</button>
+          <button type="submit" class="admin-btn admin-btn-primary">Salvar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="admin.js?v=1"></script>
+</body>
+</html>

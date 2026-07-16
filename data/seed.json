@@ -1,0 +1,481 @@
+{
+  "menuCategories": [
+    [
+      "todos",
+      "Todos"
+    ],
+    [
+      "combos",
+      "Combos"
+    ],
+    [
+      "filadelfia",
+      "Filadélfia"
+    ],
+    [
+      "hot",
+      "Hot Filadélfia"
+    ],
+    [
+      "temaki",
+      "Temaki"
+    ],
+    [
+      "uramaki",
+      "Uramaki"
+    ],
+    [
+      "sashimi",
+      "Sashimi"
+    ],
+    [
+      "niguiri",
+      "Niguiri"
+    ],
+    [
+      "joe",
+      "Joe Joe"
+    ],
+    [
+      "especiais",
+      "Especiais"
+    ]
+  ],
+  "menuProducts": [
+    {
+      "id": "combo-du-chef",
+      "name": "Combo Du Chef",
+      "label": "Combos",
+      "category": "combos",
+      "badge": "36 peças",
+      "desc": "36 peças para dividir com hot, salmão, peças especiais e sashimi.",
+      "composition": "Itens inclusos no Combo Du Chef:",
+      "details": [
+        "20 Hot Filadélfia",
+        "5 Filadélfia",
+        "2 Sushi nigiri",
+        "3 Gunkan c/ tataki de salmão",
+        "2 Joe Joe",
+        "4 Sashimi de salmão"
+      ],
+      "variants": [
+        {
+          "id": "36",
+          "label": "36 un",
+          "price": 65
+        }
+      ],
+      "meta": [
+        "36 peças",
+        "Chef"
+      ],
+      "image": "duchef_Cardapio_optimized.jpg"
+    },
+    {
+      "id": "combo-mix-joes",
+      "name": "Combo Mix Joes",
+      "label": "Combos",
+      "category": "combos",
+      "badge": "12 peças",
+      "desc": "12 peças autorais para quem gosta de joes, gunkans e geleias especiais.",
+      "composition": "Itens inclusos no Mix Joes:",
+      "details": [
+        "4 Joe de salmão c/ cream cheese",
+        "4 Gunkan c/ tataki de salmão",
+        "2 Joe c/ geleia de pimenta",
+        "2 Joe c/ geleia de maracujá"
+      ],
+      "variants": [
+        {
+          "id": "12",
+          "label": "12 un",
+          "price": 35.9
+        }
+      ],
+      "meta": [
+        "12 peças",
+        "Joes"
+      ],
+      "image": "mixdejoe_cardapio_optimized.jpg"
+    },
+    {
+      "id": "combo-wa-rio-1",
+      "name": "Combo WA RIO 1",
+      "label": "Combos",
+      "category": "combos",
+      "badge": "31 peças",
+      "desc": "31 peças com filadélfia, hot, uramaki e peças especiais da casa.",
+      "composition": "Itens inclusos no WA RIO 1:",
+      "details": [
+        "10 Filadélfia",
+        "10 Hot Filadélfia",
+        "5 Uramaki de salmão",
+        "2 Joe c/ geleia de maracujá",
+        "2 Nigiri de salmão",
+        "2 Gunkan de tataki de salmão"
+      ],
+      "variants": [
+        {
+          "id": "31",
+          "label": "31 un",
+          "price": 55.9
+        }
+      ],
+      "meta": [
+        "31 peças",
+        "WA RIO"
+      ],
+      "image": "wario1_cardapio_optimized.jpg"
+    },
+    {
+      "id": "combo-wa-rio-2",
+      "name": "Combo WA RIO 2",
+      "label": "Combos",
+      "category": "combos",
+      "badge": "36 peças",
+      "desc": "36 peças premium com sashimi, nigiri, joes, uramakis, filadélfia e hot.",
+      "composition": "Itens inclusos no WA RIO 2:",
+      "details": [
+        "4 Sashimi de salmão",
+        "4 Nigiri de salmão",
+        "2 Nigiri skin",
+        "2 Joe c/ cream cheese",
+        "4 Uramaki de salmão",
+        "4 Uramaki especial",
+        "10 Filadélfia roll",
+        "10 Hot Filadélfia"
+      ],
+      "variants": [
+        {
+          "id": "36",
+          "label": "36 un",
+          "price": 76.9
+        }
+      ],
+      "meta": [
+        "36 peças",
+        "Premium"
+      ],
+      "image": "wario2_cardapio_optimized.jpg"
+    },
+    {
+      "id": "filadelfia-roll",
+      "name": "Filadélfia Roll",
+      "label": "Filadélfia",
+      "category": "filadelfia",
+      "badge": "Clássico",
+      "desc": "Salmão fresco, cream cheese e arroz temperado em uma opção cremosa e muito pedida da casa.",
+      "variants": [
+        {
+          "id": "10",
+          "label": "10 un",
+          "price": 16.9
+        },
+        {
+          "id": "20",
+          "label": "20 un",
+          "price": 23
+        },
+        {
+          "id": "30",
+          "label": "30 un",
+          "price": 31
+        },
+        {
+          "id": "40",
+          "label": "40 un",
+          "price": 40
+        },
+        {
+          "id": "50",
+          "label": "50 un",
+          "price": 50
+        },
+        {
+          "id": "60",
+          "label": "60 un",
+          "price": 60
+        }
+      ],
+      "meta": [
+        "10 a 60 un",
+        "Cream cheese"
+      ],
+      "image": "filadelfia_cardapio_optimized.jpg"
+    },
+    {
+      "id": "hot-filadelfia",
+      "name": "Hot Filadélfia",
+      "label": "Hot Filadélfia",
+      "category": "hot",
+      "badge": "Mais pedido",
+      "desc": "Hot crocante e filadélfia cremoso, organizado por quantidade para facilitar a escolha.",
+      "variants": [
+        {
+          "id": "10",
+          "label": "10 un",
+          "price": 16.9
+        },
+        {
+          "id": "20",
+          "label": "20 un",
+          "price": 23
+        },
+        {
+          "id": "30",
+          "label": "30 un",
+          "price": 31
+        },
+        {
+          "id": "40",
+          "label": "40 un",
+          "price": 40
+        },
+        {
+          "id": "50",
+          "label": "50 un",
+          "price": 50
+        },
+        {
+          "id": "60",
+          "label": "60 un",
+          "price": 60
+        }
+      ],
+      "meta": [
+        "10 a 60 un",
+        "Hot"
+      ],
+      "image": "Hot_roll_cardapio_optimized.jpg"
+    },
+    {
+      "id": "temaki-frio",
+      "name": "Temaki Frio",
+      "label": "Temaki",
+      "category": "temaki",
+      "desc": "Temaki fresco, bem recheado e finalizado com equilíbrio para uma porção individual.",
+      "variants": [
+        {
+          "id": "1",
+          "label": "1 un",
+          "price": 18.9
+        }
+      ],
+      "meta": [
+        "Individual",
+        "Frio"
+      ],
+      "image": "TEMAKI_site_optimized.jpg"
+    },
+    {
+      "id": "temaki-hot",
+      "name": "Temaki Hot",
+      "label": "Temaki",
+      "category": "temaki",
+      "desc": "Versão quente e intensa do temaki, com textura crocante e recheio cremoso.",
+      "variants": [
+        {
+          "id": "1",
+          "label": "1 un",
+          "price": 19.9
+        }
+      ],
+      "meta": [
+        "Individual",
+        "Hot"
+      ],
+      "image": "temakihot_cardapio_optimized.jpg"
+    },
+    {
+      "id": "sushi-dog",
+      "name": "Sushi Dog",
+      "label": "Especial",
+      "category": "especiais",
+      "badge": "Especial",
+      "desc": "Criação generosa da casa, pensada para quem gosta de uma experiência diferente.",
+      "variants": [
+        {
+          "id": "1",
+          "label": "1 un",
+          "price": 34.9
+        }
+      ],
+      "meta": [
+        "Especial",
+        "Generoso"
+      ],
+      "image": "sushidog_cardapio_optimized.jpg"
+    },
+    {
+      "id": "uramaki-salmao",
+      "name": "Uramaki de Salmão",
+      "label": "Uramaki",
+      "category": "uramaki",
+      "desc": "Peças frias com salmão, arroz bem temperado e finalização delicada.",
+      "variants": [
+        {
+          "id": "10",
+          "label": "10 un",
+          "price": 18.9
+        },
+        {
+          "id": "20",
+          "label": "20 un",
+          "price": 34.9
+        }
+      ],
+      "meta": [
+        "Salmão",
+        "Frio"
+      ],
+      "image": "uramakisalmao_cardapio_optimized.jpg"
+    },
+    {
+      "id": "uramaki-especial",
+      "name": "Uramaki Especial",
+      "label": "Uramaki",
+      "category": "uramaki",
+      "badge": "Especial",
+      "desc": "Uramaki com montagem mais elaborada, acabamento premium e sabor marcante.",
+      "variants": [
+        {
+          "id": "10",
+          "label": "10 un",
+          "price": 21.9
+        },
+        {
+          "id": "20",
+          "label": "20 un",
+          "price": 39.9
+        }
+      ],
+      "meta": [
+        "Especial",
+        "Premium"
+      ],
+      "image": "uramakiespecialatualizado_cardapio_optimized.jpg"
+    },
+    {
+      "id": "sashimi",
+      "name": "Sashimi",
+      "label": "Sashimi",
+      "category": "sashimi",
+      "desc": "Cortes frescos de salmão para complementar o pedido com leveza e precisão.",
+      "variants": [
+        {
+          "id": "1",
+          "label": "1 un",
+          "price": 4
+        },
+        {
+          "id": "4",
+          "label": "4 un",
+          "price": 14
+        },
+        {
+          "id": "5",
+          "label": "5 un",
+          "price": 18
+        }
+      ],
+      "meta": [
+        "Salmão",
+        "Cortes"
+      ],
+      "image": "sashimi_cardapio_optimized.jpg"
+    },
+    {
+      "id": "niguiri",
+      "name": "Sushi Niguiri",
+      "label": "Niguiri",
+      "category": "niguiri",
+      "desc": "Arroz temperado e salmão em corte delicado, servido em opções para completar a seleção.",
+      "variants": [
+        {
+          "id": "1",
+          "label": "1 un",
+          "price": 3
+        },
+        {
+          "id": "2",
+          "label": "2 un",
+          "price": 5
+        },
+        {
+          "id": "4",
+          "label": "4 un",
+          "price": 9
+        }
+      ],
+      "meta": [
+        "Salmão",
+        "Clássico"
+      ],
+      "image": "sushinigiri_cardapio_optimized.jpg"
+    },
+    {
+      "id": "joe-joe",
+      "name": "Joe Joe",
+      "label": "Joe Joe",
+      "category": "joe",
+      "desc": "Peças cremosas e delicadas para adicionar um toque especial ao pedido.",
+      "variants": [
+        {
+          "id": "1",
+          "label": "1 un",
+          "price": 3
+        },
+        {
+          "id": "2",
+          "label": "2 un",
+          "price": 5
+        },
+        {
+          "id": "4",
+          "label": "4 un",
+          "price": 10
+        }
+      ],
+      "meta": [
+        "Especial",
+        "Cremoso"
+      ],
+      "image": "joejoe_cardapio_optimized.jpg"
+    }
+  ],
+  "promoProducts": [
+    {
+      "id": "promo-namorados-35",
+      "name": "Combo Love + sobremesa grátis",
+      "label": "Promoção do Dia dos Namorados",
+      "category": "promocoes",
+      "badge": "35 peças + doce",
+      "desc": "Combo especial para casal com salmão, joes, gunkan, filadélfia, uramaki, hot e sobremesa grátis.",
+      "composition": "Itens inclusos no Combo Love:",
+      "details": [
+        "2 Niguiri de salmão selado",
+        "2 Niguiri de salmão",
+        "2 Joe c/ geleia de maracujá",
+        "2 Joe Joe de salmão",
+        "2 Gunkan c/ tataki",
+        "5 Filadélfia roll",
+        "5 Uramaki de salmão",
+        "5 Hot especial",
+        "10 Hot Filadélfia",
+        "4 Banana crocante com Nutella"
+      ],
+      "variants": [
+        {
+          "id": "35",
+          "label": "35 peças + 4 bananas",
+          "price": 79
+        }
+      ],
+      "meta": [
+        "Para casal",
+        "Sobremesa grátis"
+      ],
+      "image": "promo_namorados_combo_35_optimized.jpg"
+    }
+  ]
+}
