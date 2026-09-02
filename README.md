@@ -49,7 +49,10 @@ já estão no seu site hoje para dentro de `public/`, no mesmo nível do HTML.
 ```bash
 cd wario-admin
 npm install
-ADMIN_PASSWORD=escolha-uma-senha-forte npm start
+# PowerShell
+$env:ADMIN_PASSWORD="escolha-uma-senha-forte"
+$env:SESSION_SECRET="escolha-um-texto-longo-aleatorio"
+npm start
 ```
 
 Abra `http://localhost:3000` para o site e `http://localhost:3000/admin` para o painel.
@@ -102,8 +105,9 @@ Abra `http://localhost:3000` para o site e `http://localhost:3000/admin` para o 
 
 - O painel é protegido por senha + cookie de sessão (HttpOnly), não por login de
   usuário — é pensado para uso pessoal seu, não para múltiplos administradores.
-- A senha padrão embutida no arquivo é `27e30filhos` — ela só é usada se a variável de
-  ambiente `ADMIN_PASSWORD` não estiver definida no Railway. O recomendado é sempre
-  configurar `ADMIN_PASSWORD` no Railway (Variables), em vez de depender do valor fixo
-  no código.
+- A senha do painel deve ficar na variável `ADMIN_PASSWORD`. Não coloque a senha dentro
+  do HTML, JS, CSS ou em arquivos que vão para o Git.
+- Sem `ADMIN_PASSWORD`, o painel `/admin` fica bloqueado até a senha ser configurada.
+- Para trocar a senha no site publicado, altere `ADMIN_PASSWORD` em Railway →
+  Variables e faça redeploy/restart do serviço.
 - Tem limite de tentativas de login (8 por 15 min por IP) para dificultar força bruta.

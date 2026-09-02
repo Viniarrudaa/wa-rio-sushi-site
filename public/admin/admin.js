@@ -566,6 +566,8 @@ loginForm.addEventListener('submit', async (e) => {
   }catch(err){
     loginError.textContent = err.message === 'too_many_attempts'
       ? 'Muitas tentativas. Aguarde alguns minutos.'
+      : err.message === 'admin_password_missing'
+        ? 'Senha do painel ainda não configurada no servidor.'
       : 'Senha incorreta.';
     loginError.hidden = false;
   }

@@ -13,6 +13,8 @@ Este backend cria orders Pix no Mercado Pago, consulta status e recebe webhooks.
    - `MP_PAYER_FIRST_NAME`: opcional. Em testes Pix do Mercado Pago, use `APRO`.
    - `MP_WEBHOOK_URL`: URL publica deste backend em producao, terminando em `/api/pix/webhook`.
    - `APP_ORIGIN`: dominio publico do site, exemplo `https://wariosushi.com.br`.
+   - `ADMIN_PASSWORD`: senha do painel em `/admin`.
+   - `SESSION_SECRET`: texto longo aleatorio usado para assinar a sessao do painel.
    - `TRUST_PROXY`: use `true` somente se o servidor estiver atras de um proxy/CDN confiavel que controla `X-Forwarded-For`.
    - `TURNSTILE_REQUIRED`: use `true` em producao para exigir anti-bot antes de criar Pix.
    - `TURNSTILE_SITE_KEY`: chave publica do Cloudflare Turnstile.
@@ -25,7 +27,7 @@ Este backend cria orders Pix no Mercado Pago, consulta status e recebe webhooks.
 
 Para teste local, use `DEFAULT_PAYER_EMAIL=test_user_br@testuser.com` e `MP_PAYER_FIRST_NAME=APRO`. Em producao, limpe `MP_PAYER_FIRST_NAME` para usar o nome real do cliente.
 
-Nunca coloque `MP_ACCESS_TOKEN` no HTML, CSS ou JS publico.
+Nunca coloque `MP_ACCESS_TOKEN`, `ADMIN_PASSWORD` ou `SESSION_SECRET` no HTML, CSS ou JS publico.
 
 ## Rodar localmente
 
@@ -35,6 +37,14 @@ node server.js
 ```
 
 Nao ha dependencias externas neste servidor local.
+
+Para testar o painel localmente no PowerShell:
+
+```powershell
+$env:ADMIN_PASSWORD="sua-senha-de-teste"
+$env:SESSION_SECRET="um-texto-longo-aleatorio-para-teste"
+node server.js
+```
 
 Depois abra:
 
@@ -55,5 +65,6 @@ http://localhost:3000/wario_sushi_v2_16.html
 - Troque o armazenamento em memoria por banco de dados se quiser historico de pedidos.
 - Configure o webhook no painel do Mercado Pago apontando para `/api/pix/webhook`.
 - Em producao, deixe `NODE_ENV=production` e preencha `APP_ORIGIN`.
+- Em producao, configure `ADMIN_PASSWORD`; sem essa variavel o painel admin fica bloqueado.
 - O servidor recalcula o valor do pedido com uma tabela de produtos interna. Sempre atualize essa tabela quando mudar preco no cardapio.
 - A integracao usa Mercado Pago Orders API (`/v1/orders`) para Pix.

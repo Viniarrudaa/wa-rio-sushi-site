@@ -40,7 +40,8 @@ const menuDataDir=path.resolve(process.env.DATA_DIR||path.join(rootDir,'data'));
 const menuDbFile=path.join(menuDataDir,'db.json');
 const menuSeedFile=path.join(rootDir,'data','seed.json');
 const menuUploadDir=path.join(menuDataDir,'uploads','menu');
-const adminPassword=String(process.env.ADMIN_PASSWORD||'27e30filhos');
+const adminPassword=String(process.env.ADMIN_PASSWORD||'');
+const adminLoginEnabled=adminPassword.length>0;
 const adminSessionSecret=String(process.env.SESSION_SECRET||process.env.ADMIN_SESSION_SECRET||crypto.randomBytes(32).toString('hex'));
 const adminSessionMaxAgeMs=Math.max(1,Number(process.env.ADMIN_SESSION_HOURS)||12)*60*60*1000;
 const defaultBusinessHours={openHour:19,closeHour:23,openDays:[0,3,4,5,6],timeZone:'America/Sao_Paulo',scheduleLeadMinutes:30};
@@ -66,8 +67,10 @@ loadOrderStore();
 ensureMenuDb();
 validateProductionConfig();
 
-if(!process.env.ADMIN_PASSWORD){
-  console.warn('ADMIN_PASSWORD ausente; usando senha padrao do painel. Configure ADMIN_PASSWORD no Railway antes de divulgar o admin.');
+if(!adminLoginEnabled){
+  console.warn(isProduction
+    ? 'ADMIN_PASSWORD ausente; painel admin bloqueado ate a senha ser configurada no Railway.'
+    : 'ADMIN_PASSWORD ausente; defina ADMIN_PASSWORD para acessar o painel admin local.');
 }
 
 function loadEnv(filePath){
@@ -1437,10 +1440,11 @@ async function handleMenuAdminApi(req,res,url){
     return sendJson(res,200,{loggedIn:isAdminAuthenticated(req)});
   }
   if(req.method==='POST'&&url.pathname==='/api/admin/login'){
+    if(!adminLoginEnabled) return sendJson(res,503,{error:'admin_password_missing'});
     const ip=clientIp(req);
     if(adminTooManyAttempts(ip)) return sendJson(res,429,{error:'too_many_attempts'});
     const body=await readJson(req);
-    const ok=typeof body?.password==='string'&&sameSecret(body.password,adminPassword);
+    const ok=typeof body?.password==='string'&&body.password.length>0&&sameSecret(body.password,adminPassword);
     registerAdminAttempt(ip,ok);
     if(!ok) return sendJson(res,401,{error:'invalid_password'});
     pruneAdminSessions();
