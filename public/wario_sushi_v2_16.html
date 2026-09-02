@@ -26,7 +26,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="wario_sushi_v2_16.css?v=57">
+<link rel="stylesheet" href="wario_sushi_v2_16.css?v=59">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Restaurant","name":"WA RIO Sushi","alternateName":"Wariosushi","url":"https://wariosushi.com.br/","image":"https://wariosushi.com.br/hero_desktop_wa_rio_optimized.jpg","logo":"https://wariosushi.com.br/favicon_wario.png","telephone":"+5521982225443","servesCuisine":["Sushi","Comida japonesa"],"priceRange":"$$","currenciesAccepted":"BRL","paymentAccepted":"Pix, cartao de debito, cartao de credito, dinheiro","address":{"@type":"PostalAddress","addressLocality":"Rio de Janeiro","addressRegion":"RJ","addressCountry":"BR","addressSubLocality":"Cachambi"},"areaServed":[{"@type":"Place","name":"Cachambi"},{"@type":"Place","name":"M\u00e9ier"},{"@type":"Place","name":"Engenho de Dentro"},{"@type":"Place","name":"Pilares"},{"@type":"Place","name":"Riachuelo"},{"@type":"Place","name":"Maria da Gra\u00e7a"},{"@type":"Place","name":"Higien\u00f3polis"},{"@type":"Place","name":"Engenho Novo"},{"@type":"Place","name":"Del Castilho"},{"@type":"Place","name":"Aboli\u00e7\u00e3o"},{"@type":"Place","name":"Piedade"}],"openingHoursSpecification":[{"@type":"OpeningHoursSpecification","dayOfWeek":["Wednesday","Thursday","Friday","Saturday","Sunday"],"opens":"19:00","closes":"23:00"}],"acceptsReservations":false,"sameAs":["https://www.instagram.com/wariosushi/"],"potentialAction":{"@type":"OrderAction","target":{"@type":"EntryPoint","urlTemplate":"https://wa.me/5521982225443","inLanguage":"pt-BR","actionPlatform":["http://schema.org/DesktopWebPlatform","http://schema.org/MobileWebPlatform"]}}}</script>
 </head>
 <body>
@@ -57,26 +57,24 @@
   </button>
 </nav>
 
-<div class="seasonal-banner" id="namorados" role="region" aria-label="Chamada para promoções de Dia dos Namorados">
-  <span class="seasonal-rose seasonal-rose-left" aria-hidden="true"></span>
-  <div class="seasonal-banner-copy">
-    <span class="seasonal-kicker">12 de junho</span>
-    <strong>Promo&ccedil;&atilde;o do Dia dos Namorados</strong>
-    <p>Combos para casal com sushi premium, hot e pe&ccedil;as especiais para dividir.</p>
+<div class="premium-banner" id="premium" role="region" aria-label="Chamada para WA RIO Sushi Premium">
+  <div class="premium-banner-copy">
+    <span class="premium-kicker">Promo&ccedil;&atilde;o especial</span>
+    <strong>WA RIO Sushi Premium</strong>
+    <p>35 pe&ccedil;as + 4 bananas crocantes com Nutella por R$ 79,00.</p>
   </div>
-  <div class="seasonal-action">
-    <span class="seasonal-pulse">Promo&ccedil;&otilde;es limitadas</span>
-    <a href="#promocoes-namorados" class="seasonal-cta">Ir para promo&ccedil;&otilde;es</a>
+  <div class="premium-action">
+    <span class="premium-pulse">Pre&ccedil;o especial</span>
+    <a href="#promocoes-premium" class="premium-banner-cta">Ver promo&ccedil;&atilde;o</a>
   </div>
-  <span class="seasonal-rose seasonal-rose-right" aria-hidden="true"></span>
 </div>
 
 <!-- HERO -->
 <section class="hero" id="inicio">
   <div class="hero-content">
-    <span class="hero-tag">Jantar a dois</span>
+    <span class="hero-tag">WA RIO Premium</span>
     <h1>O verdadeiro<br><em>sabor japonês.</em></h1>
-    <p>Ingredientes selecionados, t&eacute;cnicas tradicionais<br> e uma experi&ecirc;ncia perfeita para dividir com quem voc&ecirc; ama.</p>
+    <p>Ingredientes selecionados, t&eacute;cnicas tradicionais<br> e uma experi&ecirc;ncia especial para o seu pedido.</p>
     <a href="#combos" class="btn-primary">
       <span class="btn-primary-text">Ver Cardápio</span>
       <span class="btn-primary-arrow" aria-hidden="true"></span>
@@ -99,16 +97,11 @@
     <span class="scroll-hint">Explore por categoria</span>
     <a href="https://wa.me/5521982225443?text=Ol%C3%A1%2C%20WA%20RIO%20Sushi%21%20Quero%20falar%20com%20o%20atendimento." target="_blank" rel="noopener noreferrer" class="ver-todos">Falar com atendente →</a>
   </div>
-  <div class="promo-zone promo-zone-namorados" id="promocoes-namorados" aria-label="Promoções de Dia dos Namorados do WA RIO Sushi">
+  <div class="promo-zone promo-zone-premium" id="promocoes-premium" aria-label="Promoção WA RIO Sushi Premium">
     <div class="promo-zone-head">
-      <span>12 de junho</span>
-      <strong>Promo&ccedil;&atilde;o do Dia dos Namorados</strong>
-      <p>Promo&ccedil;&otilde;es especiais para reservar e receber em casa.</p>
-      <div class="promo-countdown" data-countdown="namorados" aria-live="polite" aria-label="Contagem regressiva para o Dia dos Namorados">
-        <span class="promo-countdown-label" id="namoradosCountdownLabel">Faltam</span>
-        <strong id="namoradosDays">--</strong>
-        <small id="namoradosTimeLeft">dias</small>
-      </div>
+      <span>Promo&ccedil;&atilde;o especial</span>
+      <strong>WA RIO Sushi Premium</strong>
+      <p>35 pe&ccedil;as + 4 bananas crocantes com Nutella por R$ 79,00.</p>
     </div>
     <div class="promo-list" id="promoList"></div>
   </div>
@@ -274,7 +267,7 @@
 <section class="delivery-areas" id="entrega">
   <div class="delivery-areas-copy">
     <span class="sec-tag">Somente delivery</span>
-    <h2 class="sec-title">Sushi delivery no<br><em>Cachambi e regi&atilde;o</em></h2>
+    <h2 class="sec-title">Sushi delivery no <br><em>Cachambi e regi&atilde;o</em></h2>
     <p>Estamos no Cachambi e atendemos pedidos de comida japonesa por delivery em bairros da Zona Norte do Rio.</p>
   </div>
   <div class="delivery-area-list" aria-label="Bairros atendidos pelo WA RIO Sushi">
@@ -517,6 +510,6 @@
   <span class="order-bar-action">Ver pedido</span>
 </button>
 
-<script src="wario_sushi_v2_16.js?v=57" type="module"></script>
+<script src="wario_sushi_v2_16.js?v=59" type="module"></script>
 </body>
 </html>

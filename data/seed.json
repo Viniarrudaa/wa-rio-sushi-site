@@ -445,13 +445,13 @@
   ],
   "promoProducts": [
     {
-      "id": "promo-namorados-35",
-      "name": "Combo Love + sobremesa grátis",
-      "label": "Promoção do Dia dos Namorados",
+      "id": "wa-rio-sushi-premium",
+      "name": "WA RIO Sushi Premium",
+      "label": "Promoção especial",
       "category": "promocoes",
-      "badge": "35 peças + doce",
-      "desc": "Combo especial para casal com salmão, joes, gunkan, filadélfia, uramaki, hot e sobremesa grátis.",
-      "composition": "Itens inclusos no Combo Love:",
+      "badge": "35 peças + 4 bananas",
+      "desc": "Seleção premium com salmão, joes, gunkan, filadélfia, uramaki, hot e 4 bananas crocantes com Nutella.",
+      "composition": "Itens inclusos no WA RIO Sushi Premium:",
       "details": [
         "2 Niguiri de salmão selado",
         "2 Niguiri de salmão",
@@ -462,7 +462,7 @@
         "5 Uramaki de salmão",
         "5 Hot especial",
         "10 Hot Filadélfia",
-        "4 Banana crocante com Nutella"
+        "4 Bananas crocantes com Nutella"
       ],
       "variants": [
         {
@@ -472,10 +472,10 @@
         }
       ],
       "meta": [
-        "Para casal",
-        "Sobremesa grátis"
+        "WA RIO Premium",
+        "Com Nutella"
       ],
-      "image": "promo_namorados_combo_35_optimized.jpg"
+      "image": "wario2_cardapio_optimized.jpg"
     }
   ]
 }

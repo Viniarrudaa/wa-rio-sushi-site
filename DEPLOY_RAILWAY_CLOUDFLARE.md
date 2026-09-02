@@ -13,6 +13,9 @@
 NODE_ENV=production
 APP_ORIGIN=https://seudominio.com
 TRUST_PROXY=true
+ADMIN_PASSWORD=SENHA_FORTE_DO_PAINEL
+SESSION_SECRET=TEXTO_LONGO_ALEATORIO_PARA_SESSAO
+DATA_DIR=/data
 MP_ACCESS_TOKEN=APP_USR_SEU_TOKEN_REAL
 MP_WEBHOOK_SECRET=SEU_SEGREDO_DE_WEBHOOK
 DEFAULT_PAYER_EMAIL=pedido@wariosushi.com.br
@@ -30,7 +33,10 @@ GA_MEASUREMENT_ID=G-SEU_ID_DO_GA4
 ```
 
 5. Crie um Volume no Railway e monte em `/data`.
-   - Sem volume, o arquivo de pedidos pode ser perdido em redeploy/restart.
+   - Sem volume, alteracoes feitas no painel podem voltar para o cardapio inicial em redeploy/restart.
+   - Sem volume, o arquivo de pedidos tambem pode ser perdido em redeploy/restart.
+   - Sem volume, imagens enviadas pelo painel tambem podem ser perdidas em redeploy/restart.
+   - As imagens do painel ficam em `/data/uploads/menu`.
    - Para comecar com mais seguranca, use o volume.
 6. Em Google Analytics 4, crie um fluxo Web para o dominio e copie o ID iniciado por `G-` para `GA_MEASUREMENT_ID`.
 
@@ -69,6 +75,8 @@ https://seudominio.com/api/pix/webhook
 - `TURNSTILE_REQUIRED=true`.
 - `TRUST_PROXY=true` somente com Cloudflare/Railway na frente.
 - Volume montado em `/data`.
+- Painel acessando em `/admin` com `ADMIN_PASSWORD`.
+- Edicao de cardapio refletindo no site.
 - Webhook do Mercado Pago funcionando.
 - Site acessando por HTTPS.
 - Teste real de Pix concluido.

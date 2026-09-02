@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { createReadStream, existsSync, readFileSync } from 'node:fs';
+import { createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { mkdir, stat, writeFile } from 'node:fs/promises';
 import http from 'node:http';
 import path from 'node:path';
@@ -36,12 +36,39 @@ const turnstileEnabled=Boolean(turnstileSiteKey&&turnstileSecretKey&&turnstileRe
 const orderPersistenceEnabled=String(process.env.ORDER_STORE||'file').toLowerCase()!=='memory';
 const orderStoreFile=path.resolve(__dirname,process.env.ORDER_STORE_FILE||path.join('data','orders.json'));
 const orderStoreTtlMs=Math.max(1,Number(process.env.ORDER_STORE_TTL_HOURS)||72)*60*60*1000;
-const businessHours={openHour:19,closeHour:23,openDays:[0,3,4,5,6],timeZone:'America/Sao_Paulo'};
-const scheduleLeadMinutes=30;
+const menuDataDir=path.resolve(process.env.DATA_DIR||path.join(rootDir,'data'));
+const menuDbFile=path.join(menuDataDir,'db.json');
+const menuSeedFile=path.join(rootDir,'data','seed.json');
+const menuUploadDir=path.join(menuDataDir,'uploads','menu');
+const adminPassword=String(process.env.ADMIN_PASSWORD||'27e30filhos');
+const adminSessionSecret=String(process.env.SESSION_SECRET||process.env.ADMIN_SESSION_SECRET||crypto.randomBytes(32).toString('hex'));
+const adminSessionMaxAgeMs=Math.max(1,Number(process.env.ADMIN_SESSION_HOURS)||12)*60*60*1000;
+const defaultBusinessHours={openHour:19,closeHour:23,openDays:[0,3,4,5,6],timeZone:'America/Sao_Paulo',scheduleLeadMinutes:30};
+const defaultDeliveryAreas=[
+  {name:'Cachambi',fee:7,active:true},
+  {name:'Méier',fee:8,active:true},
+  {name:'Engenho de Dentro',fee:8,active:true},
+  {name:'Pilares',fee:8,active:true},
+  {name:'Riachuelo',fee:8,active:true},
+  {name:'Maria da Graça',fee:7,active:true},
+  {name:'Higienópolis',fee:8,active:true},
+  {name:'Engenho Novo',fee:8,active:true},
+  {name:'Del Castilho',fee:8,active:true},
+  {name:'Abolição',fee:8,active:true},
+  {name:'Piedade',fee:8,active:true}
+];
+const deliveryAreaDisplayNames=new Map(defaultDeliveryAreas.map(area=>[normalizeText(area.name),area.name]));
 let orderPersistTimer=null;
+const adminSessions=new Map();
+const adminLoginAttempts=new Map();
 
 loadOrderStore();
+ensureMenuDb();
 validateProductionConfig();
+
+if(!process.env.ADMIN_PASSWORD){
+  console.warn('ADMIN_PASSWORD ausente; usando senha padrao do painel. Configure ADMIN_PASSWORD no Railway antes de divulgar o admin.');
+}
 
 function loadEnv(filePath){
   if(!existsSync(filePath)) return;
@@ -122,6 +149,613 @@ function sendJson(res,status,body){
   res.end(JSON.stringify(body));
 }
 
+function sendJsonWithHeaders(res,status,body,headers={}){
+  res.writeHead(status,{'Content-Type':'application/json; charset=utf-8',...headers});
+  res.end(JSON.stringify(body));
+}
+
+function ensureMenuDb(){
+  if(!existsSync(menuDataDir)) mkdirSync(menuDataDir,{recursive:true});
+  if(!existsSync(menuDbFile)){
+    const seed=existsSync(menuSeedFile)
+      ? readFileSync(menuSeedFile,'utf8')
+      : JSON.stringify({menuCategories:[['todos','Todos']],menuProducts:[],promoProducts:[]},null,2);
+    writeFileSync(menuDbFile,seed,'utf8');
+  }
+}
+
+function defaultSiteSettings(){
+  return {
+    delivery:{
+      defaultFee:8,
+      areas:defaultDeliveryAreas.map(area=>({...area}))
+    },
+    businessHours:{
+      ...defaultBusinessHours,
+      openDays:[...defaultBusinessHours.openDays]
+    }
+  };
+}
+
+function normalizeFee(value,fallback=0,max=200){
+  const fee=Number(value);
+  if(!Number.isFinite(fee)||fee<0||fee>max) return fallback;
+  return Math.round(fee*100)/100;
+}
+
+function normalizeHourValue(value,fallback,max=23){
+  const raw=String(value??'');
+  const fromTime=/^(\d{1,2}):\d{2}$/.exec(raw);
+  const hour=fromTime?Number(fromTime[1]):Number(value);
+  if(!Number.isFinite(hour)) return fallback;
+  return Math.max(0,Math.min(max,Math.floor(hour)));
+}
+
+function normalizeOpenDays(value,fallback){
+  const days=Array.isArray(value)
+    ? [...new Set(value.map(day=>Number(day)).filter(day=>Number.isInteger(day)&&day>=0&&day<=6))]
+    : [];
+  return days.length?days.sort((a,b)=>a-b):[...fallback];
+}
+
+function normalizeDeliveryAreas(value,defaultFee){
+  const source=Array.isArray(value)?value:defaultDeliveryAreas;
+  const seen=new Set();
+  return source.map((area,index)=>{
+    const rawName=safeText(area?.name,80);
+    const key=normalizeText(rawName);
+    const name=deliveryAreaDisplayNames.get(key)||rawName;
+    if(!name||seen.has(key)) return null;
+    seen.add(key);
+    return {
+      id:slugify(area?.id||name)||`area-${index+1}`,
+      name,
+      fee:normalizeFee(area?.fee,defaultFee),
+      active:area?.active!==false
+    };
+  }).filter(Boolean).slice(0,60);
+}
+
+function normalizeSiteSettings(settings={}){
+  const defaults=defaultSiteSettings();
+  const deliverySource=settings?.delivery&&typeof settings.delivery==='object'?settings.delivery:{};
+  const businessSource=settings?.businessHours&&typeof settings.businessHours==='object'?settings.businessHours:{};
+  const defaultFee=normalizeFee(deliverySource.defaultFee,defaults.delivery.defaultFee);
+  const openHour=normalizeHourValue(businessSource.openHour,defaults.businessHours.openHour,23);
+  let closeHour=normalizeHourValue(businessSource.closeHour,defaults.businessHours.closeHour,24);
+  if(closeHour<=openHour) closeHour=Math.min(24,openHour+1);
+  return {
+    delivery:{
+      defaultFee,
+      areas:normalizeDeliveryAreas(deliverySource.areas,defaultFee)
+    },
+    businessHours:{
+      openHour,
+      closeHour,
+      openDays:normalizeOpenDays(businessSource.openDays,defaults.businessHours.openDays),
+      timeZone:safeText(businessSource.timeZone,60)||defaults.businessHours.timeZone,
+      scheduleLeadMinutes:Number.isFinite(Number(businessSource.scheduleLeadMinutes))
+        ? Math.max(0,Math.min(240,Math.floor(Number(businessSource.scheduleLeadMinutes))))
+        : defaults.businessHours.scheduleLeadMinutes
+    }
+  };
+}
+
+function normalizeMenuCategory(entry,index=0,seen=new Set()){
+  const isArray=Array.isArray(entry);
+  const source=entry&&typeof entry==='object'?entry:{};
+  const rawId=isArray?entry[0]:(source.id||source.filter||source.value);
+  const rawLabel=isArray?entry[1]:(source.label||source.name||source.title);
+  let id=slugify(rawId)||slugify(rawLabel);
+  let label=safeText(rawLabel,80)||safeText(rawId,80);
+  if(!id&&!label) return null;
+  if(!id) id=`categoria-${index+1}`;
+  if(!label) label=id;
+  if(id==='todos'){
+    id='todos';
+    label='Todos';
+  }
+  let uniqueId=id;
+  let suffix=2;
+  while(seen.has(uniqueId)){
+    uniqueId=`${id}-${suffix}`;
+    suffix+=1;
+  }
+  seen.add(uniqueId);
+  return {
+    id:uniqueId,
+    label,
+    active:uniqueId==='todos'?true:source.active!==false
+  };
+}
+
+function normalizeMenuCategories(value){
+  const source=Array.isArray(value)?value:[['todos','Todos']];
+  const seen=new Set();
+  const normalized=source
+    .map((entry,index)=>normalizeMenuCategory(entry,index,seen))
+    .filter(Boolean);
+  const withoutTodos=normalized.filter(category=>category.id!=='todos');
+  return [{id:'todos',label:'Todos',active:true},...withoutTodos].slice(0,80);
+}
+
+function normalizeMenuDb(db){
+  return {
+    menuCategories:normalizeMenuCategories(db?.menuCategories),
+    menuProducts:Array.isArray(db?.menuProducts)?db.menuProducts:[],
+    promoProducts:Array.isArray(db?.promoProducts)?db.promoProducts:[],
+    siteSettings:normalizeSiteSettings(db?.siteSettings)
+  };
+}
+
+function readMenuDb(){
+  ensureMenuDb();
+  try{
+    return normalizeMenuDb(JSON.parse(readFileSync(menuDbFile,'utf8')));
+  }catch(error){
+    console.error('Falha ao ler cardapio:',error.message);
+    return normalizeMenuDb(JSON.parse(readFileSync(menuSeedFile,'utf8')));
+  }
+}
+
+function writeMenuDb(db){
+  ensureMenuDb();
+  writeFileSync(menuDbFile,JSON.stringify(normalizeMenuDb(db),null,2),'utf8');
+}
+
+function publicMenuPayload(){
+  const db=readMenuDb();
+  const visibleCategories=db.menuCategories.filter(category=>category.id==='todos'||category.active!==false);
+  const visibleCategoryIds=new Set(visibleCategories.map(category=>category.id));
+  return {
+    menuCategories:visibleCategories.map(category=>[category.id,category.label]),
+    menuProducts:db.menuProducts.filter(product=>!product.soldOut&&visibleCategoryIds.has(product.category)),
+    promoProducts:db.promoProducts.filter(product=>!product.soldOut),
+    siteSettings:db.siteSettings
+  };
+}
+
+function collectionFor(kind,db){
+  if(kind==='promo') return db.promoProducts;
+  if(kind==='product') return db.menuProducts;
+  return null;
+}
+
+function slugify(value){
+  return normalizeText(value)
+    .replace(/[^a-z0-9]+/g,'-')
+    .replace(/(^-|-$)/g,'')
+    .slice(0,80);
+}
+
+function normalizeArrayText(value,maxItems=40,maxLength=160){
+  return Array.isArray(value)
+    ? value.map(item=>safeText(item,maxLength)).filter(Boolean).slice(0,maxItems)
+    : [];
+}
+
+function normalizeVariants(value){
+  if(!Array.isArray(value)) return [];
+  const ids=new Set();
+  return value.map(variant=>{
+    const label=safeText(variant?.label,60);
+    const price=Number(variant?.price);
+    let id=slugify(variant?.id||label)||'unico';
+    if(ids.has(id)){
+      let index=2;
+      while(ids.has(`${id}-${index}`)) index+=1;
+      id=`${id}-${index}`;
+    }
+    ids.add(id);
+    return {id,label,price:Math.round(price*100)/100};
+  }).filter(variant=>variant.label&&Number.isFinite(variant.price)&&variant.price>=0);
+}
+
+function validateAdminProduct(body){
+  if(!body||typeof body!=='object') return 'Dados invalidos.';
+  if(!safeText(body.name,120)) return 'Informe o nome do item.';
+  if(!safeText(body.category,60)) return 'Informe a categoria.';
+  if(!normalizeVariants(body.variants).length) return 'Adicione ao menos uma variante com preco.';
+  return '';
+}
+
+function adminProductPayload(body,existing={}){
+  return {
+    ...existing,
+    name:safeText(body.name,120),
+    label:safeText(body.label,60),
+    category:safeText(body.category,60),
+    badge:safeText(body.badge,60),
+    desc:safeText(body.desc,500),
+    composition:safeText(body.composition,140),
+    details:normalizeArrayText(body.details,60,180),
+    variants:normalizeVariants(body.variants),
+    meta:normalizeArrayText(body.meta,20,60),
+    image:safeText(body.image,180)||existing.image||'logo_wariobranca - Editado.png',
+    soldOut:Boolean(body.soldOut)
+  };
+}
+
+function categoryUseCounts(db){
+  const counts={};
+  for(const product of db.menuProducts){
+    const category=safeText(product?.category,80);
+    if(!category) continue;
+    counts[category]=(counts[category]||0)+1;
+  }
+  return counts;
+}
+
+function applyCategoryUpdate(db,categories){
+  const next=normalizeMenuCategories(categories);
+  const nextIds=new Set(next.map(category=>category.id));
+  const counts=categoryUseCounts(db);
+  const missing=Object.keys(counts).filter(category=>!nextIds.has(category));
+  if(missing.length){
+    const error=new Error(`Antes de excluir, mova os itens das categorias: ${missing.join(', ')}.`);
+    error.status=400;
+    throw error;
+  }
+  db.menuCategories=next;
+  return next;
+}
+
+function moveProduct(list,id,direction,categoryScope=''){
+  const productIndex=list.findIndex(product=>product.id===id);
+  if(productIndex<0) return false;
+  const step=direction==='up'?-1:direction==='down'?1:0;
+  if(!step) return false;
+  const scope=safeText(categoryScope,80);
+  const scopedIndexes=list
+    .map((product,index)=>({product,index}))
+    .filter(({product})=>!scope||scope==='todos'||safeText(product?.category,80)===scope)
+    .map(({index})=>index);
+  const scopedPosition=scopedIndexes.indexOf(productIndex);
+  const targetIndex=scopedIndexes[scopedPosition+step];
+  if(scopedPosition<0||targetIndex===undefined) return false;
+  const current=list[productIndex];
+  list[productIndex]=list[targetIndex];
+  list[targetIndex]=current;
+  return true;
+}
+
+function deploymentChecklist(){
+  const dataDirNormalized=path.normalize(menuDataDir).replace(/\\/g,'/');
+  const dataEnvNormalized=path.normalize(process.env.DATA_DIR||'').replace(/\\/g,'/');
+  const dataLooksPersistent=dataEnvNormalized==='/data';
+  const hasHttpsOrigin=appOrigins.some(origin=>/^https:\/\//i.test(origin));
+  return {
+    generatedAt:new Date().toISOString(),
+    environment:isProduction?'production':'local',
+    checks:[
+      {
+        id:'admin-password',
+        label:'Senha do painel',
+        ok:Boolean(process.env.ADMIN_PASSWORD),
+        detail:process.env.ADMIN_PASSWORD?'ADMIN_PASSWORD configurada.':'Configure ADMIN_PASSWORD no Railway antes de publicar.'
+      },
+      {
+        id:'session-secret',
+        label:'Sessão do painel',
+        ok:Boolean(process.env.SESSION_SECRET||process.env.ADMIN_SESSION_SECRET),
+        detail:(process.env.SESSION_SECRET||process.env.ADMIN_SESSION_SECRET)?'SESSION_SECRET configurada.':'Configure SESSION_SECRET para não deslogar todo mundo a cada deploy.'
+      },
+      {
+        id:'data-volume',
+        label:'Volume persistente',
+        ok:dataLooksPersistent,
+        detail:dataLooksPersistent?`DATA_DIR apontando para ${menuDataDir}.`:'No Railway, monte um Volume em /data e defina DATA_DIR=/data.'
+      },
+      {
+        id:'order-store',
+        label:'Pedidos Pix',
+        ok:orderPersistenceEnabled,
+        detail:orderPersistenceEnabled?`Pedidos configurados para salvar em arquivo.`:'ORDER_STORE está em memória; pedidos podem sumir ao reiniciar.'
+      },
+      {
+        id:'app-origin',
+        label:'Domínio oficial',
+        ok:!isProduction||hasHttpsOrigin,
+        detail:hasHttpsOrigin?'APP_ORIGIN/ALLOWED_ORIGINS usa HTTPS.':'Em produção, configure APP_ORIGIN=https://wariosushi.com.br.'
+      }
+    ]
+  };
+}
+
+function productCatalogFromMenu(){
+  const db=readMenuDb();
+  const catalog=new Map();
+  const visibleCategoryIds=new Set(db.menuCategories.filter(category=>category.id==='todos'||category.active!==false).map(category=>category.id));
+  for(const product of [...db.menuProducts,...db.promoProducts]){
+    if(product?.soldOut) continue;
+    if(db.menuProducts.includes(product)&&!visibleCategoryIds.has(product.category)) continue;
+    const variants=Array.isArray(product?.variants)?product.variants:[];
+    for(const variant of variants){
+      const variantId=slugify(variant?.id||variant?.label)||'unico';
+      const id=`${safeText(product?.id,80)}-${variantId}`;
+      const price=Number(variant?.price);
+      if(!safeText(product?.id,80)||!Number.isFinite(price)||price<0) continue;
+      const name=variants.length>1
+        ? `${safeText(product.name,120)} (${safeText(variant.label,60)})`
+        : safeText(product.name,120);
+      catalog.set(id,{name,price:Math.round(price*100)/100});
+    }
+  }
+  return catalog;
+}
+
+const adminImageExtensions=new Set(['.jpg','.jpeg','.png','.webp','.gif','.ico']);
+const uploadMimeExtensions=new Map([
+  ['image/jpeg','.jpg'],
+  ['image/png','.png'],
+  ['image/webp','.webp'],
+  ['image/gif','.gif']
+]);
+
+function listImageFiles(dir,prefix='',depth=0){
+  if(!existsSync(dir)||depth>3) return [];
+  const files=[];
+  for(const entry of readdirSync(dir,{withFileTypes:true})){
+    if(entry.name.startsWith('.')) continue;
+    const fullPath=path.join(dir,entry.name);
+    const publicName=`${prefix}${entry.name}`;
+    if(entry.isDirectory()){
+      files.push(...listImageFiles(fullPath,`${publicName}/`,depth+1));
+    }else if(entry.isFile()&&adminImageExtensions.has(path.extname(entry.name).toLowerCase())){
+      files.push(publicName.replace(/\\/g,'/'));
+    }
+  }
+  return files;
+}
+
+function listAdminImages(){
+  const files=new Set();
+  for(const dir of [rootDir,path.join(rootDir,'public')]){
+    if(!existsSync(dir)) continue;
+    for(const entry of readdirSync(dir,{withFileTypes:true})){
+      if(entry.isFile()&&adminImageExtensions.has(path.extname(entry.name).toLowerCase())) files.add(entry.name);
+    }
+  }
+  listImageFiles(path.join(menuDataDir,'uploads'),'uploads/').forEach(file=>files.add(file));
+  return [...files].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+}
+
+function adminImageUsage(db=readMenuDb()){
+  const usage={};
+  for(const product of [...db.menuProducts,...db.promoProducts]){
+    const image=safeText(product?.image,180);
+    if(!image) continue;
+    if(!usage[image]) usage[image]=[];
+    usage[image].push({
+      id:safeText(product?.id,80),
+      name:safeText(product?.name,120),
+      kind:db.promoProducts.includes(product)?'promo':'product'
+    });
+  }
+  return usage;
+}
+
+function uploadedImagePath(image){
+  const imageName=safeText(image,220).replace(/\\/g,'/');
+  if(!/^uploads\/menu\/[\w .()\-]+\.(?:png|jpe?g|webp|gif)$/i.test(imageName)||imageName.includes('..')) return null;
+  const filePath=path.resolve(menuDataDir,`.${path.sep}${imageName}`);
+  return isPathInside(filePath,menuUploadDir)?filePath:null;
+}
+
+function deleteAdminImage(image,force=false){
+  const db=readMenuDb();
+  const imageName=safeText(image,220).replace(/\\/g,'/');
+  const filePath=uploadedImagePath(imageName);
+  if(!filePath){
+    const error=new Error('Só imagens enviadas pelo painel podem ser removidas.');
+    error.status=400;
+    throw error;
+  }
+  const usedBy=adminImageUsage(db)[imageName]||[];
+  if(usedBy.length&&!force){
+    const error=new Error('Essa imagem está em uso em um item do cardápio.');
+    error.status=409;
+    error.usedBy=usedBy;
+    throw error;
+  }
+  if(existsSync(filePath)) unlinkSync(filePath);
+  return imageName;
+}
+
+function imageBufferMatchesMime(buffer,mime){
+  if(mime==='image/png') return buffer.length>8&&buffer[0]===0x89&&buffer[1]===0x50&&buffer[2]===0x4e&&buffer[3]===0x47;
+  if(mime==='image/jpeg') return buffer.length>3&&buffer[0]===0xff&&buffer[1]===0xd8&&buffer[2]===0xff;
+  if(mime==='image/gif') return buffer.length>6&&buffer.toString('ascii',0,3)==='GIF';
+  if(mime==='image/webp') return buffer.length>12&&buffer.toString('ascii',0,4)==='RIFF'&&buffer.toString('ascii',8,12)==='WEBP';
+  return false;
+}
+
+function saveAdminImage(body){
+  const originalName=safeText(body?.filename,180);
+  const mime=safeText(body?.mime,80).toLowerCase();
+  const ext=uploadMimeExtensions.get(mime);
+  if(!ext) {
+    const error=new Error('Envie uma imagem JPG, PNG, WebP ou GIF.');
+    error.status=400;
+    throw error;
+  }
+  const rawBase64=String(body?.dataBase64||'').replace(/^data:[^;]+;base64,/i,'').replace(/\s/g,'');
+  if(!rawBase64){
+    const error=new Error('Imagem vazia.');
+    error.status=400;
+    throw error;
+  }
+  const buffer=Buffer.from(rawBase64,'base64');
+  if(!buffer.length||buffer.length>8*1024*1024){
+    const error=new Error('A imagem deve ter ate 8 MB.');
+    error.status=413;
+    throw error;
+  }
+  if(!imageBufferMatchesMime(buffer,mime)){
+    const error=new Error('O arquivo enviado nao parece ser uma imagem valida.');
+    error.status=400;
+    throw error;
+  }
+  const baseName=slugify(path.basename(originalName,path.extname(originalName)))||'imagem-cardapio';
+  const filename=`${baseName}-${Date.now().toString(36)}-${crypto.randomBytes(3).toString('hex')}${ext}`;
+  mkdirSync(menuUploadDir,{recursive:true});
+  writeFileSync(path.join(menuUploadDir,filename),buffer);
+  return `uploads/menu/${filename}`;
+}
+
+function mergeSiteSettings(body,existing){
+  const patch=body&&typeof body==='object'?body:{};
+  const patchDelivery=patch.delivery&&typeof patch.delivery==='object'?patch.delivery:{};
+  const patchHours=patch.businessHours&&typeof patch.businessHours==='object'?patch.businessHours:{};
+  return normalizeSiteSettings({
+    delivery:{
+      ...(existing?.delivery||{}),
+      ...patchDelivery,
+      areas:Object.prototype.hasOwnProperty.call(patchDelivery,'areas')
+        ? patchDelivery.areas
+        : existing?.delivery?.areas
+    },
+    businessHours:{
+      ...(existing?.businessHours||{}),
+      ...patchHours,
+      openDays:Object.prototype.hasOwnProperty.call(patchHours,'openDays')
+        ? patchHours.openDays
+        : existing?.businessHours?.openDays
+    }
+  });
+}
+
+function adminOrdersPayload(){
+  const sortedOrders=[...orders.values()].sort((a,b)=>{
+    const bTime=Number(b?.createdAtMs)||Date.parse(b?.createdAt)||0;
+    const aTime=Number(a?.createdAtMs)||Date.parse(a?.createdAt)||0;
+    return bTime-aTime;
+  });
+  return {
+    orders:sortedOrders.slice(0,100).map(order=>({
+      orderId:safeText(order?.orderId,80),
+      paymentId:safeText(order?.mpOrderId||order?.paymentId,80),
+      status:safeText(order?.status||'pending',40),
+      amount:normalizeFee(order?.amount,0,5000),
+      subtotal:normalizeFee(order?.subtotal,0,5000),
+      deliveryFee:normalizeFee(order?.deliveryFee,0),
+      customerName:safeText(order?.customerName,80),
+      address:{
+        street:safeText(order?.address?.street,140),
+        number:safeText(order?.address?.number,12),
+        complement:safeText(order?.address?.complement,80),
+        neighborhood:safeText(order?.address?.neighborhood,80),
+        cep:safeText(order?.address?.cep,12)
+      },
+      schedule:{
+        mode:safeText(order?.schedule?.mode,40),
+        date:safeText(order?.schedule?.date,10),
+        time:safeText(order?.schedule?.time,5),
+        label:safeText(order?.schedule?.label,80)
+      },
+      items:Array.isArray(order?.items)
+        ? order.items.slice(0,30).map(item=>({
+          name:safeText(item?.name,120),
+          qty:Math.max(1,Math.min(20,Number(item?.qty)||1)),
+          total:normalizeFee(item?.total,0)
+        }))
+        : [],
+      createdAt:safeText(order?.createdAt,40)
+    }))
+  };
+}
+
+function parseCookies(header){
+  return String(header||'').split(';').reduce((cookies,part)=>{
+    const index=part.indexOf('=');
+    if(index<0) return cookies;
+    const key=part.slice(0,index).trim();
+    const value=part.slice(index+1).trim();
+    if(key) cookies[key]=decodeURIComponent(value);
+    return cookies;
+  },{});
+}
+
+function signSession(id){
+  return crypto.createHmac('sha256',adminSessionSecret).update(id).digest('base64url');
+}
+
+function hashAdminPassword(value){
+  return crypto.createHash('sha256').update(String(value)).digest();
+}
+
+function sameSecret(a,b){
+  return crypto.timingSafeEqual(hashAdminPassword(a),hashAdminPassword(b));
+}
+
+function adminCookie(value,maxAgeSeconds){
+  const parts=[
+    `wario_admin_session=${encodeURIComponent(value)}`,
+    'Path=/',
+    'HttpOnly',
+    'SameSite=Lax',
+    `Max-Age=${Math.max(0,maxAgeSeconds)}`
+  ];
+  if(isProduction) parts.push('Secure');
+  return parts.join('; ');
+}
+
+function createAdminSession(){
+  const id=crypto.randomBytes(24).toString('base64url');
+  const expiresAt=Date.now()+adminSessionMaxAgeMs;
+  adminSessions.set(id,{expiresAt});
+  return `${id}.${signSession(id)}`;
+}
+
+function adminSessionId(req){
+  const token=parseCookies(req.headers.cookie).wario_admin_session||'';
+  const [id,signature]=token.split('.');
+  if(!id||!signature||signature!==signSession(id)) return '';
+  const session=adminSessions.get(id);
+  if(!session||session.expiresAt<Date.now()){
+    if(id) adminSessions.delete(id);
+    return '';
+  }
+  return id;
+}
+
+function isAdminAuthenticated(req){
+  return Boolean(adminSessionId(req));
+}
+
+function pruneAdminSessions(){
+  const now=Date.now();
+  for(const [id,session] of adminSessions){
+    if(!session||session.expiresAt<now) adminSessions.delete(id);
+  }
+}
+
+function adminTooManyAttempts(ip){
+  const now=Date.now();
+  const entry=adminLoginAttempts.get(ip)||{count:0,ts:now};
+  if(now-entry.ts>15*60_000){
+    entry.count=0;
+    entry.ts=now;
+  }
+  adminLoginAttempts.set(ip,entry);
+  return entry.count>=8;
+}
+
+function registerAdminAttempt(ip,success){
+  if(success){
+    adminLoginAttempts.delete(ip);
+    return;
+  }
+  const now=Date.now();
+  const entry=adminLoginAttempts.get(ip)||{count:0,ts:now};
+  if(now-entry.ts>15*60_000){
+    entry.count=0;
+    entry.ts=now;
+  }
+  entry.count+=1;
+  adminLoginAttempts.set(ip,entry);
+}
+
 function summarizeMpError(error){
   const details=error?.details;
   if(!details||typeof details!=='object') return error.message;
@@ -168,7 +802,7 @@ function applyCors(req,res){
   if(!allowedOrigins.has(origin)&&!isSameHostOrigin(req,origin)) return false;
   res.setHeader('Access-Control-Allow-Origin',origin);
   res.setHeader('Vary','Origin');
-  res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods','GET,POST,PUT,PATCH,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers','Content-Type,Accept');
   res.setHeader('Access-Control-Max-Age','600');
   return true;
@@ -191,6 +825,8 @@ function clientIp(req){
 }
 
 function ratePolicy(pathname){
+  if(pathname==='/api/admin/login') return {windowMs:60_000,max:12};
+  if(pathname.startsWith('/api/admin/')) return {windowMs:60_000,max:120};
   if(pathname==='/api/pix/create') return {windowMs:60_000,max:6};
   if(pathname.startsWith('/api/pix/status/')) return {windowMs:60_000,max:90};
   if(pathname==='/api/pix/webhook') return {windowMs:60_000,max:120};
@@ -223,7 +859,8 @@ function rateLimit(req,url){
 }
 
 function requiresJson(req,pathname){
-  return req.method==='POST'&&(pathname==='/api/pix/create'||pathname==='/api/pix/webhook');
+  return (req.method==='POST'&&(pathname==='/api/pix/create'||pathname==='/api/pix/webhook'))
+    || (['POST','PUT','PATCH'].includes(req.method)&&pathname.startsWith('/api/admin/'));
 }
 
 function hasJsonContentType(req){
@@ -263,12 +900,12 @@ async function verifyTurnstileToken(token,req){
   }
 }
 
-async function readJson(req){
+async function readJson(req,maxBytes=32*1024){
   let size=0;
   const chunks=[];
   for await(const chunk of req){
     size+=chunk.length;
-    if(size>32*1024){
+    if(size>maxBytes){
       const error=new Error('Payload muito grande.');
       error.status=413;
       throw error;
@@ -303,67 +940,20 @@ function normalizeText(value){
   return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
 }
 
-const productCatalog=new Map([
-  ['combo-du-chef-36',{name:'Combo Du Chef (36 un)',price:65}],
-  ['combo-mix-joes-12',{name:'Combo Mix Joes (12 un)',price:35.9}],
-  ['combo-wa-rio-1-31',{name:'Combo WA RIO 1 (31 un)',price:55.9}],
-  ['combo-wa-rio-2-36',{name:'Combo WA RIO 2 (36 un)',price:76.9}],
-  ['promo-namorados-35-35',{name:'Combo Love + sobremesa gratis (35 pecas + 4 bananas)',price:79}],
-  ['promo-wa-rio-1-31',{name:'Especial WA RIO 1 (31 pecas)',price:55.9}],
-  ['promo-mix-joes-12',{name:'Mix Joes Especial (12 pecas)',price:35.9}],
-  ['promo-hot-20-20',{name:'Hot Filadelfia Especial (20 un)',price:23}],
-  ['filadelfia-roll-10',{name:'Filadelfia Roll (10 un)',price:16.9}],
-  ['filadelfia-roll-20',{name:'Filadelfia Roll (20 un)',price:23}],
-  ['filadelfia-roll-30',{name:'Filadelfia Roll (30 un)',price:31}],
-  ['filadelfia-roll-40',{name:'Filadelfia Roll (40 un)',price:40}],
-  ['filadelfia-roll-50',{name:'Filadelfia Roll (50 un)',price:50}],
-  ['filadelfia-roll-60',{name:'Filadelfia Roll (60 un)',price:60}],
-  ['hot-filadelfia-10',{name:'Hot Filadelfia (10 un)',price:16.9}],
-  ['hot-filadelfia-20',{name:'Hot Filadelfia (20 un)',price:23}],
-  ['hot-filadelfia-30',{name:'Hot Filadelfia (30 un)',price:31}],
-  ['hot-filadelfia-40',{name:'Hot Filadelfia (40 un)',price:40}],
-  ['hot-filadelfia-50',{name:'Hot Filadelfia (50 un)',price:50}],
-  ['hot-filadelfia-60',{name:'Hot Filadelfia (60 un)',price:60}],
-  ['temaki-frio-1',{name:'Temaki Frio',price:18.9}],
-  ['temaki-hot-1',{name:'Temaki Hot',price:19.9}],
-  ['sushi-dog-1',{name:'Sushi Dog',price:34.9}],
-  ['uramaki-salmao-10',{name:'Uramaki de Salmao (10 un)',price:18.9}],
-  ['uramaki-salmao-20',{name:'Uramaki de Salmao (20 un)',price:34.9}],
-  ['uramaki-especial-10',{name:'Uramaki Especial (10 un)',price:21.9}],
-  ['uramaki-especial-20',{name:'Uramaki Especial (20 un)',price:39.9}],
-  ['sashimi-1',{name:'Sashimi (1 un)',price:4}],
-  ['sashimi-4',{name:'Sashimi (4 un)',price:14}],
-  ['sashimi-5',{name:'Sashimi (5 un)',price:18}],
-  ['niguiri-1',{name:'Sushi Niguiri (1 un)',price:3}],
-  ['niguiri-2',{name:'Sushi Niguiri (2 un)',price:5}],
-  ['niguiri-4',{name:'Sushi Niguiri (4 un)',price:9}],
-  ['joe-joe-1',{name:'Joe Joe (1 un)',price:3}],
-  ['joe-joe-2',{name:'Joe Joe (2 un)',price:5}],
-  ['joe-joe-4',{name:'Joe Joe (4 un)',price:10}]
-]);
+function deliverySettings(){
+  return readMenuDb().siteSettings.delivery;
+}
 
-const deliveryFeeByNeighborhood={
-  'cachambi':7,
-  'maria da graca':7
-};
-const deliveryNeighborhoods=[
-  'cachambi',
-  'meier',
-  'engenho de dentro',
-  'pilares',
-  'riachuelo',
-  'maria da graca',
-  'higienopolis',
-  'engenho novo',
-  'del castilho',
-  'abolicao',
-  'piedade'
-];
+function businessHoursConfig(){
+  return readMenuDb().siteSettings.businessHours;
+}
 
 function deliveryFeeFor(neighborhood){
   const normalized=normalizeText(neighborhood);
-  if(!deliveryNeighborhoods.includes(normalized)) return null;
-  return deliveryFeeByNeighborhood[normalized]??8;
+  const delivery=deliverySettings();
+  const area=delivery.areas.find(item=>item.active!==false&&normalizeText(item.name)===normalized);
+  if(!area) return null;
+  return normalizeFee(area.fee,delivery.defaultFee);
 }
 
 function normalizeOrder(body,schedule){
@@ -385,6 +975,7 @@ function normalizeOrder(body,schedule){
     normalizeOrder.lastError='Esse bairro ainda nao esta em uma area atendida pelo delivery.';
     return null;
   }
+  const productCatalog=productCatalogFromMenu();
   const submittedItems=Array.isArray(body?.items)?body.items.slice(0,30):[];
   const items=submittedItems.map(item=>{
     const id=safeText(item.id,80);
@@ -536,19 +1127,6 @@ function pixResponse(mpOrder,order){
 }
 
 async function ensurePixQrImage(responseBody){
-  if(responseBody.qrCodeBase64||!responseBody.qrCode) return responseBody;
-  try{
-    const QRCode=await import('qrcode');
-    const dataUrl=await QRCode.default.toDataURL(responseBody.qrCode,{
-      errorCorrectionLevel:'M',
-      margin:2,
-      scale:6,
-      type:'image/png'
-    });
-    responseBody.qrCodeBase64=String(dataUrl).split(',')[1]||'';
-  }catch(error){
-    console.warn('Nao foi possivel gerar QR local a partir do copia-e-cola Pix:',error.message);
-  }
   return responseBody;
 }
 
@@ -556,10 +1134,32 @@ function formatMoney(value){
   return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(value)||0);
 }
 
-function currentBusinessMinutes(date=new Date()){
+function joinPortugueseList(items){
+  if(items.length<=1) return items[0]||'';
+  return `${items.slice(0,-1).join(', ')} e ${items[items.length-1]}`;
+}
+
+function formatBusinessHour(hour){
+  return `${String(Math.floor(Number(hour)||0)).padStart(2,'0')}h`;
+}
+
+function businessDaysText(hours=businessHoursConfig()){
+  const days=Array.isArray(hours.openDays)?hours.openDays:[];
+  const normalized=[...new Set(days)].sort((a,b)=>a-b);
+  const names=['domingo','segunda','terca','quarta','quinta','sexta','sabado'];
+  if(normalized.length===7) return 'todos os dias';
+  if(normalized.join(',')==='0,3,4,5,6') return 'de quarta a domingo';
+  return joinPortugueseList(normalized.map(day=>names[day]).filter(Boolean));
+}
+
+function businessScheduleText(hours=businessHoursConfig()){
+  return `Atendemos ${businessDaysText(hours)}, das ${formatBusinessHour(hours.openHour)} as ${formatBusinessHour(hours.closeHour)}.`;
+}
+
+function currentBusinessMinutes(date=new Date(),hours=businessHoursConfig()){
   try{
     const parts=new Intl.DateTimeFormat('pt-BR',{
-      timeZone:businessHours.timeZone,
+      timeZone:hours.timeZone,
       hour:'2-digit',
       minute:'2-digit',
       hour12:false
@@ -573,10 +1173,10 @@ function currentBusinessMinutes(date=new Date()){
   }
 }
 
-function currentBusinessDay(date=new Date()){
+function currentBusinessDay(date=new Date(),hours=businessHoursConfig()){
   try{
     const weekday=new Intl.DateTimeFormat('en-US',{
-      timeZone:businessHours.timeZone,
+      timeZone:hours.timeZone,
       weekday:'short'
     }).format(date).slice(0,3).toLowerCase();
     return {sun:0,mon:1,tue:2,wed:3,thu:4,fri:5,sat:6}[weekday]??date.getDay();
@@ -585,22 +1185,23 @@ function currentBusinessDay(date=new Date()){
   }
 }
 
-function isBusinessDay(date=new Date()){
-  return businessHours.openDays.includes(currentBusinessDay(date));
+function isBusinessDay(date=new Date(),hours=businessHoursConfig()){
+  return hours.openDays.includes(currentBusinessDay(date,hours));
 }
 
-function isBusinessOpen(date=new Date()){
-  const minutes=currentBusinessMinutes(date);
-  return isBusinessDay(date)&&minutes>=businessHours.openHour*60&&minutes<businessHours.closeHour*60;
+function isBusinessOpen(date=new Date(),hours=businessHoursConfig()){
+  const minutes=currentBusinessMinutes(date,hours);
+  return isBusinessDay(date,hours)&&minutes>=hours.openHour*60&&minutes<hours.closeHour*60;
 }
 
 function closedOrderMessage(date=new Date()){
-  const minutes=currentBusinessMinutes(date);
-  const schedule='Atendemos de quarta a domingo, das 19h as 23h.';
-  if(!isBusinessDay(date)){
+  const hours=businessHoursConfig();
+  const minutes=currentBusinessMinutes(date,hours);
+  const schedule=businessScheduleText(hours);
+  if(!isBusinessDay(date,hours)){
     return `Hoje nao estamos abertos. ${schedule}`;
   }
-  if(minutes<businessHours.openHour*60){
+  if(minutes<hours.openHour*60){
     return `Ainda nao estamos abertos. ${schedule}`;
   }
   return `Atendimento encerrado por hoje. ${schedule}`;
@@ -617,11 +1218,11 @@ function scheduleTimestamp(dateValue,timeValue){
   return Date.parse(`${dateValue}T${timeValue}:00-03:00`);
 }
 
-function isBusinessTime(timeValue){
+function isBusinessTime(timeValue,hours=businessHoursConfig()){
   const match=String(timeValue||'').match(/^(\d{2}):(\d{2})$/);
   if(!match) return false;
   const minutes=Number(match[1])*60+Number(match[2]);
-  return Number.isFinite(minutes)&&minutes>=businessHours.openHour*60&&minutes<businessHours.closeHour*60;
+  return Number.isFinite(minutes)&&minutes>=hours.openHour*60&&minutes<hours.closeHour*60;
 }
 
 function formatScheduleDate(dateValue){
@@ -632,10 +1233,11 @@ function formatScheduleDate(dateValue){
 
 function normalizeSchedule(value){
   normalizeSchedule.lastError='';
+  const hours=businessHoursConfig();
   const mode=safeText(value?.mode,40);
   if(mode==='now'){
-    if(!isBusinessOpen()){
-      normalizeSchedule.lastError='Agora estamos fechados. Escolha um agendamento para receber no horario de atendimento.';
+    if(!isBusinessOpen(new Date(),hours)){
+      normalizeSchedule.lastError=`Agora estamos fechados. Escolha um agendamento. ${businessScheduleText(hours)}`;
       return null;
     }
     return {
@@ -657,16 +1259,16 @@ function normalizeSchedule(value){
     normalizeSchedule.lastError='Escolha uma data valida para a entrega.';
     return null;
   }
-  if(!isBusinessDay(dateObject)){
-    normalizeSchedule.lastError='Escolha uma data de quarta a domingo.';
+  if(!isBusinessDay(dateObject,hours)){
+    normalizeSchedule.lastError=`Escolha uma data dentro dos dias de atendimento. ${businessScheduleText(hours)}`;
     return null;
   }
-  if(!isBusinessTime(time)){
-    normalizeSchedule.lastError='Escolha um horario entre 19h e 23h.';
+  if(!isBusinessTime(time,hours)){
+    normalizeSchedule.lastError=`Escolha um horario entre ${formatBusinessHour(hours.openHour)} e ${formatBusinessHour(hours.closeHour)}.`;
     return null;
   }
-  if(!Number.isFinite(timestamp)||timestamp<Date.now()+scheduleLeadMinutes*60*1000){
-    normalizeSchedule.lastError=`Escolha um horario com pelo menos ${scheduleLeadMinutes} minutos de antecedencia.`;
+  if(!Number.isFinite(timestamp)||timestamp<Date.now()+hours.scheduleLeadMinutes*60*1000){
+    normalizeSchedule.lastError=`Escolha um horario com pelo menos ${hours.scheduleLeadMinutes} minutos de antecedencia.`;
     return null;
   }
   return {
@@ -827,6 +1429,155 @@ async function handleWebhook(req,res,url){
   }
 }
 
+async function handleMenuAdminApi(req,res,url){
+  if(req.method==='GET'&&url.pathname==='/api/menu'){
+    return sendJson(res,200,publicMenuPayload());
+  }
+  if(req.method==='GET'&&url.pathname==='/api/admin/session'){
+    return sendJson(res,200,{loggedIn:isAdminAuthenticated(req)});
+  }
+  if(req.method==='POST'&&url.pathname==='/api/admin/login'){
+    const ip=clientIp(req);
+    if(adminTooManyAttempts(ip)) return sendJson(res,429,{error:'too_many_attempts'});
+    const body=await readJson(req);
+    const ok=typeof body?.password==='string'&&sameSecret(body.password,adminPassword);
+    registerAdminAttempt(ip,ok);
+    if(!ok) return sendJson(res,401,{error:'invalid_password'});
+    pruneAdminSessions();
+    const token=createAdminSession();
+    return sendJsonWithHeaders(res,200,{ok:true},{'Set-Cookie':adminCookie(token,Math.round(adminSessionMaxAgeMs/1000))});
+  }
+  if(req.method==='POST'&&url.pathname==='/api/admin/logout'){
+    const id=adminSessionId(req);
+    if(id) adminSessions.delete(id);
+    return sendJsonWithHeaders(res,200,{ok:true},{'Set-Cookie':adminCookie('',0)});
+  }
+  if(!url.pathname.startsWith('/api/admin/')) return false;
+  if(!isAdminAuthenticated(req)) return sendJson(res,401,{error:'not_authenticated'});
+
+  if(req.method==='GET'&&url.pathname==='/api/admin/menu'){
+    return sendJson(res,200,readMenuDb());
+  }
+  if(req.method==='GET'&&url.pathname==='/api/admin/backup'){
+    const date=new Date().toISOString().slice(0,10);
+    return sendJsonWithHeaders(res,200,{
+      generatedAt:new Date().toISOString(),
+      source:'WA RIO Admin',
+      menu:readMenuDb()
+    },{
+      'Cache-Control':'no-store',
+      'Content-Disposition':`attachment; filename="wa-rio-cardapio-backup-${date}.json"`
+    });
+  }
+  if(req.method==='GET'&&url.pathname==='/api/admin/deploy-check'){
+    return sendJson(res,200,deploymentChecklist());
+  }
+  if(req.method==='GET'&&url.pathname==='/api/admin/categories'){
+    const db=readMenuDb();
+    return sendJson(res,200,{categories:db.menuCategories,counts:categoryUseCounts(db)});
+  }
+  if(req.method==='PUT'&&url.pathname==='/api/admin/categories'){
+    const body=await readJson(req);
+    const db=readMenuDb();
+    const categories=applyCategoryUpdate(db,body?.categories);
+    writeMenuDb(db);
+    return sendJson(res,200,{ok:true,categories,counts:categoryUseCounts(db)});
+  }
+  if(req.method==='GET'&&url.pathname==='/api/admin/images'){
+    return sendJson(res,200,{images:listAdminImages(),usage:adminImageUsage()});
+  }
+  if(req.method==='POST'&&url.pathname==='/api/admin/images'){
+    const body=await readJson(req,12*1024*1024);
+    const image=saveAdminImage(body);
+    return sendJson(res,200,{ok:true,image,images:listAdminImages(),usage:adminImageUsage()});
+  }
+  if(req.method==='DELETE'&&url.pathname==='/api/admin/images'){
+    const body=await readJson(req);
+    const deleted=deleteAdminImage(body?.image,Boolean(body?.force));
+    return sendJson(res,200,{ok:true,deleted,images:listAdminImages(),usage:adminImageUsage()});
+  }
+  if(req.method==='GET'&&url.pathname==='/api/admin/settings'){
+    return sendJson(res,200,readMenuDb().siteSettings);
+  }
+  if(req.method==='PUT'&&url.pathname==='/api/admin/settings'){
+    const body=await readJson(req);
+    const db=readMenuDb();
+    db.siteSettings=mergeSiteSettings(body,db.siteSettings);
+    writeMenuDb(db);
+    return sendJson(res,200,{ok:true,siteSettings:db.siteSettings});
+  }
+  if(req.method==='GET'&&url.pathname==='/api/admin/orders'){
+    return sendJson(res,200,adminOrdersPayload());
+  }
+
+  const parts=url.pathname.split('/').filter(Boolean);
+  if(parts[0]!=='api'||parts[1]!=='admin'||parts[2]!=='menu') return false;
+  const kind=parts[3];
+  const id=parts[4]?decodeURIComponent(parts[4]):'';
+  const action=parts[5]||'';
+  const db=readMenuDb();
+  const list=collectionFor(kind,db);
+  if(!list) return sendJson(res,404,{error:'invalid_kind'});
+
+  if(req.method==='PATCH'&&id==='reorder'&&!action){
+    const body=await readJson(req);
+    const moved=moveProduct(list,safeText(body?.id,80),safeText(body?.direction,20),safeText(body?.category,80));
+    if(!moved) return sendJson(res,400,{error:'Não foi possível mover este item.'});
+    writeMenuDb(db);
+    return sendJson(res,200,{ok:true});
+  }
+
+  if(req.method==='POST'&&!id){
+    const body=await readJson(req);
+    const validationError=validateAdminProduct(body);
+    if(validationError) return sendJson(res,400,{error:validationError});
+    const allProducts=[...db.menuProducts,...db.promoProducts];
+    const baseId=slugify(body.id||body.name)||`item-${Date.now()}`;
+    let uniqueId=baseId;
+    let index=2;
+    while(allProducts.some(product=>product.id===uniqueId)){
+      uniqueId=`${baseId}-${index}`;
+      index+=1;
+    }
+    const product={id:uniqueId,...adminProductPayload(body)};
+    list.push(product);
+    writeMenuDb(db);
+    return sendJson(res,200,{ok:true,product});
+  }
+
+  const productIndex=list.findIndex(product=>product.id===id);
+  if(productIndex<0) return sendJson(res,404,{error:'not_found'});
+
+  if(req.method==='PUT'&&id&&!action){
+    const body=await readJson(req);
+    const validationError=validateAdminProduct(body);
+    if(validationError) return sendJson(res,400,{error:validationError});
+    list[productIndex]=adminProductPayload(body,list[productIndex]);
+    writeMenuDb(db);
+    return sendJson(res,200,{ok:true,product:list[productIndex]});
+  }
+
+  if(req.method==='PATCH'&&id&&action==='soldout'){
+    const body=await readJson(req);
+    list[productIndex].soldOut=Boolean(body?.soldOut);
+    writeMenuDb(db);
+    return sendJson(res,200,{ok:true,product:list[productIndex]});
+  }
+
+  if(req.method==='DELETE'&&id&&!action){
+    list.splice(productIndex,1);
+    writeMenuDb(db);
+    return sendJson(res,200,{ok:true});
+  }
+
+  return sendJson(res,404,{error:'Endpoint nao encontrado.'});
+}
+
+function isPathInside(targetPath,basePath){
+  const relative=path.relative(basePath,targetPath);
+  return relative===''||Boolean(relative&&!relative.startsWith('..')&&!path.isAbsolute(relative));
+}
+
 async function serveStatic(req,res,url){
   let pathname;
   try{
@@ -843,8 +1594,16 @@ async function serveStatic(req,res,url){
     res.end('Not found');
     return;
   }
-  const filePath=path.resolve(rootDir,`.${pathname}`);
-  if(!filePath.startsWith(rootDir)){
+  const isUploadPath=pathname.startsWith('/uploads/');
+  const staticRoot=isUploadPath?path.join(menuDataDir,'uploads'):rootDir;
+  const filePath=isUploadPath
+    ? path.resolve(menuDataDir,`.${pathname}`)
+    : pathname==='/admin'||pathname==='/admin/'
+      ? path.join(rootDir,'public','admin','index.html')
+      : pathname.startsWith('/admin/')
+        ? path.resolve(rootDir,'public',`.${pathname}`)
+        : path.resolve(rootDir,`.${pathname}`);
+  if(!isPathInside(filePath,staticRoot)){
     res.writeHead(404);
     res.end('Not found');
     return;
@@ -861,6 +1620,7 @@ async function serveStatic(req,res,url){
       '.jpg':'image/jpeg',
       '.jpeg':'image/jpeg',
       '.webp':'image/webp',
+      '.gif':'image/gif',
       '.ico':'image/x-icon',
       '.xml':'application/xml; charset=utf-8',
       '.txt':'text/plain; charset=utf-8'
@@ -899,6 +1659,8 @@ const server=http.createServer(async(req,res)=>{
       }
       if(requiresJson(req,url.pathname)&&!hasJsonContentType(req)) return sendJson(res,415,{error:'Content-Type application/json obrigatorio.'});
       if(!rateLimit(req,url)) return sendJson(res,429,{error:'Muitas tentativas. Aguarde um minuto.'});
+      const menuAdminHandled=await handleMenuAdminApi(req,res,url);
+      if(menuAdminHandled!==false) return;
       if(req.method==='GET'&&url.pathname==='/api/security/config') return sendJson(res,200,securityConfig());
       if(req.method==='POST'&&url.pathname==='/api/pix/create') return await createPixOrder(req,res);
       if(req.method==='GET'&&url.pathname.startsWith('/api/pix/status/')) return await getPixStatus(req,res,url.pathname.split('/').pop(),url);

@@ -1,8 +1,8 @@
 # WA RIO Sushi — Site + Painel Admin
 
-Isso transforma o site estático em um site com backend (Node.js + Express), rodando no
+Isso transforma o site estático em um site com backend Node.js, rodando no
 Railway, com um painel de administração em `/admin` para editar itens, preços e
-marcar itens como esgotados sem precisar mexer em código.
+ocultar itens sem precisar mexer em código.
 
 ## O que mudou em relação ao site atual
 
@@ -13,6 +13,8 @@ marcar itens como esgotados sem precisar mexer em código.
   continuam no arquivo como estavam (servem de "modo offline" caso a API não responda),
   mas agora, ao carregar a página, o site busca `/api/menu` e usa os dados vindos do
   servidor — que são os dados que você edita pelo painel.
+- O mesmo servidor mantém as APIs de Pix e valida o pedido usando o cardápio editado no
+  painel. Assim, preço novo e item novo ficam consistentes no site e no pagamento.
 - Todo o resto do site (carrinho, WhatsApp, Pix, Cloudflare Turnstile etc.) **não foi
   alterado**.
 
@@ -20,11 +22,14 @@ marcar itens como esgotados sem precisar mexer em código.
 
 ```
 wario-admin/
-  server.js          -> servidor Express (site + API do admin)
+  server.js          -> inicia o servidor do site
   package.json
+  server/
+    server.js        -> APIs de cardapio, painel admin, Pix e arquivos do site
   data/
     seed.json         -> dados iniciais extraídos do seu JS (14 produtos + 1 promoção)
     db.json            -> criado automaticamente na primeira execução (não versionar)
+    uploads/           -> imagens enviadas pelo painel (não versionar; usar volume)
   public/
     wario_sushi_v2_16.html
     wario_sushi_v2_16.css
@@ -64,7 +69,8 @@ Abra `http://localhost:3000` para o site e `http://localhost:3000/admin` para o 
    `/data`, e defina a variável `DATA_DIR=/data`. Isso é essencial: sem isso, toda vez
    que você fizer um novo deploy, os itens que você editou no admin voltam ao estado
    original (`seed.json`), porque o sistema de arquivos do Railway não é permanente
-   entre deploys sem um Volume.
+   entre deploys sem um Volume. As imagens enviadas pelo painel também ficam nesse
+   volume, dentro de `/data/uploads/menu`.
 4. O Railway detecta o `package.json` e roda `npm start` automaticamente. A porta é
    pega de `process.env.PORT`, que o Railway já define sozinho.
 
@@ -73,15 +79,24 @@ Abra `http://localhost:3000` para o site e `http://localhost:3000/admin` para o 
 - Acesse `wariosushi.com.br/admin` e entre com a senha (`ADMIN_PASSWORD`).
 - **Cardápio** e **Promoções**: duas abas separadas.
 - Clique em qualquer item para abrir o editor: nome, categoria, descrição, itens
-  inclusos, tags, imagem (nome do arquivo que já está hospedado no site) e as
+  inclusos, tags, imagem (nome do arquivo que já está hospedado no site ou uma imagem
+  enviada pelo painel) e as
   variantes com preço (ex: 10 un / 20 un / 30 un, cada uma com seu preço).
-- Botão **"Marcar como esgotado"** no card: some do site na hora, sem precisar abrir o
-  editor. Clique de novo para voltar a aparecer.
+- **Imagens**: envia novas fotos para usar no cardápio e permite escolher uma imagem
+  já existente para o item aberto no editor. Fotos grandes são reduzidas
+  automaticamente antes do envio.
+- O editor mostra em qual parte do site o item vai aparecer: cardápio, categoria
+  escolhida ou área de promoções, com uma prévia do card antes de salvar.
+- **Categorias**: permite renomear, ocultar, reordenar e criar categorias. Para excluir
+  uma categoria, primeiro mova ou remova os itens que estão nela.
+- Botões **Subir** e **Descer** nos cards mudam a ordem em que os itens aparecem no
+  site.
+- **Ferramentas**: baixa um backup do cardápio e mostra um checklist rápido antes do
+  push/publicação.
+- Botão **"Ocultar no site"** no card: some do site na hora, sem precisar abrir o
+  editor. Clique em **"Mostrar no site"** para voltar a aparecer.
 - **+ Novo item**: cria um produto novo, que já aparece no site.
 - **Excluir item**: remove permanentemente (pede confirmação).
-
-Categorias (Combos, Filadélfia, Hot, Temaki etc.) continuam fixas por enquanto — dá pra
-adicionar edição de categorias depois se você precisar.
 
 ## Segurança
 

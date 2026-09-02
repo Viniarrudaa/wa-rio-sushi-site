@@ -97,39 +97,6 @@ function setNavMenuOpen(open){
 navToggle?.addEventListener('click',()=>setNavMenuOpen(!navbar.classList.contains('is-menu-open')));
 document.querySelectorAll('a[href^="#"]').forEach(a=>{ a.addEventListener('click',e=>{ const href=a.getAttribute('href'); if(!href||href.length<2)return; const t=document.querySelector(href); if(t){e.preventDefault();setNavMenuOpen(false);t.scrollIntoView({behavior:'smooth'});} }); });
 document.addEventListener('click',e=>{if(navbar?.classList.contains('is-menu-open')&&!navbar.contains(e.target))setNavMenuOpen(false);});
-const namoradosCountdown=document.querySelector('[data-countdown="namorados"]');
-const namoradosCountdownEls={
-  days:document.getElementById('namoradosDays'),
-  label:document.getElementById('namoradosCountdownLabel'),
-  timeLeft:document.getElementById('namoradosTimeLeft')
-};
-const namoradosStart=Date.parse('2026-06-12T00:00:00-03:00');
-const namoradosEnd=Date.parse('2026-06-13T00:00:00-03:00');
-function setCountdownValue(el,value){if(el) el.textContent=String(Math.max(0,value)).padStart(2,'0');}
-function updateNamoradosCountdown(){
-  if(!namoradosCountdown) return;
-  const now=Date.now();
-  const isToday=now>=namoradosStart&&now<namoradosEnd;
-  const target=isToday?namoradosEnd:namoradosStart;
-  const remaining=Math.max(0,target-now);
-  const days=Math.floor(remaining/86400000);
-  const hours=Math.floor((remaining%86400000)/3600000);
-  const minutes=Math.floor((remaining%3600000)/60000);
-  namoradosCountdown.classList.toggle('is-today',isToday);
-  if(isToday){
-    if(namoradosCountdownEls.label) namoradosCountdownEls.label.textContent='Hoje';
-    if(namoradosCountdownEls.days) namoradosCountdownEls.days.textContent='12/06';
-    if(namoradosCountdownEls.timeLeft) namoradosCountdownEls.timeLeft.textContent='reserve';
-    namoradosCountdown.setAttribute('aria-label',`Hoje é Dia dos Namorados. Restam ${hours} horas e ${minutes} minutos para reservar.`);
-    return;
-  }
-  setCountdownValue(namoradosCountdownEls.days,days);
-  if(namoradosCountdownEls.label) namoradosCountdownEls.label.textContent='Faltam';
-  if(namoradosCountdownEls.timeLeft) namoradosCountdownEls.timeLeft.textContent=`${days===1?'dia':'dias'} e ${hours}h`;
-  namoradosCountdown.setAttribute('aria-label',`Faltam ${days} dias, ${hours} horas e ${minutes} minutos para o Dia dos Namorados.`);
-}
-updateNamoradosCountdown();
-window.setInterval(updateNamoradosCountdown,60000);
 const whatsappPhone='5521982225443';
 const moneyFormatter=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
 const formatMoney=value=>moneyFormatter.format(Number(value)||0);
@@ -187,14 +154,14 @@ function safeText(value,max=240){
 }
 function safeImageSrc(value){
   const src=String(value??'').trim();
-  if(/^[\w .()\-]+?\.(?:png|jpe?g|webp|gif|svg)$/i.test(src)&&!src.includes('..')) return src;
+  if(/^(?:uploads\/menu\/)?[\w .()\-]+?\.(?:png|jpe?g|webp|gif|svg)$/i.test(src)&&!src.includes('..')) return src;
   try{
     const url=new URL(src);
     if(url.protocol==='https:'&&trustedImageHosts.has(url.hostname)) return url.href;
   }catch(error){}
   return 'logo_wariobranca - Editado.png';
 }
-const menuCategories=[
+let menuCategories=[
   ['todos','Todos'],
   ['combos','Combos'],
   ['filadelfia','Filadélfia'],
@@ -206,7 +173,7 @@ const menuCategories=[
   ['joe','Joe Joe'],
   ['especiais','Especiais']
 ];
-const menuProducts=[
+let menuProducts=[
   {id:'combo-du-chef',name:'Combo Du Chef',label:'Combos',category:'combos',badge:'36 peças',desc:'36 peças para dividir com hot, salmão, peças especiais e sashimi.',composition:'Itens inclusos no Combo Du Chef:',details:['20 Hot Filadélfia','5 Filadélfia','2 Sushi nigiri','3 Gunkan c/ tataki de salmão','2 Joe Joe','4 Sashimi de salmão'],variants:[{id:'36',label:'36 un',price:65}],meta:['36 peças','Chef'],image:'duchef_Cardapio_optimized.jpg'},
   {id:'combo-mix-joes',name:'Combo Mix Joes',label:'Combos',category:'combos',badge:'12 peças',desc:'12 peças autorais para quem gosta de joes, gunkans e geleias especiais.',composition:'Itens inclusos no Mix Joes:',details:['4 Joe de salmão c/ cream cheese','4 Gunkan c/ tataki de salmão','2 Joe c/ geleia de pimenta','2 Joe c/ geleia de maracujá'],variants:[{id:'12',label:'12 un',price:35.9}],meta:['12 peças','Joes'],image:'mixdejoe_cardapio_optimized.jpg'},
   {id:'combo-wa-rio-1',name:'Combo WA RIO 1',label:'Combos',category:'combos',badge:'31 peças',desc:'31 peças com filadélfia, hot, uramaki e peças especiais da casa.',composition:'Itens inclusos no WA RIO 1:',details:['10 Filadélfia','10 Hot Filadélfia','5 Uramaki de salmão','2 Joe c/ geleia de maracujá','2 Nigiri de salmão','2 Gunkan de tataki de salmão'],variants:[{id:'31',label:'31 un',price:55.9}],meta:['31 peças','WA RIO'],image:'wario1_cardapio_optimized.jpg'},
@@ -222,9 +189,10 @@ const menuProducts=[
   {id:'niguiri',name:'Sushi Niguiri',label:'Niguiri',category:'niguiri',desc:'Arroz temperado e salmão em corte delicado, servido em opções para completar a seleção.',variants:[{id:'1',label:'1 un',price:3},{id:'2',label:'2 un',price:5},{id:'4',label:'4 un',price:9}],meta:['Salmão','Clássico'],image:'sushinigiri_cardapio_optimized.jpg'},
   {id:'joe-joe',name:'Joe Joe',label:'Joe Joe',category:'joe',desc:'Peças cremosas e delicadas para adicionar um toque especial ao pedido.',variants:[{id:'1',label:'1 un',price:3},{id:'2',label:'2 un',price:5},{id:'4',label:'4 un',price:10}],meta:['Especial','Cremoso'],image:'joejoe_cardapio_optimized.jpg'}
 ];
-const promoProducts=[
-  {id:'promo-namorados-35',name:'Combo Love + sobremesa grátis',label:'Dia dos Namorados',category:'promocoes',badge:'35 peças + doce',desc:'Combo especial para casal com salmão, joes, gunkan, filadélfia, uramaki, hot e sobremesa grátis.',composition:'Itens inclusos no Combo Love:',details:['2 Niguiri de salmão selado','2 Niguiri de salmão','2 Joe c/ geleia de maracujá','2 Joe Joe de salmão','2 Gunkan c/ tataki','5 Filadélfia roll','5 Uramaki de salmão','5 Hot especial','10 Hot Filadélfia','4 Banana crocante com Nutella'],variants:[{id:'35',label:'35 peças + 4 bananas',price:79}],meta:['Para casal','Sobremesa grátis'],image:'promo_namorados_combo_35_optimized.jpg'}
+let promoProducts=[
+  {id:'wa-rio-sushi-premium',name:'WA RIO Sushi Premium',label:'Promoção especial',category:'promocoes',badge:'35 peças + 4 bananas',desc:'Seleção premium com salmão, joes, gunkan, filadélfia, uramaki, hot e 4 bananas crocantes com Nutella.',composition:'Itens inclusos no WA RIO Sushi Premium:',details:['2 Niguiri de salmão selado','2 Niguiri de salmão','2 Joe c/ geleia de maracujá','2 Joe Joe de salmão','2 Gunkan c/ tataki','5 Filadélfia roll','5 Uramaki de salmão','5 Hot especial','10 Hot Filadélfia','4 Bananas crocantes com Nutella'],variants:[{id:'35',label:'35 peças + 4 bananas',price:79}],meta:['WA RIO Premium','Com Nutella'],image:'wario2_cardapio_optimized.jpg'}
 ];
+let siteSettingsFromApi=null;
 function variantSummary(item){return `${safeText(item.name,120)}: ${item.variants.map(variant=>`${safeText(variant.label,40)} - ${formatMoney(variant.price)}`).join(', ')}`;}
 function variantButtons(item){
   return item.variants.map((variant,index)=>{
@@ -317,6 +285,18 @@ function renderMenu(){
       </article>`;
     }).join('');
   }
+}
+try{
+  const res=await fetch('/api/menu',{headers:{'Accept':'application/json'}});
+  if(res.ok){
+    const data=await res.json();
+    if(Array.isArray(data.menuCategories)&&data.menuCategories.length) menuCategories=data.menuCategories;
+    if(Array.isArray(data.menuProducts)) menuProducts=data.menuProducts;
+    if(Array.isArray(data.promoProducts)) promoProducts=data.promoProducts;
+    if(data.siteSettings) siteSettingsFromApi=data.siteSettings;
+  }
+}catch(error){
+  // sem conexao com a API: mantém o cardápio padrão embutido no arquivo
 }
 renderPromotions();
 renderMenu();
@@ -470,11 +450,11 @@ const scheduleDateDisplay=document.getElementById('scheduleDateDisplay');
 const scheduleTime=document.getElementById('scheduleTime');
 const scheduleStatus=document.getElementById('scheduleStatus');
 const deliveryState={status:'empty',cep:'',area:null};
-const defaultDeliveryFee=8;
+let defaultDeliveryFee=8;
 const orderSendCooldownMs=3000;
 const businessToastMs=4000;
 const businessHours={openHour:19,closeHour:23,openDays:[0,3,4,5,6],timeZone:'America/Sao_Paulo'};
-const scheduleLeadMinutes=30;
+let scheduleLeadMinutes=30;
 let lastOrderSendAt=0;
 let businessToastTimer=null;
 const pixApi={
@@ -489,7 +469,8 @@ const turnstileState={
   widgetId:null,
   scriptPromise:null,
   rendering:false,
-  size:''
+  size:'',
+  resizeTimer:null
 };
 const pixState={
   paymentId:'',
@@ -520,6 +501,85 @@ const deliveryNeighborhoods=[
   'Abolição',
   'Piedade'
 ];
+
+function normalizeFeeValue(value,fallback=0){
+  const fee=Number(value);
+  if(!Number.isFinite(fee)||fee<0) return fallback;
+  return Math.round(fee*100)/100;
+}
+function normalizeHourValue(value,fallback,max=23){
+  const raw=String(value??'');
+  const fromTime=/^(\d{1,2}):\d{2}$/.exec(raw);
+  const hour=fromTime?Number(fromTime[1]):Number(value);
+  if(!Number.isFinite(hour)) return fallback;
+  return Math.max(0,Math.min(max,Math.floor(hour)));
+}
+function joinPortugueseList(items){
+  if(items.length<=1) return items[0]||'';
+  return `${items.slice(0,-1).join(', ')} e ${items[items.length-1]}`;
+}
+function formatBusinessHour(hour){
+  return `${String(Math.floor(Number(hour)||0)).padStart(2,'0')}h`;
+}
+function businessDaysText(){
+  const days=[...new Set(businessHours.openDays)].sort((a,b)=>a-b);
+  const names=['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+  if(days.length===7) return 'todos os dias';
+  if(days.join(',')==='0,3,4,5,6') return 'de quarta a domingo';
+  return joinPortugueseList(days.map(day=>names[day]).filter(Boolean));
+}
+function businessScheduleText(){
+  return `Atendemos ${businessDaysText()}, das ${formatBusinessHour(businessHours.openHour)} às ${formatBusinessHour(businessHours.closeHour)}.`;
+}
+function renderDeliveryAreas(){
+  const list=document.querySelector('.delivery-area-list');
+  if(!list) return;
+  list.replaceChildren(...deliveryNeighborhoods.map(area=>{
+    const span=document.createElement('span');
+    span.textContent=area;
+    return span;
+  }));
+}
+function updateBusinessCopy(){
+  const whatsappCopy=document.querySelector('.whatsapp-section p');
+  if(whatsappCopy){
+    whatsappCopy.innerHTML=`${escapeHtml(businessScheduleText())}<br>Envie sua mensagem e receba seu pedido quentinho!`;
+  }
+  const footerHours=[...document.querySelectorAll('footer .footer-col li')]
+    .find(item=>/Qua a Dom|quarta|domingo|19h|23h/i.test(item.textContent));
+  if(footerHours){
+    footerHours.textContent=`Horario: ${businessDaysText().replace(/^de /,'')} - ${formatBusinessHour(businessHours.openHour)} as ${formatBusinessHour(businessHours.closeHour)}`;
+  }
+}
+function applySiteSettings(settings){
+  if(!settings||typeof settings!=='object') return;
+  const delivery=settings.delivery||{};
+  const hours=settings.businessHours||{};
+  defaultDeliveryFee=normalizeFeeValue(delivery.defaultFee,defaultDeliveryFee);
+  if(Array.isArray(delivery.areas)){
+    const activeAreas=delivery.areas
+      .filter(area=>area&&area.active!==false&&safeText(area.name,80))
+      .slice(0,60);
+    Object.keys(deliveryFeeByNeighborhood).forEach(key=>delete deliveryFeeByNeighborhood[key]);
+    deliveryNeighborhoods.splice(0,deliveryNeighborhoods.length,...activeAreas.map(area=>safeText(area.name,80)));
+    activeAreas.forEach(area=>{
+      deliveryFeeByNeighborhood[normalizeText(area.name)]=normalizeFeeValue(area.fee,defaultDeliveryFee);
+    });
+    renderDeliveryAreas();
+  }
+  if(Array.isArray(hours.openDays)&&hours.openDays.length){
+    businessHours.openDays=[...new Set(hours.openDays.map(day=>Number(day)).filter(day=>Number.isInteger(day)&&day>=0&&day<=6))].sort((a,b)=>a-b);
+  }
+  businessHours.openHour=normalizeHourValue(hours.openHour,businessHours.openHour,23);
+  businessHours.closeHour=normalizeHourValue(hours.closeHour,businessHours.closeHour,24);
+  if(businessHours.closeHour<=businessHours.openHour) businessHours.closeHour=Math.min(24,businessHours.openHour+1);
+  businessHours.timeZone=safeText(hours.timeZone,60)||businessHours.timeZone;
+  if(Number.isFinite(Number(hours.scheduleLeadMinutes))){
+    scheduleLeadMinutes=Math.max(0,Math.min(240,Math.floor(Number(hours.scheduleLeadMinutes))));
+  }
+  updateBusinessCopy();
+}
+applySiteSettings(siteSettingsFromApi);
 
 function pluralizeItem(total){return total===1?'1 item':`${total} itens`;}
 function orderQty(){return [...order.values()].reduce((sum,item)=>sum+item.qty,0);}
@@ -572,7 +632,7 @@ function isBusinessOpen(date=new Date()){
 }
 function closedOrderMessage(date=new Date()){
   const minutes=currentBusinessMinutes(date);
-  const schedule='Atendemos de quarta a domingo, das 19h \u00e0s 23h.';
+  const schedule=businessScheduleText();
   if(!isBusinessDay(date)){
     return `Hoje n\u00e3o estamos abertos. ${schedule}`;
   }
@@ -706,13 +766,13 @@ function scheduleValidation(isOpen=isBusinessOpen()){
   setupScheduleControls();
   const payload=schedulePayload(isOpen);
   if(payload.mode==='now'){
-    if(!isOpen) return {valid:false,status:'warning',message:'Agora estamos fechados. Escolha um agendamento para receber no horario de atendimento.',payload};
+    if(!isOpen) return {valid:false,status:'warning',message:`Agora estamos fechados. Escolha um agendamento. ${businessScheduleText()}`,payload};
     return {valid:true,status:'success',message:'Entrega para agora. O pedido segue direto durante o horario de atendimento.',payload};
   }
   const date=scheduleDateObject(payload.date);
   if(!date) return {valid:false,status:'warning',message:'Escolha uma data para agendar a entrega.',payload};
-  if(!isBusinessDay(date)) return {valid:false,status:'warning',message:'Escolha uma data de quarta a domingo.',payload};
-  if(!isBusinessTime(payload.time)) return {valid:false,status:'warning',message:'Escolha um hor\u00e1rio entre 19h e 23h.',payload};
+  if(!isBusinessDay(date)) return {valid:false,status:'warning',message:`Escolha uma data dentro dos dias de atendimento. ${businessScheduleText()}`,payload};
+  if(!isBusinessTime(payload.time)) return {valid:false,status:'warning',message:`Escolha um hor\u00e1rio entre ${formatBusinessHour(businessHours.openHour)} e ${formatBusinessHour(businessHours.closeHour)}.`,payload};
   const timestamp=scheduleTimestamp(payload.date,payload.time);
   if(!Number.isFinite(timestamp)||timestamp<Date.now()+scheduleLeadMinutes*60_000){
     return {valid:false,status:'warning',message:`Escolha um hor\u00e1rio com pelo menos ${scheduleLeadMinutes} minutos de anteced\u00eancia.`,payload};
@@ -832,6 +892,20 @@ function loadTurnstileScript(){
 function turnstileWidgetSize(){
   return window.matchMedia('(max-width:420px)').matches?'compact':'flexible';
 }
+function watchTurnstileViewport(){
+  if(turnstileState.resizeTimer) window.clearTimeout(turnstileState.resizeTimer);
+  turnstileState.resizeTimer=window.setTimeout(()=>{
+    if(!turnstileState.enabled||!turnstileWidget||!window.turnstile||turnstileState.widgetId===null) return;
+    const nextSize=turnstileWidgetSize();
+    if(nextSize===turnstileState.size) return;
+    turnstileState.token='';
+    turnstileWidget.innerHTML='';
+    turnstileState.widgetId=null;
+    turnstileState.size='';
+    renderTurnstile();
+    updatePixPayment();
+  },180);
+}
 async function renderTurnstile(){
   if(!turnstileState.enabled||!turnstileBox||!turnstileWidget) return;
   turnstileBox.hidden=false;
@@ -889,6 +963,8 @@ async function initSecurityConfig(){
     turnstileState.enabled=true;
     turnstileState.siteKey=String(data.turnstileSiteKey);
     await renderTurnstile();
+    window.addEventListener('resize',watchTurnstileViewport,{passive:true});
+    window.addEventListener('orientationchange',watchTurnstileViewport,{passive:true});
     updatePixPayment();
   }catch(error){
     // O servidor estatico local nao expoe essa rota; em producao ela vem do backend.
@@ -1303,8 +1379,14 @@ function updateOrderScrollCue(){
 }
 function scrollOrderContentForward(){
   if(!orderContent) return;
-  orderContent.scrollBy({top:Math.max(180,orderContent.clientHeight*.72),behavior:'smooth'});
-  window.setTimeout(updateOrderScrollCue,260);
+  const start=orderContent.scrollTop;
+  const amount=Math.max(180,orderContent.clientHeight*.72);
+  const next=Math.min(orderContent.scrollHeight-orderContent.clientHeight,start+amount);
+  orderContent.scrollBy({top:amount,behavior:'smooth'});
+  window.setTimeout(()=>{
+    if(Math.abs(orderContent.scrollTop-start)<2) orderContent.scrollTop=next;
+    updateOrderScrollCue();
+  },260);
 }
 function renderOrder(){
   if(!orderItems) return;
@@ -1497,7 +1579,7 @@ document.querySelectorAll('a[href*="wa.me/5521982225443"]').forEach(link=>{
   link.addEventListener('click',()=>{
     setNavMenuOpen(false);
     sendAnalyticsEvent('click_whatsapp',{
-      source:link.classList.contains('btn-buffet')?'buffet':link.classList.contains('btn-whatsapp')?'whatsapp_section':link.classList.contains('whatsapp-float')?'floating_button':link.classList.contains('nav-cta')?'nav':link.classList.contains('seasonal-cta')?'namorados_banner':'site_link',
+      source:link.classList.contains('btn-buffet')?'buffet':link.classList.contains('btn-whatsapp')?'whatsapp_section':link.classList.contains('whatsapp-float')?'floating_button':link.classList.contains('nav-cta')?'nav':link.classList.contains('premium-banner-cta')?'premium_banner':'site_link',
       cart_items:orderQty(),
       value:orderGrandTotal(),
       payment_method:selectedPaymentMethod().value

@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="admin.css">
+<link rel="stylesheet" href="/admin/admin.css?v=6">
 </head>
 <body>
 
@@ -27,26 +27,173 @@
   <header class="admin-header">
     <div class="admin-header-brand">WA RIO <em>Admin</em></div>
     <div class="admin-header-actions">
-      <a href="/" target="_blank" class="admin-btn admin-btn-ghost">Ver site →</a>
+      <a href="/" target="_blank" class="admin-btn admin-btn-ghost">Ver site</a>
       <button id="logoutBtn" class="admin-btn admin-btn-ghost">Sair</button>
     </div>
   </header>
 
   <main class="admin-main">
-    <section class="admin-toolbar">
-      <div class="admin-tabs" id="kindTabs">
-        <button class="admin-tab is-active" data-kind="product">Cardápio</button>
-        <button class="admin-tab" data-kind="promo">Promoções</button>
-      </div>
-      <div class="admin-toolbar-right">
-        <select id="categoryFilter" class="admin-select"></select>
-        <button id="newItemBtn" class="admin-btn admin-btn-primary">+ Novo item</button>
-      </div>
-    </section>
+    <nav class="admin-section-tabs" id="sectionTabs" aria-label="Áreas do painel">
+      <button class="admin-section-tab is-active" type="button" data-section="dashboard">Resumo</button>
+      <button class="admin-section-tab" type="button" data-section="menu">Cardápio</button>
+      <button class="admin-section-tab" type="button" data-section="categories">Categorias</button>
+      <button class="admin-section-tab" type="button" data-section="images">Imagens</button>
+      <button class="admin-section-tab" type="button" data-section="delivery">Entregas</button>
+      <button class="admin-section-tab" type="button" data-section="hours">Horários</button>
+      <button class="admin-section-tab" type="button" data-section="orders">Pedidos</button>
+      <button class="admin-section-tab" type="button" data-section="tools">Ferramentas</button>
+    </nav>
 
     <div id="statusBanner" class="admin-status" hidden></div>
 
-    <section id="itemsGrid" class="admin-items-grid"></section>
+    <section class="admin-panel is-active" id="dashboardPanel" data-panel="dashboard">
+      <div class="admin-panel-head">
+        <div>
+          <span class="admin-kicker">Painel</span>
+          <h1>Resumo da operação</h1>
+        </div>
+        <button id="refreshDashboardBtn" type="button" class="admin-btn admin-btn-ghost">Atualizar</button>
+      </div>
+      <div id="dashboardCards" class="admin-metrics"></div>
+      <div class="admin-two-col">
+        <section class="admin-mini-panel">
+          <h2>Itens ocultos</h2>
+          <div id="hiddenItemsList" class="admin-compact-list"></div>
+        </section>
+        <section class="admin-mini-panel">
+          <h2>Próximos horários</h2>
+          <div id="schedulePreview" class="admin-compact-list"></div>
+        </section>
+      </div>
+    </section>
+
+    <section class="admin-panel" id="menuPanel" data-panel="menu">
+      <section class="admin-toolbar">
+        <div class="admin-tabs" id="kindTabs">
+          <button class="admin-tab is-active" data-kind="product">Cardápio</button>
+          <button class="admin-tab" data-kind="promo">Promoções</button>
+        </div>
+        <div class="admin-toolbar-right">
+          <input type="search" id="searchInput" class="admin-search" placeholder="Buscar item">
+          <select id="categoryFilter" class="admin-select"></select>
+          <button id="newItemBtn" class="admin-btn admin-btn-primary">+ Novo item</button>
+        </div>
+      </section>
+
+      <section id="itemsGrid" class="admin-items-grid"></section>
+    </section>
+
+    <section class="admin-panel" id="categoriesPanel" data-panel="categories">
+      <div class="admin-panel-head">
+        <div>
+          <span class="admin-kicker">Organização</span>
+          <h1>Categorias do cardápio</h1>
+        </div>
+        <div class="admin-panel-actions">
+          <button id="newCategoryBtn" type="button" class="admin-btn admin-btn-ghost">+ Nova categoria</button>
+          <button id="saveCategoriesBtn" type="button" class="admin-btn admin-btn-primary">Salvar categorias</button>
+        </div>
+      </div>
+      <p class="admin-panel-note">Categorias ocultas somem do site junto com os itens que estão dentro delas. A categoria Todos fica sempre ativa.</p>
+      <div id="categoriesList" class="admin-category-list"></div>
+    </section>
+
+    <section class="admin-panel" id="imagesPanel" data-panel="images">
+      <div class="admin-panel-head">
+        <div>
+          <span class="admin-kicker">Imagens</span>
+          <h1>Biblioteca de imagens</h1>
+        </div>
+        <label class="admin-btn admin-btn-primary admin-upload-btn">
+          Enviar imagem
+          <input id="imageUploadInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+        </label>
+      </div>
+      <div id="imageUploadStatus" class="admin-upload-status" hidden></div>
+      <div id="imageLibrary" class="admin-image-library"></div>
+    </section>
+
+    <section class="admin-panel" id="deliveryPanel" data-panel="delivery">
+      <div class="admin-panel-head">
+        <div>
+          <span class="admin-kicker">Entregas</span>
+          <h1>Bairros e taxas</h1>
+        </div>
+        <button id="saveDeliveryBtn" type="button" class="admin-btn admin-btn-primary">Salvar entregas</button>
+      </div>
+      <div class="admin-form-grid">
+        <label class="admin-field">
+          <span>Taxa padrão</span>
+          <input type="number" id="defaultFeeInput" step="0.01" min="0">
+        </label>
+      </div>
+      <div class="admin-list-editor" id="deliveryRows"></div>
+      <button id="addAreaBtn" type="button" class="admin-btn admin-btn-ghost">+ Adicionar bairro</button>
+    </section>
+
+    <section class="admin-panel" id="hoursPanel" data-panel="hours">
+      <div class="admin-panel-head">
+        <div>
+          <span class="admin-kicker">Funcionamento</span>
+          <h1>Horários do delivery</h1>
+        </div>
+        <button id="saveHoursBtn" type="button" class="admin-btn admin-btn-primary">Salvar horários</button>
+      </div>
+      <div class="admin-form-grid">
+        <label class="admin-field">
+          <span>Abertura</span>
+          <input type="time" id="openTimeInput" step="3600">
+        </label>
+        <label class="admin-field">
+          <span>Fechamento</span>
+          <input type="time" id="closeTimeInput" step="3600">
+        </label>
+        <label class="admin-field">
+          <span>Antecedência para agendar</span>
+          <input type="number" id="leadMinutesInput" min="0" step="5">
+        </label>
+      </div>
+      <div class="admin-days" id="openDaysGroup">
+        <label><input type="checkbox" value="0"> Dom</label>
+        <label><input type="checkbox" value="1"> Seg</label>
+        <label><input type="checkbox" value="2"> Ter</label>
+        <label><input type="checkbox" value="3"> Qua</label>
+        <label><input type="checkbox" value="4"> Qui</label>
+        <label><input type="checkbox" value="5"> Sex</label>
+        <label><input type="checkbox" value="6"> Sáb</label>
+      </div>
+    </section>
+
+    <section class="admin-panel" id="ordersPanel" data-panel="orders">
+      <div class="admin-panel-head">
+        <div>
+          <span class="admin-kicker">Pedidos</span>
+          <h1>Pedidos Pix recentes</h1>
+        </div>
+        <button id="refreshOrdersBtn" type="button" class="admin-btn admin-btn-ghost">Atualizar</button>
+      </div>
+      <div id="ordersList" class="admin-orders-list"></div>
+    </section>
+
+    <section class="admin-panel" id="toolsPanel" data-panel="tools">
+      <div class="admin-panel-head">
+        <div>
+          <span class="admin-kicker">Segurança</span>
+          <h1>Backup e publicação</h1>
+        </div>
+        <button id="downloadBackupBtn" type="button" class="admin-btn admin-btn-primary">Baixar backup</button>
+      </div>
+      <div class="admin-two-col">
+        <section class="admin-mini-panel">
+          <h2>Backup do cardápio</h2>
+          <p class="admin-panel-note">Baixe uma cópia do cardápio, promoções, categorias, horários e bairros antes de publicar mudanças grandes.</p>
+        </section>
+        <section class="admin-mini-panel">
+          <h2>Checklist antes do push</h2>
+          <div id="deployChecklist" class="admin-check-list"></div>
+        </section>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -59,6 +206,8 @@
     <form id="editorForm" class="admin-editor-body">
       <input type="hidden" id="fId">
       <input type="hidden" id="fKind">
+      <div id="placementPreview" class="admin-placement"></div>
+      <div id="itemLivePreview" class="admin-live-preview"></div>
 
       <label class="admin-field">
         <span>Nome do item</span>
@@ -82,8 +231,16 @@
           <input type="text" id="fBadge" maxlength="40">
         </label>
         <label class="admin-field">
-          <span>Imagem (nome do arquivo)</span>
-          <input type="text" id="fImage" maxlength="160" placeholder="ex: joejoe_cardapio_optimized.jpg">
+          <span>Imagem do item</span>
+          <div class="admin-image-field">
+            <input type="text" id="fImage" maxlength="180" list="imageOptions" placeholder="ex: joejoe_cardapio_optimized.jpg">
+            <label class="admin-btn admin-btn-ghost admin-btn-sm admin-upload-inline">
+              Enviar
+              <input id="editorImageUploadInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+            </label>
+          </div>
+          <datalist id="imageOptions"></datalist>
+          <img id="imagePreview" class="admin-image-preview" alt="" hidden>
         </label>
       </div>
 
@@ -117,7 +274,7 @@
 
       <label class="admin-checkbox">
         <input type="checkbox" id="fSoldOut">
-        <span>Esgotado (fica oculto para o cliente no site)</span>
+        <span>Ocultar este item do site</span>
       </label>
 
       <div class="admin-editor-footer">
@@ -131,6 +288,6 @@
   </div>
 </div>
 
-<script src="admin.js?v=1"></script>
+<script src="/admin/admin.js?v=6"></script>
 </body>
 </html>
