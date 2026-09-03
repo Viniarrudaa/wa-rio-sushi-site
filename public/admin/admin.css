@@ -104,6 +104,25 @@ input,textarea,select,button{font-family:var(--font);}
 .admin-showcase-preview-promo img{width:118px;height:96px;object-fit:cover;border-radius:7px;background:#050505;}
 .admin-showcase-preview-promo strong{font-size:14px;line-height:1.25;color:var(--white);}
 .admin-showcase-preview-promo span{display:block;margin-top:4px;color:var(--gold-light);font-size:13px;font-weight:900;}
+.admin-roulette-layout{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;align-items:start;}
+.admin-roulette-forms{display:flex;flex-direction:column;gap:16px;min-width:0;}
+.admin-roulette-preview{position:sticky;top:88px;border:1px solid var(--border);border-radius:8px;padding:16px;background:linear-gradient(180deg,#111,#0a0a0a);min-width:0;}
+.admin-roulette-prize-list{display:flex;flex-direction:column;gap:12px;}
+.admin-roulette-prize-row{display:grid;grid-template-columns:1.1fr 1.2fr 130px 110px 96px 84px 36px;gap:10px;align-items:end;border:1px solid rgba(212,168,67,.12);border-radius:8px;background:rgba(0,0,0,.18);padding:12px;}
+.admin-roulette-active{min-height:39px;justify-content:center;}
+.admin-roulette-preview-card{display:grid;justify-items:center;gap:9px;text-align:center;border:1px solid rgba(212,168,67,.14);border-radius:8px;background:linear-gradient(180deg,#151515,#080808);padding:14px;}
+.admin-roulette-preview-card strong{font-size:18px;line-height:1.1;color:var(--white);}
+.admin-roulette-preview-card p{color:var(--gray);font-size:12px;line-height:1.45;}
+.admin-roulette-preview-logo{height:44px;display:grid;place-items:center;}
+.admin-roulette-preview-logo img{max-width:150px;max-height:44px;object-fit:contain;}
+.admin-roulette-preview-logo span{font-size:12px;font-weight:900;color:var(--gold-light);letter-spacing:1.2px;}
+.admin-roulette-preview-wheel{width:176px;aspect-ratio:1;border:5px solid var(--white);border-radius:50%;position:relative;box-shadow:0 0 24px rgba(212,168,67,.1);}
+.admin-roulette-preview-wheel::before{content:'';position:absolute;top:-13px;left:50%;transform:translateX(-50%);border-left:10px solid transparent;border-right:10px solid transparent;border-top:18px solid var(--red);}
+.admin-roulette-preview-wheel span{position:absolute;inset:50% auto auto 50%;width:32px;height:32px;transform:translate(-50%,-50%);border-radius:50%;border:4px solid var(--white);background:#111;}
+.admin-roulette-preview-card button{border:0;border-radius:7px;background:linear-gradient(135deg,var(--red),var(--red2));color:var(--white);font-size:11px;font-weight:900;padding:9px 14px;text-transform:uppercase;letter-spacing:.7px;}
+.admin-roulette-chances{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+.admin-roulette-chances div{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid rgba(212,168,67,.10);border-radius:8px;background:rgba(255,255,255,.025);padding:10px 11px;color:var(--gray);font-size:12px;}
+.admin-roulette-chances strong{color:var(--gold-light);font-size:12px;white-space:nowrap;}
 .admin-list-editor,.admin-orders-list{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
 .admin-upload-btn{position:relative;overflow:hidden;}
 .admin-upload-status{margin-bottom:14px;padding:11px 14px;border:1px solid rgba(212,168,67,.18);border-radius:8px;background:rgba(212,168,67,.07);color:var(--gold-light);font-size:12.5px;font-weight:700;}
@@ -208,10 +227,12 @@ input,textarea,select,button{font-family:var(--font);}
   .admin-panel-head{flex-direction:column;align-items:stretch;}
   .admin-panel-actions{justify-content:stretch;}
   .admin-panel-actions .admin-btn{width:100%;}
-  .admin-metrics,.admin-two-col,.admin-form-grid,.admin-form-grid-compact,.admin-showcase-layout{grid-template-columns:1fr;}
-  .admin-showcase-preview{position:static;}
+  .admin-metrics,.admin-two-col,.admin-form-grid,.admin-form-grid-compact,.admin-showcase-layout,.admin-roulette-layout{grid-template-columns:1fr;}
+  .admin-showcase-preview,.admin-roulette-preview{position:static;}
   .admin-showcase-preview-promo{grid-template-columns:92px 1fr;}
   .admin-showcase-preview-promo img{width:92px;height:78px;}
+  .admin-roulette-prize-row{grid-template-columns:1fr;}
+  .admin-roulette-active{justify-content:flex-start;}
   .admin-delivery-row{grid-template-columns:1fr;}
   .admin-image-library{grid-template-columns:repeat(2,minmax(0,1fr));}
   .admin-image-field{grid-template-columns:1fr;}

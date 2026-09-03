@@ -1,0 +1,26 @@
+{
+  "updatedAt": "2026-09-03T18:57:23.545Z",
+  "spins": {
+    "_pTJfVy5aOTAm4cmFcBgLnXr": {
+      "date": "2026-09-03",
+      "prizeId": "tente-amanha",
+      "prizeName": "Não foi dessa vez. Tente novamente amanhã!",
+      "type": "none",
+      "value": 0,
+      "won": false,
+      "at": "2026-09-03T18:57:23.545Z"
+    }
+  },
+  "history": [
+    {
+      "date": "2026-09-03",
+      "prizeId": "tente-amanha",
+      "prizeName": "Não foi dessa vez. Tente novamente amanhã!",
+      "type": "none",
+      "value": 0,
+      "won": false,
+      "at": "2026-09-03T18:57:23.545Z",
+      "guestId": "0f963239597f234b"
+    }
+  ]
+}

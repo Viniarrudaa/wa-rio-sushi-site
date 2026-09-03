@@ -87,6 +87,26 @@ const showcaseFields = {
   instagramUrl: $('#showcaseInstagramUrl'),
   googleUrl: $('#showcaseGoogleUrl')
 };
+const roulettePanel = $('#roulettePanel');
+const roulettePreview = $('#roulettePreview');
+const saveRouletteBtn = $('#saveRouletteBtn');
+const addRoulettePrizeBtn = $('#addRoulettePrizeBtn');
+const roulettePrizeRows = $('#roulettePrizeRows');
+const rouletteFields = {
+  active: $('#rouletteActive'),
+  title: $('#rouletteTitle'),
+  subtitle: $('#rouletteSubtitle'),
+  logo: $('#rouletteLogo'),
+  buttonText: $('#rouletteButtonText'),
+  alreadySpunText: $('#rouletteAlreadyText'),
+  inactiveText: $('#rouletteInactiveText'),
+  resultSubtitle: $('#rouletteResultSubtitle'),
+  applyButtonText: $('#rouletteApplyButtonText'),
+  menuHref: $('#rouletteMenuHref'),
+  minOrderValue: $('#rouletteMinOrderValue'),
+  maxCouponsPerCustomer: $('#rouletteMaxCoupons'),
+  couponValidityDays: $('#rouletteValidityDays')
+};
 
 const dayFullNames = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
 const maxOriginalImageBytes = 20 * 1024 * 1024;
@@ -154,6 +174,32 @@ function defaultShowcase(){
   };
 }
 
+function defaultRoulette(){
+  return {
+    active: true,
+    title: 'Roleta diária WA RIO',
+    subtitle: 'Gire uma vez por dia e concorra a prêmios para usar no seu pedido.',
+    logo: 'logo_wariobranca - Editado.png',
+    buttonText: 'Girar roleta',
+    alreadySpunText: 'Você já girou a roleta hoje. Volte amanhã para tentar novamente.',
+    inactiveText: 'A roleta está pausada no momento.',
+    resultSubtitle: 'Use seu prêmio no pedido pelo site.',
+    applyButtonText: 'Usar no cardápio',
+    menuHref: '/wario_sushi_v2_16.html#combos',
+    minOrderValue: 40,
+    maxCouponsPerCustomer: 2,
+    couponValidityDays: 7,
+    prizes: [
+      { id: 'desconto-5', label: '5% de Desconto', resultText: '5% de Desconto!', type: 'percent', value: 5, probability: 25, active: true },
+      { id: 'desconto-10', label: '10% de Desconto', resultText: '10% de Desconto!', type: 'percent', value: 10, probability: 15, active: true },
+      { id: 'tente-amanha', label: 'Tente Amanhã', resultText: 'Não foi dessa vez. Tente novamente amanhã!', type: 'none', value: 0, probability: 50, active: true },
+      { id: 'hots-gratis', label: '6 Hots Grátis', resultText: '6 Hot Filadélfia no próximo pedido!', type: 'gift', value: '6 Hot Filadélfia', probability: 2, active: true },
+      { id: 'desconto-15', label: '15% de Desconto', resultText: '15% de Desconto!', type: 'percent', value: 15, probability: 1, active: true },
+      { id: 'frete-gratis', label: 'Frete Grátis', resultText: 'Frete Grátis!', type: 'free_shipping', value: 0, probability: 7, active: true }
+    ]
+  };
+}
+
 function defaultSettings(){
   return {
     delivery: {
@@ -179,7 +225,8 @@ function defaultSettings(){
       timeZone: 'America/Sao_Paulo',
       scheduleLeadMinutes: 30
     },
-    showcase: defaultShowcase()
+    showcase: defaultShowcase(),
+    roulette: defaultRoulette()
   };
 }
 
@@ -200,6 +247,17 @@ function currentShowcase(){
   };
 }
 
+function currentRoulette(){
+  const defaults = defaultRoulette();
+  const source = currentSettings().roulette || {};
+  const prizes = Array.isArray(source.prizes) && source.prizes.length ? source.prizes : defaults.prizes;
+  return {
+    ...defaults,
+    ...source,
+    prizes: prizes.map((prize, index) => ({ ...(defaults.prizes[index] || defaults.prizes[2]), ...(prize || {}) }))
+  };
+}
+
 function allItems(){
   return [...(state.menuProducts || []), ...(state.promoProducts || [])];
 }
@@ -216,6 +274,10 @@ function escapeHtml(str){
     '"': '&quot;',
     "'": '&#39;'
   }[c]));
+}
+
+function escapeAttr(str){
+  return escapeHtml(str);
 }
 
 function slugify(value){
@@ -488,6 +550,158 @@ function renderShowcase(){
   setFieldValue(showcaseFields.instagramUrl, showcase.links.instagramUrl);
   setFieldValue(showcaseFields.googleUrl, showcase.links.googleUrl);
   renderShowcasePreview(showcase);
+}
+
+function prizeTypeLabel(type){
+  return {
+    percent: 'Desconto',
+    free_shipping: 'Frete grátis',
+    gift: 'Brinde',
+    none: 'Sem prêmio'
+  }[type] || 'Prêmio';
+}
+
+function roulettePrizeRow(prize = {}, index = 0){
+  const defaults = defaultRoulette().prizes[index] || defaultRoulette().prizes[2];
+  const data = { ...defaults, ...prize };
+  const row = document.createElement('div');
+  row.className = 'admin-roulette-prize-row';
+  row.dataset.prizeId = data.id || '';
+  row.innerHTML = `
+    <label class="admin-field">
+      <span>Texto na roleta</span>
+      <input type="text" class="roulette-prize-label" maxlength="44" value="${escapeAttr(data.label || '')}">
+    </label>
+    <label class="admin-field">
+      <span>Resultado</span>
+      <input type="text" class="roulette-prize-result" maxlength="100" value="${escapeAttr(data.resultText || '')}">
+    </label>
+    <label class="admin-field">
+      <span>Tipo</span>
+      <select class="roulette-prize-type">
+        <option value="percent" ${data.type === 'percent' ? 'selected' : ''}>Desconto %</option>
+        <option value="free_shipping" ${data.type === 'free_shipping' ? 'selected' : ''}>Frete grátis</option>
+        <option value="gift" ${data.type === 'gift' ? 'selected' : ''}>Brinde</option>
+        <option value="none" ${data.type === 'none' ? 'selected' : ''}>Tente amanhã</option>
+      </select>
+    </label>
+    <label class="admin-field">
+      <span>Valor</span>
+      <input type="text" class="roulette-prize-value" maxlength="80" value="${escapeAttr(data.value ?? '')}">
+    </label>
+    <label class="admin-field">
+      <span>Chance</span>
+      <input type="number" class="roulette-prize-probability" min="0" max="10000" step="0.01" value="${Number(data.probability ?? 0)}">
+    </label>
+    <label class="admin-switch admin-roulette-active">
+      <input type="checkbox" class="roulette-prize-active" ${data.active === false ? '' : 'checked'}>
+      <span>Ativo</span>
+    </label>
+    <button type="button" class="admin-row-remove" data-roulette-remove aria-label="Remover prêmio">×</button>
+  `;
+  return row;
+}
+
+function normalizePrizeValue(type, value){
+  if(type === 'percent') return Math.max(1, Math.min(80, Math.floor(Number(value) || 5)));
+  if(type === 'gift') return String(value || '').trim() || 'Brinde WA RIO';
+  return 0;
+}
+
+function collectRouletteSettings(){
+  const defaults = defaultRoulette();
+  const rows = $$('#roulettePrizeRows .admin-roulette-prize-row');
+  const prizes = rows.map((row, index) => {
+    const type = row.querySelector('.roulette-prize-type')?.value || 'none';
+    const label = row.querySelector('.roulette-prize-label')?.value.trim() || `Prêmio ${index + 1}`;
+    const resultText = row.querySelector('.roulette-prize-result')?.value.trim() || label;
+    return {
+      id: row.dataset.prizeId || slugify(label) || `premio-${index + 1}`,
+      label,
+      resultText,
+      type,
+      value: normalizePrizeValue(type, row.querySelector('.roulette-prize-value')?.value),
+      probability: Math.max(0, Number(row.querySelector('.roulette-prize-probability')?.value) || 0),
+      active: !!row.querySelector('.roulette-prize-active')?.checked
+    };
+  });
+  if(!prizes.some(prize => prize.active)){
+    throw new Error('Deixe pelo menos um prêmio ativo na roleta.');
+  }
+  return {
+    active: fieldChecked(rouletteFields.active, defaults.active),
+    title: fieldValue(rouletteFields.title, defaults.title),
+    subtitle: fieldValue(rouletteFields.subtitle, defaults.subtitle),
+    logo: fieldValue(rouletteFields.logo, defaults.logo, true),
+    buttonText: fieldValue(rouletteFields.buttonText, defaults.buttonText),
+    alreadySpunText: fieldValue(rouletteFields.alreadySpunText, defaults.alreadySpunText),
+    inactiveText: fieldValue(rouletteFields.inactiveText, defaults.inactiveText),
+    resultSubtitle: fieldValue(rouletteFields.resultSubtitle, defaults.resultSubtitle),
+    applyButtonText: fieldValue(rouletteFields.applyButtonText, defaults.applyButtonText),
+    menuHref: fieldValue(rouletteFields.menuHref, defaults.menuHref),
+    minOrderValue: Math.max(0, Number(rouletteFields.minOrderValue?.value) || defaults.minOrderValue),
+    maxCouponsPerCustomer: Math.max(1, Math.min(5, Math.floor(Number(rouletteFields.maxCouponsPerCustomer?.value) || defaults.maxCouponsPerCustomer))),
+    couponValidityDays: Math.max(1, Math.min(90, Math.floor(Number(rouletteFields.couponValidityDays?.value) || defaults.couponValidityDays))),
+    prizes
+  };
+}
+
+function renderRoulettePreview(roulette = null){
+  if(!roulettePreview) return;
+  let settings;
+  try{
+    settings = roulette || collectRouletteSettings();
+  }catch(err){
+    settings = currentRoulette();
+  }
+  const prizes = (settings.prizes || []).filter(prize => prize.active !== false);
+  const totalChance = prizes.reduce((sum, prize) => sum + (Number(prize.probability) || 0), 0);
+  const colors = ['#68110c', '#151518', '#8d1c16', '#222225', '#4a0e17', '#303035', '#a82127', '#101012'];
+  const segment = prizes.length ? 360 / prizes.length : 360;
+  const gradient = prizes.length
+    ? prizes.map((prize, index) => `${colors[index % colors.length]} ${(index * segment).toFixed(2)}deg ${((index + 1) * segment).toFixed(2)}deg`).join(',')
+    : '#151518 0 360deg';
+  roulettePreview.innerHTML = `
+    <div class="admin-roulette-preview-card">
+      <div class="admin-roulette-preview-logo">${settings.logo ? `<img src="${escapeAttr(imageUrl(settings.logo))}" alt="">` : '<span>WA RIO</span>'}</div>
+      <strong>${escapeHtml(settings.title)}</strong>
+      <p>${escapeHtml(settings.subtitle)}</p>
+      <div class="admin-roulette-preview-wheel" style="background: conic-gradient(from -90deg, ${gradient});">
+        <span></span>
+      </div>
+      <button type="button">${escapeHtml(settings.buttonText)}</button>
+    </div>
+    <div class="admin-roulette-chances">
+      ${prizes.map(prize => {
+        const chance = totalChance ? ((Number(prize.probability) || 0) / totalChance) * 100 : 0;
+        return `<div><span>${escapeHtml(prize.label)} · ${escapeHtml(prizeTypeLabel(prize.type))}</span><strong>${chance.toFixed(1)}%</strong></div>`;
+      }).join('') || '<p class="admin-empty">Nenhum prêmio ativo.</p>'}
+    </div>
+  `;
+}
+
+function renderRoulette(){
+  const roulette = currentRoulette();
+  setFieldChecked(rouletteFields.active, roulette.active);
+  setFieldValue(rouletteFields.title, roulette.title);
+  setFieldValue(rouletteFields.subtitle, roulette.subtitle);
+  setFieldValue(rouletteFields.logo, roulette.logo);
+  setFieldValue(rouletteFields.buttonText, roulette.buttonText);
+  setFieldValue(rouletteFields.alreadySpunText, roulette.alreadySpunText);
+  setFieldValue(rouletteFields.inactiveText, roulette.inactiveText);
+  setFieldValue(rouletteFields.resultSubtitle, roulette.resultSubtitle);
+  setFieldValue(rouletteFields.applyButtonText, roulette.applyButtonText);
+  setFieldValue(rouletteFields.menuHref, roulette.menuHref);
+  setFieldValue(rouletteFields.minOrderValue, roulette.minOrderValue);
+  setFieldValue(rouletteFields.maxCouponsPerCustomer, roulette.maxCouponsPerCustomer);
+  setFieldValue(rouletteFields.couponValidityDays, roulette.couponValidityDays);
+  if(roulettePrizeRows){
+    roulettePrizeRows.innerHTML = '';
+    (roulette.prizes || defaultRoulette().prizes).forEach((prize, index) => {
+      roulettePrizeRows.appendChild(roulettePrizeRow(prize, index));
+    });
+  }
+  renderRoulettePreview(roulette);
 }
 
 function updateImagePreview(){
@@ -882,6 +1096,7 @@ function renderAll(){
   renderImages();
   renderDashboard();
   renderShowcase();
+  renderRoulette();
   renderDelivery();
   renderHours();
   renderOrders();
@@ -1167,6 +1382,32 @@ showcasePanel?.addEventListener('input', () => renderShowcasePreview());
 showcasePanel?.addEventListener('change', () => renderShowcasePreview());
 showcaseHeroImageUploadInput?.addEventListener('change', () => handleShowcaseImageUpload(showcaseHeroImageUploadInput, showcaseFields.heroImage));
 showcasePromoImageUploadInput?.addEventListener('change', () => handleShowcaseImageUpload(showcasePromoImageUploadInput, showcaseFields.promoImage));
+roulettePanel?.addEventListener('input', () => renderRoulettePreview());
+roulettePanel?.addEventListener('change', () => renderRoulettePreview());
+addRoulettePrizeBtn?.addEventListener('click', () => {
+  const id = `premio-${Date.now().toString(36)}`;
+  roulettePrizeRows?.appendChild(roulettePrizeRow({
+    id,
+    label: 'Novo prêmio',
+    resultText: 'Novo prêmio!',
+    type: 'gift',
+    value: 'Brinde WA RIO',
+    probability: 5,
+    active: true
+  }, $$('#roulettePrizeRows .admin-roulette-prize-row').length));
+  renderRoulettePreview();
+});
+roulettePrizeRows?.addEventListener('click', (e) => {
+  const button = e.target.closest('[data-roulette-remove]');
+  if(!button) return;
+  const rows = $$('#roulettePrizeRows .admin-roulette-prize-row');
+  if(rows.length <= 1){
+    showStatus('A roleta precisa ter pelo menos um prêmio.', true);
+    return;
+  }
+  button.closest('.admin-roulette-prize-row')?.remove();
+  renderRoulettePreview();
+});
 imageLibrary?.addEventListener('click', (e) => {
   const deleteBtn = e.target.closest('[data-delete-image]');
   if(deleteBtn){
@@ -1205,6 +1446,21 @@ saveShowcaseBtn?.addEventListener('click', async () => {
     showStatus('Vitrine salva.');
   }catch(err){
     showStatus(err.message || 'Erro ao salvar vitrine.', true);
+  }
+});
+
+saveRouletteBtn?.addEventListener('click', async () => {
+  try{
+    const roulette = collectRouletteSettings();
+    const data = await api('/api/admin/settings', {
+      method: 'PUT',
+      body: JSON.stringify({ roulette })
+    });
+    state.siteSettings = data.siteSettings || { ...currentSettings(), roulette };
+    renderAll();
+    showStatus('Roleta salva.');
+  }catch(err){
+    showStatus(err.message || 'Erro ao salvar roleta.', true);
   }
 });
 
@@ -1459,6 +1715,12 @@ function renderOrders(){
     const items = Array.isArray(order.items) ? order.items : [];
     const addressLine = [address.street && `${address.street}, ${address.number || 's/n'}`, address.complement, address.neighborhood, address.cep].filter(Boolean).join(' - ');
     const itemLine = items.map(item => `${item.qty || 1}x ${item.name}`).join(', ');
+    const rewardLine = [
+      order.coupon?.name ? `Roleta: ${order.coupon.name}` : '',
+      order.discount ? `Desconto ${formatMoney(order.discount)}` : '',
+      order.deliveryDiscount ? `Frete grátis ${formatMoney(order.deliveryDiscount)}` : '',
+      order.gift ? `Brinde: ${order.gift}` : ''
+    ].filter(Boolean).join(' · ');
     return `
       <article class="admin-order-card">
         <div class="admin-order-top">
@@ -1473,6 +1735,7 @@ function renderOrders(){
           ${escapeHtml(addressLine || 'Endereço não informado')}<br>
           ${escapeHtml(order.schedule?.label || 'Entrega não informada')}<br>
           <span class="admin-order-items">${escapeHtml(itemLine || 'Itens não informados')}</span>
+          ${rewardLine ? `<br><span class="admin-order-items">${escapeHtml(rewardLine)}</span>` : ''}
         </div>
         <div class="admin-order-foot">
           <span>Entrega: ${escapeHtml(formatMoney(order.deliveryFee || 0))}</span>

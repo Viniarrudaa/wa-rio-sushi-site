@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roleta diária | WA RIO Sushi</title>
+<link rel="icon" href="favicon.ico?v=5" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=5">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="roleta.css?v=1">
+</head>
+<body>
+<main class="roulette-page">
+  <a class="roulette-back" href="/wario_sushi_v2_16.html#combos">Voltar ao cardápio</a>
+
+  <section class="roulette-shell" aria-live="polite">
+    <div class="roulette-brand">
+      <img id="rouletteLogo" src="logo_wariobranca - Editado.png" alt="WA RIO Sushi">
+      <span id="rouletteLogoFallback" hidden>WA RIO Sushi</span>
+    </div>
+
+    <p class="roulette-eyebrow">Gire e ganhe prêmios exclusivos</p>
+    <h1 id="rouletteTitle">Roleta diária WA RIO</h1>
+    <p class="roulette-subtitle" id="rouletteSubtitle">Gire uma vez por dia e concorra a prêmios para usar no seu pedido.</p>
+
+    <div class="roulette-card">
+      <div class="roulette-marker" aria-hidden="true"></div>
+      <div class="roulette-wheel-wrap">
+        <div class="roulette-wheel" id="rouletteWheel"></div>
+        <div class="roulette-center" aria-hidden="true"></div>
+      </div>
+      <button class="roulette-spin" id="rouletteSpinButton" type="button">Girar roleta</button>
+      <p class="roulette-status" id="rouletteStatus">Carregando roleta...</p>
+    </div>
+  </section>
+</main>
+
+<div class="roulette-modal" id="rouletteModal" aria-hidden="true">
+  <div class="roulette-modal-panel" role="dialog" aria-modal="true" aria-labelledby="rouletteModalTitle">
+    <button class="roulette-modal-close" id="rouletteModalClose" type="button" aria-label="Fechar">×</button>
+    <span class="roulette-modal-kicker" id="rouletteModalKicker">Resultado da roleta</span>
+    <h2 id="rouletteModalTitle">Você ganhou!</h2>
+    <p id="rouletteModalSubtitle">Use seu prêmio no pedido pelo site.</p>
+    <strong class="roulette-prize" id="roulettePrizeText">--</strong>
+    <button class="roulette-apply" id="rouletteApplyButton" type="button">Usar no cardápio</button>
+  </div>
+</div>
+
+<script src="roleta.js?v=1" type="module"></script>
+</body>
+</html>

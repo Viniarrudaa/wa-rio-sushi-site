@@ -379,9 +379,19 @@ body.order-open .order-drawer{transform:translateX(0);}
 .order-scroll-cue:hover{transform:translateX(-50%) translateY(-2px);}
 .order-drawer.has-scroll-cue .order-scroll-cue{display:flex;}
 .order-foot{position:relative;z-index:1;padding:18px 24px 24px;border-top:1px solid rgba(212,168,67,.13);background:linear-gradient(180deg,rgba(0,0,0,.20),rgba(0,0,0,.48));box-shadow:0 -18px 38px rgba(0,0,0,.28);}
+.order-coupon{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin-bottom:12px;padding:13px 14px;border:1px solid rgba(212,168,67,.18);border-radius:10px;background:linear-gradient(135deg,rgba(104,17,12,.22),rgba(255,255,255,.018));}
+.order-coupon-copy{display:grid;gap:3px;min-width:0;}
+.order-coupon-copy span{font-family:var(--body-font);font-size:8.5px;font-weight:900;letter-spacing:1.55px;text-transform:uppercase;color:var(--gold-light);}
+.order-coupon-copy strong{font-family:var(--body-font);font-size:12px;line-height:1.25;color:var(--white);}
+.order-coupon-copy small{font-family:var(--body-font);font-size:10.5px;line-height:1.45;color:rgba(210,191,176,.64);}
+.order-coupon select{width:100%;border:1px solid rgba(212,168,67,.18);border-radius:8px;background:rgba(0,0,0,.28);color:var(--white);font-family:var(--body-font);font-size:12px;font-weight:700;padding:10px 11px;outline:none;}
+.order-coupon select:focus{border-color:rgba(212,168,67,.52);}
+.order-coupon-clear{width:100%;min-height:38px;border:1px solid rgba(212,168,67,.16);border-radius:8px;background:rgba(255,255,255,.02);color:rgba(245,235,222,.68);font-family:var(--body-font);font-size:9px;font-weight:900;letter-spacing:1.25px;text-transform:uppercase;cursor:pointer;}
+.order-coupon-clear:hover{border-color:rgba(212,168,67,.36);color:var(--gold-light);}
 .order-totals{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;padding:13px 14px;border:1px solid rgba(212,168,67,.12);border-radius:10px;background:rgba(255,255,255,.025);}
 .order-total{display:flex;justify-content:space-between;align-items:center;font-family:var(--body-font);font-size:9px;font-weight:800;letter-spacing:1.7px;text-transform:uppercase;color:rgba(245,235,222,.62);}
 .order-total strong{font-size:12px;color:var(--gold-light);}
+.order-coupon-discount strong{color:#75f0a0;}
 .order-total-final{margin-top:4px;padding-top:9px;border-top:1px solid rgba(212,168,67,.12);color:rgba(245,235,222,.78);}
 .order-total-final strong{font-size:15px;color:#f0c65c;}
 .order-send,.order-clear{width:100%;min-height:54px;border-radius:10px;font-family:var(--body-font);font-weight:800;text-transform:uppercase;letter-spacing:1.25px;cursor:pointer;transition:transform .25s,opacity .25s,background .25s,border-color .25s,color .25s,box-shadow .25s;}

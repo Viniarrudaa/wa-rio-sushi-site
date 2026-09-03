@@ -207,6 +207,10 @@ function defaultShowcaseSettings(){
   };
 }
 let showcaseSettings=defaultShowcaseSettings();
+let rouletteSettings={
+  minOrderValue:40,
+  maxCouponsPerCustomer:2
+};
 function normalizeSiteLink(value,fallback=''){
   const link=safeText(value,260);
   if(!link) return fallback;
@@ -642,6 +646,13 @@ const orderEmpty=document.getElementById('orderEmpty');
 const orderSubtotalEl=document.getElementById('orderSubtotal');
 const orderDeliveryEl=document.getElementById('orderDelivery');
 const orderTotal=document.getElementById('orderTotal');
+const orderCoupon=document.getElementById('orderCoupon');
+const orderCouponName=document.getElementById('orderCouponName');
+const orderCouponHelp=document.getElementById('orderCouponHelp');
+const orderCouponSelect=document.getElementById('orderCouponSelect');
+const orderCouponClear=document.getElementById('orderCouponClear');
+const orderCouponDiscountRow=document.getElementById('orderCouponDiscountRow');
+const orderCouponDiscount=document.getElementById('orderCouponDiscount');
 const orderBar=document.getElementById('orderBar');
 const orderBarSummary=document.getElementById('orderBarSummary');
 const orderHeadCount=document.getElementById('orderHeadCount');
@@ -689,6 +700,9 @@ const businessHours={openHour:19,closeHour:23,openDays:[0,3,4,5,6],timeZone:'Ame
 let scheduleLeadMinutes=30;
 let lastOrderSendAt=0;
 let businessToastTimer=null;
+let selectedCouponId='';
+let couponUseEnabled=true;
+const rouletteCouponStorageKey='wa_rio_cupons_ativos';
 const pixApi={
   create:'/api/pix/create',
   status:id=>`/api/pix/status/${encodeURIComponent(id)}`,
@@ -786,6 +800,12 @@ function updateBusinessCopy(){
 function applySiteSettings(settings){
   if(!settings||typeof settings!=='object') return;
   applyShowcaseSettings(settings.showcase);
+  if(settings.roulette&&typeof settings.roulette==='object'){
+    rouletteSettings={
+      minOrderValue:normalizeFeeValue(settings.roulette.minOrderValue,rouletteSettings.minOrderValue),
+      maxCouponsPerCustomer:Math.max(1,Math.min(5,Math.floor(Number(settings.roulette.maxCouponsPerCustomer)||rouletteSettings.maxCouponsPerCustomer)))
+    };
+  }
   const delivery=settings.delivery||{};
   const hours=settings.businessHours||{};
   defaultDeliveryFee=normalizeFeeValue(delivery.defaultFee,defaultDeliveryFee);
@@ -822,6 +842,94 @@ function formatCep(value){const digits=normalizeCep(value);return digits.length>
 function normalizeText(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();}
 function isNeighborhoodServed(neighborhood){const normalized=normalizeText(neighborhood);return deliveryNeighborhoods.some(item=>normalizeText(item)===normalized);}
 function currentDeliveryFee(){if(deliveryState.status!=='served')return null;return deliveryFeeByNeighborhood[normalizeText(deliveryState.area?.name)]??defaultDeliveryFee;}
+function saveRouletteCoupons(coupons){
+  const max=Math.max(1,Number(rouletteSettings.maxCouponsPerCustomer)||2);
+  localStorage.setItem(rouletteCouponStorageKey,JSON.stringify(coupons.slice(-max)));
+}
+function readRouletteCoupons(){
+  try{
+    const raw=localStorage.getItem(rouletteCouponStorageKey);
+    const parsed=raw?JSON.parse(raw):[];
+    if(!Array.isArray(parsed)) return [];
+    const now=Date.now();
+    const cleaned=parsed.filter(coupon=>{
+      if(!coupon||typeof coupon!=='object') return false;
+      if(!coupon.id||!coupon.token||!coupon.expiresAt) return false;
+      if(!['percent','free_shipping','gift'].includes(coupon.type)) return false;
+      return Date.parse(coupon.expiresAt)>now;
+    }).slice(-(Math.max(1,Number(rouletteSettings.maxCouponsPerCustomer)||2)));
+    if(cleaned.length!==parsed.length) saveRouletteCoupons(cleaned);
+    return cleaned;
+  }catch(error){
+    return [];
+  }
+}
+function couponLabel(coupon){
+  if(!coupon) return '';
+  const name=safeText(coupon.name,100);
+  if(name) return name;
+  if(coupon.type==='percent') return `${Number(coupon.value)||0}% de desconto`;
+  if(coupon.type==='free_shipping') return 'Frete grátis';
+  if(coupon.type==='gift') return safeText(coupon.value,80)||'Brinde WA RIO';
+  return 'Cupom da roleta';
+}
+function couponHelpText(coupon,totals){
+  if(!coupon) return 'Escolha se deseja usar um cupom neste pedido.';
+  if(totals.blockedReason) return totals.blockedReason;
+  if(coupon.type==='percent') return `Desconto aplicado sobre os itens do pedido.`;
+  if(coupon.type==='free_shipping') return totals.deliveryDiscount
+    ? 'Frete grátis aplicado neste pedido.'
+    : 'Frete grátis será conferido na finalização.';
+  if(coupon.type==='gift') return `Brinde liberado: ${safeText(coupon.value,80)||couponLabel(coupon)}.`;
+  return 'Cupom selecionado.';
+}
+function selectedRouletteCoupon(coupons=readRouletteCoupons()){
+  if(!coupons.length){
+    selectedCouponId='';
+    couponUseEnabled=true;
+    return null;
+  }
+  if(!couponUseEnabled) return null;
+  const selected=coupons.find(coupon=>coupon.id===selectedCouponId)||coupons[0];
+  selectedCouponId=selected.id;
+  return selected;
+}
+function orderTotals(){
+  const subtotal=Math.round(orderSubtotal()*100)/100;
+  const fee=currentDeliveryFee();
+  const coupons=readRouletteCoupons();
+  const coupon=selectedRouletteCoupon(coupons);
+  const minOrderValue=normalizeFeeValue(coupon?.minOrderValue,rouletteSettings.minOrderValue);
+  let deliveryFee=typeof fee==='number'?fee:null;
+  let discount=0;
+  let deliveryDiscount=0;
+  let gift='';
+  let appliedCoupon=null;
+  let blockedReason='';
+  if(coupon){
+    if(subtotal<minOrderValue){
+      blockedReason=`Disponível a partir de ${formatMoney(minOrderValue)} em itens.`;
+    }else if(coupon.type==='percent'){
+      const percent=Math.max(1,Math.min(80,Math.floor(Number(coupon.value)||0)));
+      discount=Math.round(subtotal*(percent/100)*100)/100;
+      appliedCoupon={...coupon,value:percent};
+    }else if(coupon.type==='free_shipping'){
+      if(typeof deliveryFee==='number'){
+        deliveryDiscount=deliveryFee;
+        deliveryFee=0;
+      }
+      appliedCoupon={...coupon,value:0};
+    }else if(coupon.type==='gift'){
+      gift=safeText(coupon.value,80)||couponLabel(coupon);
+      appliedCoupon={...coupon,value:gift};
+    }
+  }
+  const subtotalAfterDiscount=Math.max(0,Math.round((subtotal-discount)*100)/100);
+  const total=typeof deliveryFee==='number'
+    ? Math.round((subtotalAfterDiscount+deliveryFee)*100)/100
+    : subtotalAfterDiscount;
+  return {subtotal,subtotalAfterDiscount,fee,deliveryFee,discount,deliveryDiscount,gift,coupon,appliedCoupon,coupons,blockedReason,total};
+}
 function hasDeliveryAddressMode(){return deliveryState.status==='served'||deliveryState.status==='manual';}
 function isAddressComplete(){
   const hasBaseAddress=Boolean(deliveryStreet?.value.trim())&&Boolean(deliveryNumber?.value.trim());
@@ -1064,9 +1172,9 @@ function selectedPaymentMethod(){
   };
 }
 function pixOrderAmount(){
-  const fee=currentDeliveryFee();
-  if(!orderQty()||typeof fee!=='number') return null;
-  return orderGrandTotal();
+  const totals=orderTotals();
+  if(!orderQty()||typeof totals.deliveryFee!=='number') return null;
+  return totals.total;
 }
 function stopPixPolling(){
   if(pixState.pollTimer){
@@ -1350,8 +1458,9 @@ function orderPayloadForPayment(){
     ? typedNeighborhood
     : deliveryState.area?safeText(deliveryState.area.name,80):'';
   const cep=normalizeCep(deliveryState.cep);
+  const totals=orderTotals();
   return {
-    amount:Number(orderGrandTotal().toFixed(2)),
+    amount:Number(totals.total.toFixed(2)),
     customerName:safeText(customerName?.value,80),
     items:[...order.values()].map(item=>({
       id:safeText(item.id,80),
@@ -1367,6 +1476,7 @@ function orderPayloadForPayment(){
       cep:cep?formatCep(cep):''
     },
     schedule:schedulePayload(),
+    coupon:totals.appliedCoupon||null,
     turnstileToken:turnstileState.token
   };
 }
@@ -1525,7 +1635,7 @@ async function verifyDeliveryCep(){
     return false;
   }
 }
-function orderGrandTotal(){const fee=currentDeliveryFee();return orderSubtotal()+(typeof fee==='number'?fee:0);}
+function orderGrandTotal(){return orderTotals().total;}
 function itemFromCard(card){
   const image=card.querySelector('img');
   const variant=card.querySelector('.combo-variant-option.is-selected');
@@ -1621,6 +1731,37 @@ function scrollOrderContentForward(){
     updateOrderScrollCue();
   },260);
 }
+function renderCouponBox(totals=orderTotals()){
+  if(!orderCoupon) return;
+  const coupons=totals.coupons||[];
+  orderCoupon.hidden=!coupons.length;
+  if(!coupons.length) return;
+  if(orderCouponSelect){
+    const options=[
+      '<option value="">Não usar cupom</option>',
+      ...coupons.map(coupon=>`<option value="${escapeAttr(coupon.id)}">${escapeHtml(couponLabel(coupon))}</option>`)
+    ];
+    orderCouponSelect.innerHTML=options.join('');
+    orderCouponSelect.value=couponUseEnabled&&totals.coupon?totals.coupon.id:'';
+  }
+  if(orderCouponName){
+    orderCouponName.textContent=couponUseEnabled&&totals.coupon
+      ? couponLabel(totals.coupon)
+      : 'Cupom não usado neste pedido';
+  }
+  if(orderCouponHelp){
+    orderCouponHelp.textContent=couponUseEnabled
+      ? couponHelpText(totals.coupon,totals)
+      : 'Você pode selecionar um cupom na lista quando quiser aplicar.';
+  }
+}
+function consumeSelectedRouletteCoupon(totals=orderTotals()){
+  if(!totals.appliedCoupon) return;
+  const remaining=readRouletteCoupons().filter(coupon=>coupon.id!==totals.appliedCoupon.id);
+  saveRouletteCoupons(remaining);
+  selectedCouponId='';
+  couponUseEnabled=true;
+}
 function renderOrder(){
   if(!orderItems) return;
   orderItems.innerHTML='';
@@ -1683,16 +1824,25 @@ function renderOrder(){
     orderItems.append(row);
   });
   const total=orderQty();
-  const subtotal=orderSubtotal();
-  const fee=currentDeliveryFee();
-  const deliveryText=deliveryState.status==='served'?(typeof fee==='number'?formatMoney(fee):'A calcular'):deliveryState.status==='manual'?'A confirmar':deliveryState.status==='blocked'?'Não atendido':'Informe CEP ou endereço';
-  const grandTotal=orderGrandTotal();
-  const totalText=deliveryState.status==='manual'?`${formatMoney(subtotal)} + entrega`:formatMoney(grandTotal);
+  const totals=orderTotals();
+  const subtotal=totals.subtotal;
+  const deliveryText=deliveryState.status==='served'?(typeof totals.deliveryFee==='number'?formatMoney(totals.deliveryFee):'A calcular'):deliveryState.status==='manual'?'A confirmar':deliveryState.status==='blocked'?'Não atendido':'Informe CEP ou endereço';
+  const totalText=deliveryState.status==='manual'?`${formatMoney(totals.subtotalAfterDiscount)} + entrega`:formatMoney(totals.total);
   document.body.classList.toggle('has-order',total>0);
   orderEmpty?.classList.toggle('is-hidden',total>0);
   orderBar.classList.toggle('is-visible',total>0);
   if(orderSubtotalEl) orderSubtotalEl.textContent=formatMoney(subtotal);
   if(orderDeliveryEl) orderDeliveryEl.textContent=deliveryText;
+  if(orderCouponDiscountRow&&orderCouponDiscount){
+    const hasDiscount=Boolean(totals.discount||totals.deliveryDiscount);
+    orderCouponDiscountRow.hidden=!hasDiscount;
+    orderCouponDiscount.textContent=totals.discount
+      ? `-${formatMoney(totals.discount)}`
+      : totals.deliveryDiscount
+        ? `-${formatMoney(totals.deliveryDiscount)}`
+        : '- R$ 0,00';
+  }
+  renderCouponBox(totals);
   orderTotal.textContent=total>0?totalText:formatMoney(0);
   orderBarSummary.textContent=total>0?`${pluralizeItem(total)} • ${totalText}`:pluralizeItem(total);
   if(orderHeadCount) orderHeadCount.textContent=total>0?`${pluralizeItem(total)} • ${totalText}`:pluralizeItem(total);
@@ -1762,13 +1912,12 @@ function buildWhatsappMessage(){
   const note=safeText(orderNote?.value,240);
   const method=selectedPaymentMethod();
   const schedule=schedulePayload();
+  const totals=orderTotals();
   const paymentLabel=method.value==='pix'
     ? (pixState.approved?'Pix aprovado':'Pix aguardando confirmacao')
     : `${method.label} na entrega`;
-  const subtotal=orderSubtotal();
-  const fee=currentDeliveryFee();
-  const hasDelivery=typeof fee==='number';
-  const totalLine=hasDelivery?formatMoney(orderGrandTotal()):`${formatMoney(subtotal)} + entrega`;
+  const hasDelivery=typeof totals.deliveryFee==='number';
+  const totalLine=hasDelivery?formatMoney(totals.total):`${formatMoney(totals.subtotalAfterDiscount)} + entrega`;
   const typedNeighborhood=safeText(deliveryNeighborhood?.value,80);
   const areaName=deliveryState.status==='manual'
     ? typedNeighborhood
@@ -1792,6 +1941,10 @@ function buildWhatsappMessage(){
     `Nome: ${clientName || 'Não informado'}`,
     'Pedido:',
     ...lines,
+    totals.appliedCoupon?`Cupom da roleta: ${couponLabel(totals.appliedCoupon)}`:'',
+    totals.discount?`Desconto: -${formatMoney(totals.discount)}`:'',
+    totals.deliveryDiscount?`Frete grátis aplicado: -${formatMoney(totals.deliveryDiscount)}`:'',
+    totals.gift?`Brinde: ${totals.gift} (grátis)`:'',
     `Endereço: ${addressLine}`,
     `Entrega: ${schedule.label}`,
     `Pagamento: ${paymentLabel}`,
@@ -1860,6 +2013,23 @@ deliveryCep?.addEventListener('input',()=>{
 deliveryCep?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();verifyDeliveryCep();}});
 deliveryCheckButton?.addEventListener('click',()=>verifyDeliveryCep());
 deliveryManualButton?.addEventListener('click',startManualAddress);
+orderCouponSelect?.addEventListener('change',()=>{
+  selectedCouponId=orderCouponSelect.value;
+  couponUseEnabled=Boolean(selectedCouponId);
+  resetPixState();
+  renderOrder();
+});
+orderCouponClear?.addEventListener('click',()=>{
+  selectedCouponId='';
+  couponUseEnabled=false;
+  resetPixState();
+  renderOrder();
+});
+window.addEventListener('storage',event=>{
+  if(event.key!==rouletteCouponStorageKey) return;
+  resetPixState();
+  renderOrder();
+});
 addressInputs.forEach(input=>{
   input.addEventListener('input',()=>{
     if(input===deliveryStreet) deliveryStreet.dataset.autofilled='false';
@@ -1912,6 +2082,8 @@ orderClear?.addEventListener('click',()=>{
   sendAnalyticsEvent('clear_cart',{cart_items:orderQty(),value:orderGrandTotal()});
   order.clear();
   orderNote.value='';
+  couponUseEnabled=true;
+  selectedCouponId='';
   resetPixState();
   const pixInput=paymentInputs.find(input=>input.value==='pix');
   if(pixInput) pixInput.checked=true;
@@ -1948,12 +2120,15 @@ orderSend?.addEventListener('click',()=>{
   const now=Date.now();
   if(now-lastOrderSendAt<orderSendCooldownMs) return;
   lastOrderSendAt=now;
-  sendAnalyticsEvent('send_order_whatsapp',{cart_items:orderQty(),value:orderGrandTotal(),payment_method:selectedPaymentMethod().value,pix_approved:pixState.approved});
+  const totals=orderTotals();
+  sendAnalyticsEvent('send_order_whatsapp',{cart_items:orderQty(),value:totals.total,payment_method:selectedPaymentMethod().value,pix_approved:pixState.approved});
   const message=requiresPixApproval()&&pixState.whatsappMessage?pixState.whatsappMessage:buildWhatsappMessage();
   const url=`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message)}`;
   const opened=window.open(url,'_blank','noopener,noreferrer');
   if(opened) opened.opener=null;
   if(!opened) window.location.assign(url);
+  consumeSelectedRouletteCoupon(totals);
+  renderOrder();
 });
 renderGoogleReviews();
 setupScheduleControls();

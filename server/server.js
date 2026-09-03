@@ -40,6 +40,8 @@ const menuDataDir=path.resolve(process.env.DATA_DIR||path.join(rootDir,'data'));
 const menuDbFile=path.join(menuDataDir,'db.json');
 const menuSeedFile=path.join(rootDir,'data','seed.json');
 const menuUploadDir=path.join(menuDataDir,'uploads','menu');
+const rouletteStoreFile=path.resolve(process.env.ROULETTE_STORE_FILE||path.join(menuDataDir,'roulette-spins.json'));
+const rouletteCookieMaxAgeSeconds=Math.max(1,Number(process.env.ROULETTE_COOKIE_DAYS)||180)*24*60*60;
 const adminPassword=String(process.env.ADMIN_PASSWORD||'');
 const adminLoginEnabled=adminPassword.length>0;
 const adminSessionSecret=String(process.env.SESSION_SECRET||process.env.ADMIN_SESSION_SECRET||crypto.randomBytes(32).toString('hex'));
@@ -59,6 +61,7 @@ const defaultDeliveryAreas=[
   {name:'Piedade',fee:8,active:true}
 ];
 const deliveryAreaDisplayNames=new Map(defaultDeliveryAreas.map(area=>[normalizeText(area.name),area.name]));
+const roulettePrizeTypes=new Set(['percent','free_shipping','gift','none']);
 let orderPersistTimer=null;
 const adminSessions=new Map();
 const adminLoginAttempts=new Map();
@@ -212,6 +215,32 @@ function defaultShowcaseSettings(){
   };
 }
 
+function defaultRouletteSettings(){
+  return {
+    active:true,
+    title:'Roleta diária WA RIO',
+    subtitle:'Gire uma vez por dia e concorra a prêmios para usar no seu pedido.',
+    logo:'logo_wariobranca - Editado.png',
+    buttonText:'Girar roleta',
+    alreadySpunText:'Você já girou a roleta hoje. Volte amanhã para tentar novamente.',
+    inactiveText:'A roleta está pausada no momento.',
+    resultSubtitle:'Use seu prêmio no pedido pelo site.',
+    applyButtonText:'Usar no cardápio',
+    menuHref:'/wario_sushi_v2_16.html#combos',
+    minOrderValue:40,
+    maxCouponsPerCustomer:2,
+    couponValidityDays:7,
+    prizes:[
+      {id:'desconto-5',label:'5% de Desconto',resultText:'5% de Desconto!',type:'percent',value:5,probability:25,active:true},
+      {id:'desconto-10',label:'10% de Desconto',resultText:'10% de Desconto!',type:'percent',value:10,probability:15,active:true},
+      {id:'tente-amanha',label:'Tente Amanhã',resultText:'Não foi dessa vez. Tente novamente amanhã!',type:'none',value:0,probability:50,active:true},
+      {id:'hots-gratis',label:'6 Hots Grátis',resultText:'6 Hot Filadélfia no próximo pedido!',type:'gift',value:'6 Hot Filadélfia',probability:2,active:true},
+      {id:'desconto-15',label:'15% de Desconto',resultText:'15% de Desconto!',type:'percent',value:15,probability:1,active:true},
+      {id:'frete-gratis',label:'Frete Grátis',resultText:'Frete Grátis!',type:'free_shipping',value:0,probability:7,active:true}
+    ]
+  };
+}
+
 function defaultSiteSettings(){
   return {
     delivery:{
@@ -222,7 +251,8 @@ function defaultSiteSettings(){
       ...defaultBusinessHours,
       openDays:[...defaultBusinessHours.openDays]
     },
-    showcase:defaultShowcaseSettings()
+    showcase:defaultShowcaseSettings(),
+    roulette:defaultRouletteSettings()
   };
 }
 
@@ -341,11 +371,70 @@ function normalizeShowcaseSettings(settings={}){
   };
 }
 
+function normalizeRoulettePrize(prize={},index=0,seen=new Set()){
+  const defaults=defaultRouletteSettings().prizes[index]||defaultRouletteSettings().prizes[2];
+  const label=safeText(prize.label,44)||defaults.label;
+  let id=slugify(prize.id||label)||defaults.id||`premio-${index+1}`;
+  if(seen.has(id)){
+    let suffix=2;
+    while(seen.has(`${id}-${suffix}`)) suffix+=1;
+    id=`${id}-${suffix}`;
+  }
+  seen.add(id);
+  const type=roulettePrizeTypes.has(prize.type)?prize.type:defaults.type;
+  const probability=normalizeFee(prize.probability,defaults.probability,10000);
+  let value=0;
+  if(type==='gift'){
+    value=safeText(prize.value,80)||safeText(defaults.value,80)||'Brinde WA RIO';
+  }else if(type==='percent'){
+    value=Math.max(1,Math.min(80,Math.floor(Number(prize.value)||Number(defaults.value)||5)));
+  }else{
+    value=0;
+  }
+  return {
+    id,
+    label,
+    resultText:safeText(prize.resultText,100)||defaults.resultText,
+    type,
+    value,
+    probability,
+    active:prize.active!==false
+  };
+}
+
+function normalizeRouletteSettings(settings={}){
+  const defaults=defaultRouletteSettings();
+  const source=settings&&typeof settings==='object'?settings:{};
+  const seen=new Set();
+  const sourcePrizes=Array.isArray(source.prizes)&&source.prizes.length?source.prizes:defaults.prizes;
+  const prizes=sourcePrizes
+    .map((prize,index)=>normalizeRoulettePrize(prize,index,seen))
+    .filter(Boolean)
+    .slice(0,12);
+  return {
+    active:source.active!==false,
+    title:safeText(source.title,80)||defaults.title,
+    subtitle:safeText(source.subtitle,180)||defaults.subtitle,
+    logo:normalizeShowcaseImage(source.logo,defaults.logo),
+    buttonText:safeText(source.buttonText,36)||defaults.buttonText,
+    alreadySpunText:safeText(source.alreadySpunText,150)||defaults.alreadySpunText,
+    inactiveText:safeText(source.inactiveText,150)||defaults.inactiveText,
+    resultSubtitle:safeText(source.resultSubtitle,120)||defaults.resultSubtitle,
+    applyButtonText:safeText(source.applyButtonText,36)||defaults.applyButtonText,
+    menuHref:normalizeSiteLink(source.menuHref,defaults.menuHref),
+    minOrderValue:normalizeFee(source.minOrderValue,defaults.minOrderValue,1000),
+    maxCouponsPerCustomer:Math.max(1,Math.min(5,Math.floor(Number(source.maxCouponsPerCustomer)||defaults.maxCouponsPerCustomer))),
+    couponValidityDays:Math.max(1,Math.min(90,Math.floor(Number(source.couponValidityDays)||defaults.couponValidityDays))),
+    prizes:prizes.length?prizes:defaults.prizes
+  };
+}
+
 function normalizeSiteSettings(settings={}){
   const defaults=defaultSiteSettings();
   const deliverySource=settings?.delivery&&typeof settings.delivery==='object'?settings.delivery:{};
   const businessSource=settings?.businessHours&&typeof settings.businessHours==='object'?settings.businessHours:{};
   const showcaseSource=settings?.showcase&&typeof settings.showcase==='object'?settings.showcase:{};
+  const rouletteSource=settings?.roulette&&typeof settings.roulette==='object'?settings.roulette:{};
   const defaultFee=normalizeFee(deliverySource.defaultFee,defaults.delivery.defaultFee);
   const openHour=normalizeHourValue(businessSource.openHour,defaults.businessHours.openHour,23);
   let closeHour=normalizeHourValue(businessSource.closeHour,defaults.businessHours.closeHour,24);
@@ -364,7 +453,8 @@ function normalizeSiteSettings(settings={}){
         ? Math.max(0,Math.min(240,Math.floor(Number(businessSource.scheduleLeadMinutes))))
         : defaults.businessHours.scheduleLeadMinutes
     },
-    showcase:normalizeShowcaseSettings(showcaseSource)
+    showcase:normalizeShowcaseSettings(showcaseSource),
+    roulette:normalizeRouletteSettings(rouletteSource)
   };
 }
 
@@ -741,6 +831,7 @@ function mergeSiteSettings(body,existing){
   const patchDelivery=patch.delivery&&typeof patch.delivery==='object'?patch.delivery:{};
   const patchHours=patch.businessHours&&typeof patch.businessHours==='object'?patch.businessHours:{};
   const patchShowcase=patch.showcase&&typeof patch.showcase==='object'?patch.showcase:{};
+  const patchRoulette=patch.roulette&&typeof patch.roulette==='object'?patch.roulette:{};
   const mergeShowcaseSection=section=>({
     ...(existing?.showcase?.[section]||{}),
     ...(patchShowcase[section]&&typeof patchShowcase[section]==='object'?patchShowcase[section]:{})
@@ -771,7 +862,16 @@ function mergeSiteSettings(body,existing){
           menu:mergeShowcaseSection('menu'),
           links:mergeShowcaseSection('links')
         }
-      : existing?.showcase
+      : existing?.showcase,
+    roulette:Object.prototype.hasOwnProperty.call(patch,'roulette')
+      ? {
+          ...(existing?.roulette||{}),
+          ...patchRoulette,
+          prizes:Object.prototype.hasOwnProperty.call(patchRoulette,'prizes')
+            ? patchRoulette.prizes
+            : existing?.roulette?.prizes
+        }
+      : existing?.roulette
   });
 }
 
@@ -789,6 +889,21 @@ function adminOrdersPayload(){
       amount:normalizeFee(order?.amount,0,5000),
       subtotal:normalizeFee(order?.subtotal,0,5000),
       deliveryFee:normalizeFee(order?.deliveryFee,0),
+      originalDeliveryFee:normalizeFee(order?.originalDeliveryFee,order?.deliveryFee||0),
+      discount:normalizeFee(order?.discount,0,5000),
+      deliveryDiscount:normalizeFee(order?.deliveryDiscount,0),
+      coupon:order?.coupon
+        ? {
+            id:safeText(order.coupon.id,80),
+            prizeId:safeText(order.coupon.prizeId,80),
+            name:safeText(order.coupon.name,100),
+            type:safeText(order.coupon.type,30),
+            value:order.coupon.value,
+            minOrderValue:normalizeFee(order.coupon.minOrderValue,0,1000),
+            expiresAt:safeText(order.coupon.expiresAt,40)
+          }
+        : null,
+      gift:safeText(order?.gift,100),
       customerName:safeText(order?.customerName,80),
       address:{
         street:safeText(order?.address?.street,140),
@@ -848,6 +963,287 @@ function adminCookie(value,maxAgeSeconds){
   ];
   if(isProduction) parts.push('Secure');
   return parts.join('; ');
+}
+
+function rouletteCookie(value,maxAgeSeconds=rouletteCookieMaxAgeSeconds){
+  const parts=[
+    `wario_roleta_guest=${encodeURIComponent(value)}`,
+    'Path=/',
+    'HttpOnly',
+    'SameSite=Lax',
+    `Max-Age=${Math.max(0,maxAgeSeconds)}`
+  ];
+  if(isProduction) parts.push('Secure');
+  return parts.join('; ');
+}
+
+function rouletteGuest(req){
+  const cookieValue=parseCookies(req.headers.cookie).wario_roleta_guest||'';
+  if(/^[A-Za-z0-9_-]{16,80}$/.test(cookieValue)) return {id:cookieValue,isNew:false};
+  return {id:crypto.randomBytes(18).toString('base64url'),isNew:true};
+}
+
+function dateKeyInSaoPaulo(date=new Date()){
+  const parts=new Intl.DateTimeFormat('en-CA',{
+    timeZone:'America/Sao_Paulo',
+    year:'numeric',
+    month:'2-digit',
+    day:'2-digit'
+  }).formatToParts(date).reduce((acc,part)=>{
+    if(part.type!=='literal') acc[part.type]=part.value;
+    return acc;
+  },{});
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+function readRouletteStore(){
+  try{
+    if(!existsSync(rouletteStoreFile)) return {spins:{},history:[]};
+    const data=JSON.parse(readFileSync(rouletteStoreFile,'utf8'));
+    return {
+      spins:data&&typeof data.spins==='object'&&data.spins?data.spins:{},
+      history:Array.isArray(data?.history)?data.history:[]
+    };
+  }catch(error){
+    console.error('Falha ao ler giros da roleta:',error.message);
+    return {spins:{},history:[]};
+  }
+}
+
+function writeRouletteStore(store){
+  mkdirSync(path.dirname(rouletteStoreFile),{recursive:true});
+  const payload={
+    updatedAt:new Date().toISOString(),
+    spins:store.spins||{},
+    history:Array.isArray(store.history)?store.history.slice(-500):[]
+  };
+  writeFileSync(rouletteStoreFile,JSON.stringify(payload,null,2),'utf8');
+}
+
+function pruneRouletteStore(store){
+  const minDateMs=Date.now()-(Math.max(2,Number(process.env.ROULETTE_STORE_TTL_DAYS)||45)*24*60*60*1000);
+  for(const [guestId,spin] of Object.entries(store.spins||{})){
+    const spinMs=Date.parse(spin?.at||'');
+    if(spinMs&&spinMs<minDateMs) delete store.spins[guestId];
+  }
+  store.history=Array.isArray(store.history)
+    ? store.history.filter(spin=>{
+        const spinMs=Date.parse(spin?.at||'');
+        return !spinMs||spinMs>=minDateMs;
+      }).slice(-500)
+    : [];
+}
+
+function publicRoulettePrize(prize){
+  return {
+    id:prize.id,
+    label:prize.label,
+    resultText:prize.resultText,
+    type:prize.type,
+    active:prize.active!==false
+  };
+}
+
+function publicRouletteSettings(settings){
+  return {
+    active:settings.active!==false,
+    title:settings.title,
+    subtitle:settings.subtitle,
+    logo:settings.logo,
+    buttonText:settings.buttonText,
+    alreadySpunText:settings.alreadySpunText,
+    inactiveText:settings.inactiveText,
+    resultSubtitle:settings.resultSubtitle,
+    applyButtonText:settings.applyButtonText,
+    menuHref:settings.menuHref,
+    minOrderValue:settings.minOrderValue,
+    maxCouponsPerCustomer:settings.maxCouponsPerCustomer,
+    couponValidityDays:settings.couponValidityDays,
+    prizes:settings.prizes.map(publicRoulettePrize)
+  };
+}
+
+function publicRouletteSpin(spin){
+  if(!spin) return null;
+  return {
+    date:safeText(spin.date,12),
+    prizeId:safeText(spin.prizeId,80),
+    prizeName:safeText(spin.prizeName,100),
+    won:spin.won===true,
+    at:safeText(spin.at,40)
+  };
+}
+
+function rouletteCouponPayload(coupon,guestId){
+  return JSON.stringify({
+    id:coupon.id,
+    prizeId:coupon.prizeId,
+    name:coupon.name,
+    type:coupon.type,
+    value:coupon.value,
+    minOrderValue:coupon.minOrderValue,
+    expiresAt:coupon.expiresAt,
+    guestId
+  });
+}
+
+function signRouletteCoupon(coupon,guestId){
+  return crypto.createHmac('sha256',adminSessionSecret).update(rouletteCouponPayload(coupon,guestId)).digest('base64url');
+}
+
+function buildRouletteCoupon(prize,settings,guestId){
+  if(!prize||prize.type==='none') return null;
+  const coupon={
+    id:`WR-${Date.now().toString(36)}-${crypto.randomBytes(3).toString('hex')}`,
+    prizeId:prize.id,
+    name:prize.resultText,
+    type:prize.type,
+    value:prize.value,
+    minOrderValue:settings.minOrderValue,
+    expiresAt:new Date(Date.now()+settings.couponValidityDays*24*60*60*1000).toISOString(),
+    wonAt:new Date().toISOString()
+  };
+  coupon.token=signRouletteCoupon(coupon,guestId);
+  return coupon;
+}
+
+function weightedRoulettePrize(settings,couponCount=0){
+  const activePrizes=settings.prizes.filter(prize=>prize.active!==false);
+  const noPrize=activePrizes.find(prize=>prize.type==='none');
+  if(couponCount>=settings.maxCouponsPerCustomer&&noPrize) return noPrize;
+  const weighted=activePrizes.filter(prize=>Number(prize.probability)>0);
+  const pool=weighted.length?weighted:activePrizes;
+  if(!pool.length) return defaultRouletteSettings().prizes.find(prize=>prize.type==='none');
+  const total=pool.reduce((sum,prize)=>sum+(Number(prize.probability)||1),0);
+  let ticket=(crypto.randomInt(0,1_000_000)/1_000_000)*total;
+  for(const prize of pool){
+    ticket-=Number(prize.probability)||1;
+    if(ticket<=0) return prize;
+  }
+  return pool[pool.length-1];
+}
+
+function normalizeRouletteCouponForOrder(coupon,req,subtotal,deliveryFee){
+  if(!coupon||typeof coupon!=='object') return {coupon:null,deliveryFee,discount:0,deliveryDiscount:0,gift:''};
+  const guest=rouletteGuest(req);
+  const candidate={
+    id:safeText(coupon.id,80),
+    prizeId:safeText(coupon.prizeId,80),
+    name:safeText(coupon.name,100),
+    type:safeText(coupon.type,30),
+    value:coupon.value,
+    minOrderValue:normalizeFee(coupon.minOrderValue,0,1000),
+    expiresAt:safeText(coupon.expiresAt,40)
+  };
+  const token=safeText(coupon.token,160);
+  if(!candidate.id||!candidate.prizeId||!candidate.name||!roulettePrizeTypes.has(candidate.type)||candidate.type==='none') return {coupon:null,deliveryFee,discount:0,deliveryDiscount:0,gift:''};
+  if(!token||token!==signRouletteCoupon(candidate,guest.id)) return {coupon:null,deliveryFee,discount:0,deliveryDiscount:0,gift:''};
+  if(Date.parse(candidate.expiresAt)<Date.now()) return {coupon:null,deliveryFee,discount:0,deliveryDiscount:0,gift:''};
+  if(subtotal<candidate.minOrderValue) return {coupon:null,deliveryFee,discount:0,deliveryDiscount:0,gift:''};
+  if(candidate.type==='percent'){
+    const percent=Math.max(1,Math.min(80,Math.floor(Number(candidate.value)||0)));
+    const discount=Math.round(subtotal*(percent/100)*100)/100;
+    return {coupon:{...candidate,value:percent},deliveryFee,discount,deliveryDiscount:0,gift:''};
+  }
+  if(candidate.type==='free_shipping'){
+    const freeAmount=typeof deliveryFee==='number'?deliveryFee:0;
+    return {coupon:{...candidate,value:0},deliveryFee:0,discount:0,deliveryDiscount:freeAmount,gift:''};
+  }
+  if(candidate.type==='gift'){
+    const gift=safeText(candidate.value,80)||candidate.name;
+    return {coupon:{...candidate,value:gift},deliveryFee,discount:0,deliveryDiscount:0,gift};
+  }
+  return {coupon:null,deliveryFee,discount:0,deliveryDiscount:0,gift:''};
+}
+
+function rouletteStatusForGuest(settings,guestId){
+  const store=readRouletteStore();
+  pruneRouletteStore(store);
+  const today=dateKeyInSaoPaulo();
+  const current=store.spins?.[guestId]||null;
+  return {
+    store,
+    today,
+    lastSpin:current?.date===today?current:null
+  };
+}
+
+function rouletteResponse(settings,lastSpin,today){
+  return {
+    settings:publicRouletteSettings(settings),
+    status:{
+      today,
+      active:settings.active!==false,
+      alreadySpun:Boolean(lastSpin),
+      canSpin:settings.active!==false&&!lastSpin,
+      lastSpin:publicRouletteSpin(lastSpin)
+    }
+  };
+}
+
+async function getRouletteStatus(req,res){
+  const guest=rouletteGuest(req);
+  const settings=readMenuDb().siteSettings.roulette;
+  const {today,lastSpin}=rouletteStatusForGuest(settings,guest.id);
+  return sendJsonWithHeaders(res,200,rouletteResponse(settings,lastSpin,today),{
+    'Set-Cookie':rouletteCookie(guest.id)
+  });
+}
+
+async function spinRoulette(req,res){
+  const body=await readJson(req);
+  const guest=rouletteGuest(req);
+  const settings=readMenuDb().siteSettings.roulette;
+  const store=readRouletteStore();
+  pruneRouletteStore(store);
+  const today=dateKeyInSaoPaulo();
+  const current=store.spins?.[guest.id]||null;
+  const headers={'Set-Cookie':rouletteCookie(guest.id)};
+
+  if(settings.active===false){
+    return sendJsonWithHeaders(res,403,{
+      error:'inactive',
+      message:settings.inactiveText,
+      ...rouletteResponse(settings,null,today)
+    },headers);
+  }
+
+  if(current?.date===today){
+    return sendJsonWithHeaders(res,409,{
+      error:'already_spun',
+      message:settings.alreadySpunText,
+      ...rouletteResponse(settings,current,today)
+    },headers);
+  }
+
+  const couponCount=Math.max(0,Math.min(5,Math.floor(Number(body?.couponCount)||0)));
+  const prize=weightedRoulettePrize(settings,couponCount);
+  const prizeIndex=Math.max(0,settings.prizes.findIndex(item=>item.id===prize.id));
+  const coupon=buildRouletteCoupon(prize,settings,guest.id);
+  const spin={
+    date:today,
+    prizeId:prize.id,
+    prizeName:prize.resultText,
+    type:prize.type,
+    value:prize.value,
+    won:Boolean(coupon),
+    at:new Date().toISOString()
+  };
+  const guestHash=crypto.createHash('sha256').update(guest.id).digest('hex').slice(0,16);
+  store.spins={...(store.spins||{}),[guest.id]:spin};
+  store.history=[
+    ...(Array.isArray(store.history)?store.history:[]),
+    {...spin,guestId:guestHash}
+  ].slice(-500);
+  writeRouletteStore(store);
+
+  return sendJsonWithHeaders(res,200,{
+    ok:true,
+    ...rouletteResponse(settings,spin,today),
+    prize:publicRoulettePrize(prize),
+    prizeIndex,
+    coupon
+  },headers);
 }
 
 function createAdminSession(){
@@ -977,6 +1373,8 @@ function clientIp(req){
 function ratePolicy(pathname){
   if(pathname==='/api/admin/login') return {windowMs:60_000,max:12};
   if(pathname.startsWith('/api/admin/')) return {windowMs:60_000,max:120};
+  if(pathname==='/api/roulette/spin') return {windowMs:60_000,max:8};
+  if(pathname==='/api/roulette') return {windowMs:60_000,max:60};
   if(pathname==='/api/pix/create') return {windowMs:60_000,max:6};
   if(pathname.startsWith('/api/pix/status/')) return {windowMs:60_000,max:90};
   if(pathname==='/api/pix/webhook') return {windowMs:60_000,max:120};
@@ -1009,7 +1407,7 @@ function rateLimit(req,url){
 }
 
 function requiresJson(req,pathname){
-  return (req.method==='POST'&&(pathname==='/api/pix/create'||pathname==='/api/pix/webhook'))
+  return (req.method==='POST'&&(pathname==='/api/pix/create'||pathname==='/api/pix/webhook'||pathname==='/api/roulette/spin'))
     || (['POST','PUT','PATCH'].includes(req.method)&&pathname.startsWith('/api/admin/'));
 }
 
@@ -1106,7 +1504,7 @@ function deliveryFeeFor(neighborhood){
   return normalizeFee(area.fee,delivery.defaultFee);
 }
 
-function normalizeOrder(body,schedule){
+function normalizeOrder(body,schedule,req){
   normalizeOrder.lastError='';
   const submittedAmount=normalizeAmount(body?.amount);
   const address={
@@ -1120,8 +1518,8 @@ function normalizeOrder(body,schedule){
     normalizeOrder.lastError='Preencha endereco, numero e bairro antes de gerar o Pix.';
     return null;
   }
-  const deliveryFee=deliveryFeeFor(address.neighborhood);
-  if(typeof deliveryFee!=='number'){
+  const rawDeliveryFee=deliveryFeeFor(address.neighborhood);
+  if(typeof rawDeliveryFee!=='number'){
     normalizeOrder.lastError='Esse bairro ainda nao esta em uma area atendida pelo delivery.';
     return null;
   }
@@ -1143,7 +1541,8 @@ function normalizeOrder(body,schedule){
   }
   if(items.some(item=>!item)) return null;
   const subtotal=Math.round(items.reduce((sum,item)=>sum+item.total,0)*100)/100;
-  const amount=Math.round((subtotal+deliveryFee)*100)/100;
+  const couponResult=normalizeRouletteCouponForOrder(body?.coupon,req,subtotal,rawDeliveryFee);
+  const amount=Math.round((subtotal-couponResult.discount+couponResult.deliveryFee)*100)/100;
   if(!submittedAmount||Math.abs(submittedAmount-amount)>0.01){
     normalizeOrder.lastError='O total do pedido mudou. Atualize o carrinho e tente gerar o Pix novamente.';
     return null;
@@ -1155,7 +1554,12 @@ function normalizeOrder(body,schedule){
     createdAtMs:Date.now(),
     amount,
     subtotal,
-    deliveryFee,
+    deliveryFee:couponResult.deliveryFee,
+    originalDeliveryFee:rawDeliveryFee,
+    discount:couponResult.discount,
+    deliveryDiscount:couponResult.deliveryDiscount,
+    coupon:couponResult.coupon,
+    gift:couponResult.gift,
     customerName:safeText(body?.customerName,80)||'Cliente WA RIO',
     items,
     address,
@@ -1441,6 +1845,10 @@ function buildWhatsappMessage(order){
     `Nome: ${order.customerName}`,
     'Pedido:',
     ...order.items.map(item=>`- ${item.qty}x ${item.name} - ${formatMoney(item.total)}`),
+    order.coupon?.name?`Cupom da roleta: ${order.coupon.name}`:'',
+    order.discount?`Desconto: -${formatMoney(order.discount)}`:'',
+    order.deliveryDiscount?`Frete gratis aplicado: -${formatMoney(order.deliveryDiscount)}`:'',
+    order.gift?`Brinde: ${order.gift} (gratis)`:'',
     `Endereco: ${addressParts.join(' - ')}`,
     `Entrega: ${order.schedule?.label||'Nao informado'}`,
     'Pagamento: Pix aprovado',
@@ -1460,7 +1868,7 @@ async function createPixOrder(req,res){
   if(!await verifyTurnstileToken(body?.turnstileToken,req)){
     return sendJson(res,403,{error:'Confirme a verificacao anti-bot para gerar o Pix.'});
   }
-  const order=normalizeOrder(body,schedule);
+  const order=normalizeOrder(body,schedule,req);
   if(!order){
     const error=normalizeOrder.lastError||'Pedido invalido ou valor divergente.';
     console.warn('Pix recusado por pedido invalido:',error);
@@ -1751,6 +2159,8 @@ async function serveStatic(req,res,url){
     ? path.resolve(menuDataDir,`.${pathname}`)
     : pathname==='/admin'||pathname==='/admin/'
       ? path.join(rootDir,'public','admin','index.html')
+      : pathname==='/roleta'||pathname==='/roleta/'
+        ? path.join(rootDir,'roleta.html')
       : pathname.startsWith('/admin/')
         ? path.resolve(rootDir,'public',`.${pathname}`)
         : path.resolve(rootDir,`.${pathname}`);
@@ -1813,6 +2223,8 @@ const server=http.createServer(async(req,res)=>{
       const menuAdminHandled=await handleMenuAdminApi(req,res,url);
       if(menuAdminHandled!==false) return;
       if(req.method==='GET'&&url.pathname==='/api/security/config') return sendJson(res,200,securityConfig());
+      if(req.method==='GET'&&url.pathname==='/api/roulette') return await getRouletteStatus(req,res);
+      if(req.method==='POST'&&url.pathname==='/api/roulette/spin') return await spinRoulette(req,res);
       if(req.method==='POST'&&url.pathname==='/api/pix/create') return await createPixOrder(req,res);
       if(req.method==='GET'&&url.pathname.startsWith('/api/pix/status/')) return await getPixStatus(req,res,url.pathname.split('/').pop(),url);
       if(req.method==='POST'&&url.pathname==='/api/pix/webhook') return await handleWebhook(req,res,url);

@@ -36,6 +36,7 @@
     <nav class="admin-section-tabs" id="sectionTabs" aria-label="Áreas do painel">
       <button class="admin-section-tab is-active" type="button" data-section="dashboard">Resumo</button>
       <button class="admin-section-tab" type="button" data-section="showcase">Vitrine</button>
+      <button class="admin-section-tab" type="button" data-section="roulette">Roleta</button>
       <button class="admin-section-tab" type="button" data-section="menu">Cardápio</button>
       <button class="admin-section-tab" type="button" data-section="categories">Categorias</button>
       <button class="admin-section-tab" type="button" data-section="images">Imagens</button>
@@ -248,6 +249,97 @@
         <aside class="admin-showcase-preview" aria-live="polite">
           <span class="admin-kicker">Prévia</span>
           <div id="showcasePreview"></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="admin-panel" id="roulettePanel" data-panel="roulette">
+      <div class="admin-panel-head">
+        <div>
+          <span class="admin-kicker">Roleta</span>
+          <h1>Roleta diária</h1>
+        </div>
+        <div class="admin-panel-actions">
+          <a href="/roleta" target="_blank" rel="noopener noreferrer" class="admin-btn admin-btn-ghost">Abrir roleta</a>
+          <button id="saveRouletteBtn" type="button" class="admin-btn admin-btn-primary">Salvar roleta</button>
+        </div>
+      </div>
+      <p class="admin-panel-note">Controle os prêmios, textos, validade e chances da roleta que o cliente gira uma vez por dia.</p>
+
+      <div class="admin-roulette-layout">
+        <div class="admin-roulette-forms">
+          <section class="admin-mini-panel">
+            <div class="admin-field-head">
+              <h2>Configurações gerais</h2>
+              <label class="admin-switch">
+                <input type="checkbox" id="rouletteActive">
+                <span>Ativa</span>
+              </label>
+            </div>
+            <div class="admin-form-grid admin-form-grid-compact">
+              <label class="admin-field">
+                <span>Título</span>
+                <input type="text" id="rouletteTitle" maxlength="80">
+              </label>
+              <label class="admin-field">
+                <span>Texto do botão</span>
+                <input type="text" id="rouletteButtonText" maxlength="36">
+              </label>
+              <label class="admin-field admin-field-wide">
+                <span>Subtítulo</span>
+                <textarea id="rouletteSubtitle" rows="2" maxlength="180"></textarea>
+              </label>
+              <label class="admin-field">
+                <span>Imagem/logo</span>
+                <input type="text" id="rouletteLogo" maxlength="180" list="imageOptions">
+              </label>
+              <label class="admin-field">
+                <span>Link para usar prêmio</span>
+                <input type="text" id="rouletteMenuHref" maxlength="260">
+              </label>
+              <label class="admin-field">
+                <span>Valor mínimo</span>
+                <input type="number" id="rouletteMinOrderValue" min="0" max="1000" step="0.01">
+              </label>
+              <label class="admin-field">
+                <span>Cupons por cliente</span>
+                <input type="number" id="rouletteMaxCoupons" min="1" max="5" step="1">
+              </label>
+              <label class="admin-field">
+                <span>Validade em dias</span>
+                <input type="number" id="rouletteValidityDays" min="1" max="90" step="1">
+              </label>
+              <label class="admin-field">
+                <span>Botão após ganhar</span>
+                <input type="text" id="rouletteApplyButtonText" maxlength="36">
+              </label>
+              <label class="admin-field admin-field-wide">
+                <span>Texto quando já girou</span>
+                <input type="text" id="rouletteAlreadyText" maxlength="150">
+              </label>
+              <label class="admin-field admin-field-wide">
+                <span>Texto quando pausada</span>
+                <input type="text" id="rouletteInactiveText" maxlength="150">
+              </label>
+              <label class="admin-field admin-field-wide">
+                <span>Texto ao ganhar</span>
+                <input type="text" id="rouletteResultSubtitle" maxlength="120">
+              </label>
+            </div>
+          </section>
+
+          <section class="admin-mini-panel">
+            <div class="admin-field-head">
+              <h2>Prêmios</h2>
+              <button id="addRoulettePrizeBtn" type="button" class="admin-btn admin-btn-ghost admin-btn-sm">+ Prêmio</button>
+            </div>
+            <div id="roulettePrizeRows" class="admin-roulette-prize-list"></div>
+          </section>
+        </div>
+
+        <aside class="admin-roulette-preview" aria-live="polite">
+          <span class="admin-kicker">Prévia</span>
+          <div id="roulettePreview"></div>
         </aside>
       </div>
     </section>

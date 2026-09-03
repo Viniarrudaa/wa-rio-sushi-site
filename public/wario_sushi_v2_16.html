@@ -26,7 +26,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="wario_sushi_v2_16.css?v=60">
+<link rel="stylesheet" href="wario_sushi_v2_16.css?v=61">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Restaurant","name":"WA RIO Sushi","alternateName":"Wariosushi","url":"https://wariosushi.com.br/","image":"https://wariosushi.com.br/hero_desktop_wa_rio_optimized.jpg","logo":"https://wariosushi.com.br/favicon_wario.png","telephone":"+5521982225443","servesCuisine":["Sushi","Comida japonesa"],"priceRange":"$$","currenciesAccepted":"BRL","paymentAccepted":"Pix, cartao de debito, cartao de credito, dinheiro","address":{"@type":"PostalAddress","addressLocality":"Rio de Janeiro","addressRegion":"RJ","addressCountry":"BR","addressSubLocality":"Cachambi"},"areaServed":[{"@type":"Place","name":"Cachambi"},{"@type":"Place","name":"M\u00e9ier"},{"@type":"Place","name":"Engenho de Dentro"},{"@type":"Place","name":"Pilares"},{"@type":"Place","name":"Riachuelo"},{"@type":"Place","name":"Maria da Gra\u00e7a"},{"@type":"Place","name":"Higien\u00f3polis"},{"@type":"Place","name":"Engenho Novo"},{"@type":"Place","name":"Del Castilho"},{"@type":"Place","name":"Aboli\u00e7\u00e3o"},{"@type":"Place","name":"Piedade"}],"openingHoursSpecification":[{"@type":"OpeningHoursSpecification","dayOfWeek":["Wednesday","Thursday","Friday","Saturday","Sunday"],"opens":"19:00","closes":"23:00"}],"acceptsReservations":false,"sameAs":["https://www.instagram.com/wariosushi/"],"potentialAction":{"@type":"OrderAction","target":{"@type":"EntryPoint","urlTemplate":"https://wa.me/5521982225443","inLanguage":"pt-BR","actionPlatform":["http://schema.org/DesktopWebPlatform","http://schema.org/MobileWebPlatform"]}}}</script>
 </head>
 <body>
@@ -41,6 +41,7 @@
   <ul id="navbarMenu">
     <li><a href="#inicio" aria-current="page">Início</a></li>
     <li><a href="#combos">Cardápio</a></li>
+    <li><a href="/roleta">Roleta</a></li>
     <li><a href="#combos">Combos</a></li>
     <li><a href="#entrega">Bairros</a></li>
     <li><a href="#buffet">Buffet</a></li>
@@ -324,6 +325,7 @@
       <ul>
         <li><a href="#inicio">Início</a></li>
         <li><a href="#combos">Cardápio</a></li>
+        <li><a href="/roleta">Roleta diária</a></li>
         <li><a href="#combos">Combos</a></li>
         <li><a href="#entrega">Bairros</a></li>
         <li><a href="#buffet">Buffet</a></li>
@@ -498,9 +500,19 @@
   </div>
   <button class="order-scroll-cue" id="orderScrollCue" type="button" aria-label="Mostrar mais do pedido">⌄</button>
   <div class="order-foot">
+    <div class="order-coupon" id="orderCoupon" hidden>
+      <div class="order-coupon-copy">
+        <span>Cupom da roleta</span>
+        <strong id="orderCouponName"></strong>
+        <small id="orderCouponHelp"></small>
+      </div>
+      <select id="orderCouponSelect" aria-label="Escolher cupom da roleta"></select>
+      <button class="order-coupon-clear" id="orderCouponClear" type="button">Não usar</button>
+    </div>
     <div class="order-totals">
       <div class="order-total"><span>Subtotal</span><strong id="orderSubtotal">R$ 0,00</strong></div>
       <div class="order-total"><span>Entrega</span><strong id="orderDelivery">A calcular</strong></div>
+      <div class="order-total order-coupon-discount" id="orderCouponDiscountRow" hidden><span>Roleta</span><strong id="orderCouponDiscount">- R$ 0,00</strong></div>
       <div class="order-total order-total-final"><span>Total</span><strong id="orderTotal">R$ 0,00</strong></div>
     </div>
     <button class="order-send" id="orderSend" type="button" disabled>Enviar pedido pelo WhatsApp</button>
@@ -515,6 +527,6 @@
   <span class="order-bar-action">Ver pedido</span>
 </button>
 
-<script src="wario_sushi_v2_16.js?v=60" type="module"></script>
+<script src="wario_sushi_v2_16.js?v=61" type="module"></script>
 </body>
 </html>
