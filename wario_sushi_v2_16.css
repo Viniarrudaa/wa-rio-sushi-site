@@ -78,6 +78,12 @@ nav.is-menu-open .nav-toggle span:nth-child(1){width:18px;transform:translateY(6
 nav.is-menu-open .nav-toggle span:nth-child(2){opacity:0;width:6px;}
 nav.is-menu-open .nav-toggle span:nth-child(3){width:18px;transform:translateY(-6px) rotate(-45deg);}
 
+/* SITE NOTICE */
+.site-notice{position:relative;z-index:95;display:flex;align-items:center;justify-content:center;gap:12px;min-height:48px;margin-top:76px;padding:9px 60px;border-bottom:1px solid rgba(212,168,67,.18);background:linear-gradient(90deg,rgba(20,13,9,.98),rgba(95,18,14,.96),rgba(20,13,9,.98));box-shadow:0 12px 34px rgba(0,0,0,.24);font-family:var(--body-font);color:rgba(245,235,222,.88);font-size:12px;font-weight:750;line-height:1.45;text-align:center;}
+.site-notice a{display:inline-flex;align-items:center;justify-content:center;min-height:30px;padding:0 12px;border:1px solid rgba(255,216,126,.34);border-radius:999px;color:var(--gold-light);font-size:8px;font-weight:900;letter-spacing:1.05px;text-transform:uppercase;text-decoration:none;white-space:nowrap;}
+.site-notice a:empty{display:none;}
+.site-notice:not([hidden])+.premium-banner{margin-top:0;}
+
 /* PREMIUM BANNER */
 .premium-banner{position:relative;z-index:90;display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:62px;margin-top:76px;padding:9px 60px;border-bottom:1px solid rgba(212,168,67,.24);background:linear-gradient(90deg,rgba(16,10,7,.98),rgba(104,17,12,.94) 38%,rgba(28,18,10,.98) 70%,rgba(6,5,5,.96));box-shadow:0 14px 42px rgba(212,168,67,.12),0 10px 26px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.06);overflow:hidden;}
 .premium-banner::before{content:'';position:absolute;z-index:1;left:60px;right:60px;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(230,176,64,.62),rgba(214,50,40,.34),transparent);}
@@ -111,6 +117,7 @@ nav.is-menu-open .nav-toggle span:nth-child(3){width:18px;transform:translateY(-
 .hero-image::before{content:'';position:absolute;top:0;left:0;width:22%;height:100%;z-index:2;background:linear-gradient(to right,rgba(5,5,5,.9) 0%,rgba(5,5,5,.3) 55%,transparent 100%);}
 .hero-image::after{content:'';position:absolute;top:0;right:0;width:8%;height:100%;z-index:2;background:linear-gradient(to left,#050505,transparent);}
 .hero-image img{width:100%;height:100%;object-fit:cover;object-position:50% 94%;transform:scale(1.0);filter:contrast(1.2) saturate(1.15) brightness(0.78) sepia(0.1);}
+.hero-image img.is-custom-hero{content:normal!important;}
 .hero-sushi-soften{position:absolute;left:9%;right:-2%;top:30%;bottom:-3%;z-index:2;pointer-events:none;background:
   radial-gradient(ellipse at 56% 58%,rgba(0,0,0,.03) 0%,rgba(0,0,0,.10) 52%,rgba(0,0,0,.06) 70%,transparent 86%),
   url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.88' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.08'/%3E%3C/svg%3E");backdrop-filter:saturate(.88) contrast(.95) brightness(.98);-webkit-backdrop-filter:saturate(.88) contrast(.95) brightness(.98);mix-blend-mode:normal;opacity:.86;-webkit-mask-image:radial-gradient(ellipse at 57% 57%,#000 0%,#000 54%,rgba(0,0,0,.55) 68%,transparent 84%);mask-image:radial-gradient(ellipse at 57% 57%,#000 0%,#000 54%,rgba(0,0,0,.55) 68%,transparent 84%);}
@@ -655,6 +662,8 @@ footer{background:linear-gradient(90deg,#240000 0%,#5E0000 45%,#7A0000 100%);bor
   nav.is-menu-open ul a:hover{background:rgba(230,176,64,.08);color:#f3d79a;}
   nav.is-menu-open ul a::after{display:none;}
 
+  .site-notice{margin-top:74px;min-height:46px;padding:9px 18px;gap:9px;font-size:11.4px;}
+  .site-notice a{min-height:28px;padding:0 10px;font-size:7.4px;letter-spacing:.85px;}
   .premium-banner{margin-top:74px;min-height:54px;padding:8px 18px;align-items:center;flex-direction:row;gap:10px;}
   .premium-banner::before{left:20px;right:20px;}
   .premium-banner::after{background:linear-gradient(90deg,rgba(230,176,64,.12),transparent 34%,rgba(214,50,40,.08));}

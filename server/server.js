@@ -167,6 +167,51 @@ function ensureMenuDb(){
   }
 }
 
+function defaultShowcaseSettings(){
+  return {
+    notice:{
+      active:false,
+      text:'',
+      buttonText:'Ver cardápio',
+      buttonHref:'#combos'
+    },
+    premium:{
+      active:true,
+      kicker:'Promoção especial',
+      title:'WA RIO Sushi Premium',
+      text:'35 peças + 4 bananas crocantes com Nutella por R$ 79,00.',
+      pulse:'Preço especial',
+      buttonText:'Ver promoção',
+      buttonHref:'#promocoes-premium'
+    },
+    hero:{
+      tag:'WA RIO Premium',
+      title:'O verdadeiro',
+      emphasis:'sabor japonês.',
+      description:'Ingredientes selecionados, técnicas tradicionais e uma experiência especial para o seu pedido.',
+      buttonText:'Ver Cardápio',
+      buttonHref:'#combos',
+      image:'hero_desktop_wa_rio_optimized.jpg'
+    },
+    promo:{
+      image:'wario2_cardapio_optimized.jpg'
+    },
+    menu:{
+      tag:'Nosso Cardápio',
+      title:'Seleção',
+      emphasis:'WA RIO',
+      text:'Uma curadoria dos pedidos mais desejados da casa, preparada para quem busca frescor, textura e sabor japonês com acabamento especial.',
+      actionText:'Falar com atendente'
+    },
+    links:{
+      whatsappPhone:'5521982225443',
+      whatsappMessage:'Olá, WA RIO Sushi! Quero falar com o atendimento.',
+      instagramUrl:'https://www.instagram.com/wariosushi/',
+      googleUrl:'https://maps.app.goo.gl/xuXupQpwMX77WqdR8'
+    }
+  };
+}
+
 function defaultSiteSettings(){
   return {
     delivery:{
@@ -176,7 +221,8 @@ function defaultSiteSettings(){
     businessHours:{
       ...defaultBusinessHours,
       openDays:[...defaultBusinessHours.openDays]
-    }
+    },
+    showcase:defaultShowcaseSettings()
   };
 }
 
@@ -219,10 +265,87 @@ function normalizeDeliveryAreas(value,defaultFee){
   }).filter(Boolean).slice(0,60);
 }
 
+function normalizeShowcaseImage(value,fallback=''){
+  const image=safeText(value,180).replace(/\\/g,'/');
+  if(/^(?:uploads\/menu\/)?[\w .()\-]+?\.(?:png|jpe?g|webp|gif|svg)$/i.test(image)&&!image.includes('..')) return image;
+  return fallback;
+}
+
+function normalizeSiteLink(value,fallback=''){
+  const link=safeText(value,260);
+  if(!link) return fallback;
+  if(/^#[A-Za-z][\w-]*$/.test(link)) return link;
+  if(/^\/(?!\/)[\w\-./?%=&#+]*$/.test(link)) return link;
+  try{
+    const url=new URL(link);
+    if(url.protocol==='https:') return url.href;
+  }catch(error){}
+  return fallback;
+}
+
+function normalizeShowcasePhone(value,fallback){
+  const digits=String(value??'').replace(/\D/g,'');
+  return digits.length>=10&&digits.length<=15?digits:fallback;
+}
+
+function normalizeShowcaseSettings(settings={}){
+  const defaults=defaultShowcaseSettings();
+  const source=settings&&typeof settings==='object'?settings:{};
+  const notice=source.notice&&typeof source.notice==='object'?source.notice:{};
+  const premium=source.premium&&typeof source.premium==='object'?source.premium:{};
+  const hero=source.hero&&typeof source.hero==='object'?source.hero:{};
+  const promo=source.promo&&typeof source.promo==='object'?source.promo:{};
+  const menu=source.menu&&typeof source.menu==='object'?source.menu:{};
+  const links=source.links&&typeof source.links==='object'?source.links:{};
+  return {
+    notice:{
+      active:notice.active===true,
+      text:safeText(notice.text,140)||defaults.notice.text,
+      buttonText:safeText(notice.buttonText,36)||defaults.notice.buttonText,
+      buttonHref:normalizeSiteLink(notice.buttonHref,defaults.notice.buttonHref)
+    },
+    premium:{
+      active:premium.active!==false,
+      kicker:safeText(premium.kicker,48)||defaults.premium.kicker,
+      title:safeText(premium.title,90)||defaults.premium.title,
+      text:safeText(premium.text,150)||defaults.premium.text,
+      pulse:safeText(premium.pulse,48)||defaults.premium.pulse,
+      buttonText:safeText(premium.buttonText,36)||defaults.premium.buttonText,
+      buttonHref:normalizeSiteLink(premium.buttonHref,defaults.premium.buttonHref)
+    },
+    hero:{
+      tag:safeText(hero.tag,48)||defaults.hero.tag,
+      title:safeText(hero.title,70)||defaults.hero.title,
+      emphasis:safeText(hero.emphasis,70)||defaults.hero.emphasis,
+      description:safeText(hero.description,220)||defaults.hero.description,
+      buttonText:safeText(hero.buttonText,36)||defaults.hero.buttonText,
+      buttonHref:normalizeSiteLink(hero.buttonHref,defaults.hero.buttonHref),
+      image:normalizeShowcaseImage(hero.image,defaults.hero.image)
+    },
+    promo:{
+      image:normalizeShowcaseImage(promo.image,defaults.promo.image)
+    },
+    menu:{
+      tag:safeText(menu.tag,48)||defaults.menu.tag,
+      title:safeText(menu.title,70)||defaults.menu.title,
+      emphasis:safeText(menu.emphasis,70)||defaults.menu.emphasis,
+      text:safeText(menu.text,220)||defaults.menu.text,
+      actionText:safeText(menu.actionText,36)||defaults.menu.actionText
+    },
+    links:{
+      whatsappPhone:normalizeShowcasePhone(links.whatsappPhone,defaults.links.whatsappPhone),
+      whatsappMessage:safeText(links.whatsappMessage,180)||defaults.links.whatsappMessage,
+      instagramUrl:normalizeSiteLink(links.instagramUrl,defaults.links.instagramUrl),
+      googleUrl:normalizeSiteLink(links.googleUrl,defaults.links.googleUrl)
+    }
+  };
+}
+
 function normalizeSiteSettings(settings={}){
   const defaults=defaultSiteSettings();
   const deliverySource=settings?.delivery&&typeof settings.delivery==='object'?settings.delivery:{};
   const businessSource=settings?.businessHours&&typeof settings.businessHours==='object'?settings.businessHours:{};
+  const showcaseSource=settings?.showcase&&typeof settings.showcase==='object'?settings.showcase:{};
   const defaultFee=normalizeFee(deliverySource.defaultFee,defaults.delivery.defaultFee);
   const openHour=normalizeHourValue(businessSource.openHour,defaults.businessHours.openHour,23);
   let closeHour=normalizeHourValue(businessSource.closeHour,defaults.businessHours.closeHour,24);
@@ -240,7 +363,8 @@ function normalizeSiteSettings(settings={}){
       scheduleLeadMinutes:Number.isFinite(Number(businessSource.scheduleLeadMinutes))
         ? Math.max(0,Math.min(240,Math.floor(Number(businessSource.scheduleLeadMinutes))))
         : defaults.businessHours.scheduleLeadMinutes
-    }
+    },
+    showcase:normalizeShowcaseSettings(showcaseSource)
   };
 }
 
@@ -525,16 +649,22 @@ function listAdminImages(){
 
 function adminImageUsage(db=readMenuDb()){
   const usage={};
+  const addUsage=(image,details)=>{
+    const imageName=safeText(image,180);
+    if(!imageName) return;
+    if(!usage[imageName]) usage[imageName]=[];
+    usage[imageName].push(details);
+  };
   for(const product of [...db.menuProducts,...db.promoProducts]){
-    const image=safeText(product?.image,180);
-    if(!image) continue;
-    if(!usage[image]) usage[image]=[];
-    usage[image].push({
+    addUsage(product?.image,{
       id:safeText(product?.id,80),
       name:safeText(product?.name,120),
       kind:db.promoProducts.includes(product)?'promo':'product'
     });
   }
+  const showcase=db.siteSettings?.showcase||{};
+  addUsage(showcase.hero?.image,{id:'showcase-hero',name:'Imagem da primeira tela',kind:'showcase'});
+  addUsage(showcase.promo?.image,{id:'showcase-promo',name:'Imagem da promoção em destaque',kind:'showcase'});
   return usage;
 }
 
@@ -556,7 +686,7 @@ function deleteAdminImage(image,force=false){
   }
   const usedBy=adminImageUsage(db)[imageName]||[];
   if(usedBy.length&&!force){
-    const error=new Error('Essa imagem está em uso em um item do cardápio.');
+    const error=new Error('Essa imagem está em uso no cardápio ou na vitrine.');
     error.status=409;
     error.usedBy=usedBy;
     throw error;
@@ -610,6 +740,11 @@ function mergeSiteSettings(body,existing){
   const patch=body&&typeof body==='object'?body:{};
   const patchDelivery=patch.delivery&&typeof patch.delivery==='object'?patch.delivery:{};
   const patchHours=patch.businessHours&&typeof patch.businessHours==='object'?patch.businessHours:{};
+  const patchShowcase=patch.showcase&&typeof patch.showcase==='object'?patch.showcase:{};
+  const mergeShowcaseSection=section=>({
+    ...(existing?.showcase?.[section]||{}),
+    ...(patchShowcase[section]&&typeof patchShowcase[section]==='object'?patchShowcase[section]:{})
+  });
   return normalizeSiteSettings({
     delivery:{
       ...(existing?.delivery||{}),
@@ -624,7 +759,19 @@ function mergeSiteSettings(body,existing){
       openDays:Object.prototype.hasOwnProperty.call(patchHours,'openDays')
         ? patchHours.openDays
         : existing?.businessHours?.openDays
-    }
+    },
+    showcase:Object.prototype.hasOwnProperty.call(patch,'showcase')
+      ? {
+          ...(existing?.showcase||{}),
+          ...patchShowcase,
+          notice:mergeShowcaseSection('notice'),
+          premium:mergeShowcaseSection('premium'),
+          hero:mergeShowcaseSection('hero'),
+          promo:mergeShowcaseSection('promo'),
+          menu:mergeShowcaseSection('menu'),
+          links:mergeShowcaseSection('links')
+        }
+      : existing?.showcase
   });
 }
 

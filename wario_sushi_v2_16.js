@@ -95,9 +95,10 @@ function setNavMenuOpen(open){
   navToggle?.setAttribute('aria-label',open?'Fechar menu':'Abrir menu');
 }
 navToggle?.addEventListener('click',()=>setNavMenuOpen(!navbar.classList.contains('is-menu-open')));
-document.querySelectorAll('a[href^="#"]').forEach(a=>{ a.addEventListener('click',e=>{ const href=a.getAttribute('href'); if(!href||href.length<2)return; const t=document.querySelector(href); if(t){e.preventDefault();setNavMenuOpen(false);t.scrollIntoView({behavior:'smooth'});} }); });
+document.querySelectorAll('a[href^="#"]').forEach(a=>{ a.addEventListener('click',e=>{ const href=a.getAttribute('href'); if(!href||!href.startsWith('#')||href.length<2)return; let t=null; try{t=document.querySelector(href);}catch(error){return;} if(t){e.preventDefault();setNavMenuOpen(false);t.scrollIntoView({behavior:'smooth'});} }); });
 document.addEventListener('click',e=>{if(navbar?.classList.contains('is-menu-open')&&!navbar.contains(e.target))setNavMenuOpen(false);});
-const whatsappPhone='5521982225443';
+let whatsappPhone='5521982225443';
+let whatsappDefaultMessage='Olá, WA RIO Sushi! Quero falar com o atendimento.';
 const moneyFormatter=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
 const formatMoney=value=>moneyFormatter.format(Number(value)||0);
 const trustedImageHosts=new Set();
@@ -161,6 +162,233 @@ function safeImageSrc(value){
   }catch(error){}
   return 'logo_wariobranca - Editado.png';
 }
+function defaultShowcaseSettings(){
+  return {
+    notice:{
+      active:false,
+      text:'',
+      buttonText:'Ver cardápio',
+      buttonHref:'#combos'
+    },
+    premium:{
+      active:true,
+      kicker:'Promoção especial',
+      title:'WA RIO Sushi Premium',
+      text:'35 peças + 4 bananas crocantes com Nutella por R$ 79,00.',
+      pulse:'Preço especial',
+      buttonText:'Ver promoção',
+      buttonHref:'#promocoes-premium'
+    },
+    hero:{
+      tag:'WA RIO Premium',
+      title:'O verdadeiro',
+      emphasis:'sabor japonês.',
+      description:'Ingredientes selecionados, técnicas tradicionais e uma experiência especial para o seu pedido.',
+      buttonText:'Ver Cardápio',
+      buttonHref:'#combos',
+      image:'hero_desktop_wa_rio_optimized.jpg'
+    },
+    promo:{
+      image:'wario2_cardapio_optimized.jpg'
+    },
+    menu:{
+      tag:'Nosso Cardápio',
+      title:'Seleção',
+      emphasis:'WA RIO',
+      text:'Uma curadoria dos pedidos mais desejados da casa, preparada para quem busca frescor, textura e sabor japonês com acabamento especial.',
+      actionText:'Falar com atendente'
+    },
+    links:{
+      whatsappPhone:'5521982225443',
+      whatsappMessage:'Olá, WA RIO Sushi! Quero falar com o atendimento.',
+      instagramUrl:'https://www.instagram.com/wariosushi/',
+      googleUrl:'https://maps.app.goo.gl/xuXupQpwMX77WqdR8'
+    }
+  };
+}
+let showcaseSettings=defaultShowcaseSettings();
+function normalizeSiteLink(value,fallback=''){
+  const link=safeText(value,260);
+  if(!link) return fallback;
+  if(/^#[A-Za-z][\w-]*$/.test(link)) return link;
+  if(/^\/(?!\/)[\w\-./?%=&#+]*$/.test(link)) return link;
+  try{
+    const url=new URL(link);
+    if(url.protocol==='https:') return url.href;
+  }catch(error){}
+  return fallback;
+}
+function normalizeShowcasePhone(value,fallback='5521982225443'){
+  const digits=String(value??'').replace(/\D/g,'');
+  return digits.length>=10&&digits.length<=15?digits:fallback;
+}
+function normalizeShowcaseSection(defaults,source={}){
+  return {...defaults,...(source&&typeof source==='object'?source:{})};
+}
+function normalizeShowcaseSettings(settings={}){
+  const defaults=defaultShowcaseSettings();
+  const source=settings&&typeof settings==='object'?settings:{};
+  const notice=normalizeShowcaseSection(defaults.notice,source.notice);
+  const premium=normalizeShowcaseSection(defaults.premium,source.premium);
+  const hero=normalizeShowcaseSection(defaults.hero,source.hero);
+  const promo=normalizeShowcaseSection(defaults.promo,source.promo);
+  const menu=normalizeShowcaseSection(defaults.menu,source.menu);
+  const links=normalizeShowcaseSection(defaults.links,source.links);
+  return {
+    notice:{
+      active:notice.active===true,
+      text:safeText(notice.text,140),
+      buttonText:safeText(notice.buttonText,36)||defaults.notice.buttonText,
+      buttonHref:normalizeSiteLink(notice.buttonHref,defaults.notice.buttonHref)
+    },
+    premium:{
+      active:premium.active!==false,
+      kicker:safeText(premium.kicker,48)||defaults.premium.kicker,
+      title:safeText(premium.title,90)||defaults.premium.title,
+      text:safeText(premium.text,150)||defaults.premium.text,
+      pulse:safeText(premium.pulse,48)||defaults.premium.pulse,
+      buttonText:safeText(premium.buttonText,36)||defaults.premium.buttonText,
+      buttonHref:normalizeSiteLink(premium.buttonHref,defaults.premium.buttonHref)
+    },
+    hero:{
+      tag:safeText(hero.tag,48)||defaults.hero.tag,
+      title:safeText(hero.title,70)||defaults.hero.title,
+      emphasis:safeText(hero.emphasis,70)||defaults.hero.emphasis,
+      description:safeText(hero.description,220)||defaults.hero.description,
+      buttonText:safeText(hero.buttonText,36)||defaults.hero.buttonText,
+      buttonHref:normalizeSiteLink(hero.buttonHref,defaults.hero.buttonHref),
+      image:safeImageSrc(hero.image||defaults.hero.image)
+    },
+    promo:{
+      image:safeImageSrc(promo.image||defaults.promo.image)
+    },
+    menu:{
+      tag:safeText(menu.tag,48)||defaults.menu.tag,
+      title:safeText(menu.title,70)||defaults.menu.title,
+      emphasis:safeText(menu.emphasis,70)||defaults.menu.emphasis,
+      text:safeText(menu.text,220)||defaults.menu.text,
+      actionText:safeText(menu.actionText,36)||defaults.menu.actionText
+    },
+    links:{
+      whatsappPhone:normalizeShowcasePhone(links.whatsappPhone,defaults.links.whatsappPhone),
+      whatsappMessage:safeText(links.whatsappMessage,180)||defaults.links.whatsappMessage,
+      instagramUrl:normalizeSiteLink(links.instagramUrl,defaults.links.instagramUrl),
+      googleUrl:normalizeSiteLink(links.googleUrl,defaults.links.googleUrl)
+    }
+  };
+}
+function whatsappUrl(message=whatsappDefaultMessage){
+  return `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message||whatsappDefaultMessage)}`;
+}
+function setAnchorHref(anchor,href){
+  if(!anchor||!href) return;
+  anchor.href=href;
+  const isExternal=/^https:\/\//i.test(href);
+  if(isExternal){
+    anchor.target='_blank';
+    anchor.rel='noopener noreferrer';
+  }else{
+    anchor.removeAttribute('target');
+    anchor.removeAttribute('rel');
+  }
+}
+function setAnchorsHref(selector,href){
+  document.querySelectorAll(selector).forEach(anchor=>setAnchorHref(anchor,href));
+}
+function instagramHandle(url){
+  try{
+    const parsed=new URL(url);
+    const handle=parsed.pathname.split('/').filter(Boolean)[0];
+    return handle?`@${handle}`:'@wariosushi';
+  }catch(error){
+    return '@wariosushi';
+  }
+}
+function applyShowcaseSettings(settings){
+  showcaseSettings=normalizeShowcaseSettings(settings);
+  const {notice,premium,hero,promo,menu,links}=showcaseSettings;
+  whatsappPhone=links.whatsappPhone;
+  whatsappDefaultMessage=links.whatsappMessage;
+  const mainWhatsappUrl=whatsappUrl(whatsappDefaultMessage);
+
+  const noticeWrap=document.getElementById('siteNotice');
+  const noticeText=document.getElementById('siteNoticeText');
+  const noticeLink=document.getElementById('siteNoticeLink');
+  if(noticeWrap){
+    const visible=notice.active&&Boolean(notice.text);
+    noticeWrap.hidden=!visible;
+    if(noticeText) noticeText.textContent=notice.text;
+    if(noticeLink){
+      noticeLink.textContent=notice.buttonText;
+      setAnchorHref(noticeLink,notice.buttonHref);
+      noticeLink.hidden=!visible||!notice.buttonText||!notice.buttonHref;
+    }
+  }
+
+  const premiumBanner=document.getElementById('premium');
+  if(premiumBanner){
+    premiumBanner.hidden=!premium.active;
+    const kicker=premiumBanner.querySelector('.premium-kicker');
+    const title=premiumBanner.querySelector('strong');
+    const text=premiumBanner.querySelector('p');
+    const pulse=premiumBanner.querySelector('.premium-pulse');
+    const button=premiumBanner.querySelector('.premium-banner-cta');
+    if(kicker) kicker.textContent=premium.kicker;
+    if(title) title.textContent=premium.title;
+    if(text) text.textContent=premium.text;
+    if(pulse) pulse.textContent=premium.pulse;
+    if(button){
+      button.textContent=premium.buttonText;
+      setAnchorHref(button,premium.buttonHref);
+    }
+  }
+
+  const heroTag=document.querySelector('.hero-tag');
+  const heroTitle=document.querySelector('.hero h1');
+  const heroText=document.querySelector('.hero p');
+  const heroButton=document.querySelector('.hero .btn-primary');
+  const heroButtonText=document.querySelector('.hero .btn-primary-text');
+  const heroImage=document.querySelector('.hero-image img');
+  if(heroTag) heroTag.textContent=hero.tag;
+  if(heroTitle) heroTitle.innerHTML=`${escapeHtml(hero.title)}<br><em>${escapeHtml(hero.emphasis)}</em>`;
+  if(heroText) heroText.textContent=hero.description;
+  if(heroButton) setAnchorHref(heroButton,hero.buttonHref);
+  if(heroButtonText) heroButtonText.textContent=hero.buttonText;
+  if(heroImage){
+    const defaultHero=defaultShowcaseSettings().hero.image;
+    heroImage.src=hero.image;
+    heroImage.classList.toggle('is-custom-hero',hero.image!==defaultHero);
+  }
+
+  const promoHead=document.querySelector('.promo-zone-head');
+  if(promoHead){
+    const promoKicker=promoHead.querySelector('span');
+    const promoTitle=promoHead.querySelector('strong');
+    const promoText=promoHead.querySelector('p');
+    if(promoKicker) promoKicker.textContent=premium.kicker;
+    if(promoTitle) promoTitle.textContent=premium.title;
+    if(promoText) promoText.textContent=premium.text;
+  }
+  const promoImage=document.querySelector('#promoList .promo-card img');
+  if(promoImage) promoImage.src=promo.image;
+
+  const menuTag=document.querySelector('.combos-title-wrap .sec-tag');
+  const menuTitle=document.querySelector('.combos-title-wrap .sec-title');
+  const menuText=document.querySelector('.combos-intro');
+  const menuAction=document.querySelector('.combos-header .ver-todos');
+  if(menuTag) menuTag.textContent=menu.tag;
+  if(menuTitle) menuTitle.innerHTML=`${escapeHtml(menu.title)} <em>${escapeHtml(menu.emphasis)}</em>`;
+  if(menuText) menuText.textContent=menu.text;
+  if(menuAction){
+    menuAction.textContent=`${menu.actionText} →`;
+    setAnchorHref(menuAction,mainWhatsappUrl);
+  }
+
+  setAnchorsHref('.nav-cta,.btn-whatsapp,.whatsapp-float,footer .footer-social a[title="WhatsApp"]',mainWhatsappUrl);
+  setAnchorsHref('.insta-handle,.sushi-gallery-card,footer .footer-social a[title="Instagram"]',links.instagramUrl);
+  setAnchorsHref('.dep-google-link',links.googleUrl);
+  document.querySelectorAll('.insta-handle').forEach(anchor=>{anchor.textContent=instagramHandle(links.instagramUrl);});
+}
 let menuCategories=[
   ['todos','Todos'],
   ['combos','Combos'],
@@ -210,8 +438,9 @@ const comboVisibleCount=document.getElementById('comboVisibleCount');
 const promoList=document.getElementById('promoList');
 function renderPromotions(){
   if(!promoList) return;
-  promoList.classList.toggle('has-single-promo',promoProducts.length===1);
-  promoList.innerHTML=promoProducts.map(item=>{
+  const promotions=promoProducts.map((item,index)=>index===0?{...item,image:showcaseSettings.promo.image}:item);
+  promoList.classList.toggle('has-single-promo',promotions.length===1);
+  promoList.innerHTML=promotions.map(item=>{
     const firstVariant=item.variants[0];
     const firstPrice=Number(firstVariant.price)||0;
     const itemName=escapeHtml(item.name);
@@ -293,7 +522,10 @@ try{
     if(Array.isArray(data.menuCategories)&&data.menuCategories.length) menuCategories=data.menuCategories;
     if(Array.isArray(data.menuProducts)) menuProducts=data.menuProducts;
     if(Array.isArray(data.promoProducts)) promoProducts=data.promoProducts;
-    if(data.siteSettings) siteSettingsFromApi=data.siteSettings;
+    if(data.siteSettings){
+      siteSettingsFromApi=data.siteSettings;
+      showcaseSettings=normalizeShowcaseSettings(data.siteSettings.showcase);
+    }
   }
 }catch(error){
   // sem conexao com a API: mantém o cardápio padrão embutido no arquivo
@@ -553,6 +785,7 @@ function updateBusinessCopy(){
 }
 function applySiteSettings(settings){
   if(!settings||typeof settings!=='object') return;
+  applyShowcaseSettings(settings.showcase);
   const delivery=settings.delivery||{};
   const hours=settings.businessHours||{};
   defaultDeliveryFee=normalizeFeeValue(delivery.defaultFee,defaultDeliveryFee);
@@ -1575,7 +1808,7 @@ document.addEventListener('click',event=>{
 document.querySelectorAll('.add-to-order').forEach(button=>{
   button.addEventListener('click',()=>{const card=button.closest('.combo-card,.promo-card');if(card)addToOrder(card,button);});
 });
-document.querySelectorAll('a[href*="wa.me/5521982225443"]').forEach(link=>{
+document.querySelectorAll('a[href*="wa.me/"]').forEach(link=>{
   link.addEventListener('click',()=>{
     setNavMenuOpen(false);
     sendAnalyticsEvent('click_whatsapp',{

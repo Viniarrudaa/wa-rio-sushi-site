@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/admin/admin.css?v=6">
+<link rel="stylesheet" href="/admin/admin.css?v=7">
 </head>
 <body>
 
@@ -35,6 +35,7 @@
   <main class="admin-main">
     <nav class="admin-section-tabs" id="sectionTabs" aria-label="Áreas do painel">
       <button class="admin-section-tab is-active" type="button" data-section="dashboard">Resumo</button>
+      <button class="admin-section-tab" type="button" data-section="showcase">Vitrine</button>
       <button class="admin-section-tab" type="button" data-section="menu">Cardápio</button>
       <button class="admin-section-tab" type="button" data-section="categories">Categorias</button>
       <button class="admin-section-tab" type="button" data-section="images">Imagens</button>
@@ -64,6 +65,190 @@
           <h2>Próximos horários</h2>
           <div id="schedulePreview" class="admin-compact-list"></div>
         </section>
+      </div>
+    </section>
+
+    <section class="admin-panel" id="showcasePanel" data-panel="showcase">
+      <div class="admin-panel-head">
+        <div>
+          <span class="admin-kicker">Vitrine</span>
+          <h1>Textos, imagens e links do site</h1>
+        </div>
+        <button id="saveShowcaseBtn" type="button" class="admin-btn admin-btn-primary">Salvar vitrine</button>
+      </div>
+      <p class="admin-panel-note">Use esta área para mudar a primeira impressão do site sem mexer nos itens do cardápio.</p>
+
+      <div class="admin-showcase-layout">
+        <div class="admin-showcase-forms">
+          <section class="admin-mini-panel">
+            <div class="admin-field-head">
+              <h2>Aviso temporário</h2>
+              <label class="admin-switch">
+                <input type="checkbox" id="showcaseNoticeActive">
+                <span>Mostrar</span>
+              </label>
+            </div>
+            <div class="admin-form-grid admin-form-grid-compact">
+              <label class="admin-field admin-field-wide">
+                <span>Texto do aviso</span>
+                <input type="text" id="showcaseNoticeText" maxlength="140" placeholder="ex: Hoje abrimos às 19h">
+              </label>
+              <label class="admin-field">
+                <span>Texto do botão</span>
+                <input type="text" id="showcaseNoticeButtonText" maxlength="36">
+              </label>
+              <label class="admin-field">
+                <span>Link do botão</span>
+                <input type="text" id="showcaseNoticeButtonHref" maxlength="260" placeholder="#combos">
+              </label>
+            </div>
+          </section>
+
+          <section class="admin-mini-panel">
+            <div class="admin-field-head">
+              <h2>Banner da promoção</h2>
+              <label class="admin-switch">
+                <input type="checkbox" id="showcasePremiumActive">
+                <span>Mostrar</span>
+              </label>
+            </div>
+            <div class="admin-form-grid admin-form-grid-compact">
+              <label class="admin-field">
+                <span>Rótulo</span>
+                <input type="text" id="showcasePremiumKicker" maxlength="48">
+              </label>
+              <label class="admin-field">
+                <span>Título</span>
+                <input type="text" id="showcasePremiumTitle" maxlength="90">
+              </label>
+              <label class="admin-field">
+                <span>Destaque curto</span>
+                <input type="text" id="showcasePremiumPulse" maxlength="48">
+              </label>
+              <label class="admin-field admin-field-wide">
+                <span>Texto</span>
+                <input type="text" id="showcasePremiumText" maxlength="150">
+              </label>
+              <label class="admin-field">
+                <span>Texto do botão</span>
+                <input type="text" id="showcasePremiumButtonText" maxlength="36">
+              </label>
+              <label class="admin-field">
+                <span>Link do botão</span>
+                <input type="text" id="showcasePremiumButtonHref" maxlength="260">
+              </label>
+            </div>
+          </section>
+
+          <section class="admin-mini-panel">
+            <h2>Primeira tela</h2>
+            <div class="admin-form-grid admin-form-grid-compact">
+              <label class="admin-field">
+                <span>Rótulo</span>
+                <input type="text" id="showcaseHeroTag" maxlength="48">
+              </label>
+              <label class="admin-field">
+                <span>Título</span>
+                <input type="text" id="showcaseHeroTitle" maxlength="70">
+              </label>
+              <label class="admin-field">
+                <span>Ênfase</span>
+                <input type="text" id="showcaseHeroEmphasis" maxlength="70">
+              </label>
+              <label class="admin-field admin-field-wide">
+                <span>Texto principal</span>
+                <textarea id="showcaseHeroText" rows="2" maxlength="220"></textarea>
+              </label>
+              <label class="admin-field">
+                <span>Texto do botão</span>
+                <input type="text" id="showcaseHeroButtonText" maxlength="36">
+              </label>
+              <label class="admin-field">
+                <span>Link do botão</span>
+                <input type="text" id="showcaseHeroButtonHref" maxlength="260">
+              </label>
+              <label class="admin-field admin-field-wide">
+                <span>Imagem da primeira tela</span>
+                <div class="admin-image-field">
+                  <input type="text" id="showcaseHeroImage" maxlength="180" list="imageOptions">
+                  <label class="admin-btn admin-btn-ghost admin-btn-sm admin-upload-inline">
+                    Enviar
+                    <input id="showcaseHeroImageUploadInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+                  </label>
+                </div>
+              </label>
+            </div>
+          </section>
+
+          <section class="admin-mini-panel">
+            <h2>Promoção em destaque</h2>
+            <div class="admin-form-grid admin-form-grid-compact">
+              <label class="admin-field admin-field-wide">
+                <span>Imagem da promoção</span>
+                <div class="admin-image-field">
+                  <input type="text" id="showcasePromoImage" maxlength="180" list="imageOptions">
+                  <label class="admin-btn admin-btn-ghost admin-btn-sm admin-upload-inline">
+                    Enviar
+                    <input id="showcasePromoImageUploadInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+                  </label>
+                </div>
+              </label>
+            </div>
+          </section>
+
+          <section class="admin-mini-panel">
+            <h2>Chamada do cardápio</h2>
+            <div class="admin-form-grid admin-form-grid-compact">
+              <label class="admin-field">
+                <span>Rótulo</span>
+                <input type="text" id="showcaseMenuTag" maxlength="48">
+              </label>
+              <label class="admin-field">
+                <span>Título</span>
+                <input type="text" id="showcaseMenuTitle" maxlength="70">
+              </label>
+              <label class="admin-field">
+                <span>Ênfase</span>
+                <input type="text" id="showcaseMenuEmphasis" maxlength="70">
+              </label>
+              <label class="admin-field admin-field-wide">
+                <span>Texto</span>
+                <textarea id="showcaseMenuText" rows="2" maxlength="220"></textarea>
+              </label>
+              <label class="admin-field">
+                <span>Texto do botão</span>
+                <input type="text" id="showcaseMenuActionText" maxlength="36">
+              </label>
+            </div>
+          </section>
+
+          <section class="admin-mini-panel">
+            <h2>Links principais</h2>
+            <div class="admin-form-grid admin-form-grid-compact">
+              <label class="admin-field">
+                <span>WhatsApp</span>
+                <input type="text" id="showcaseWhatsappPhone" maxlength="20" placeholder="5521982225443">
+              </label>
+              <label class="admin-field admin-field-wide">
+                <span>Mensagem padrão</span>
+                <input type="text" id="showcaseWhatsappMessage" maxlength="180">
+              </label>
+              <label class="admin-field admin-field-wide">
+                <span>Instagram</span>
+                <input type="url" id="showcaseInstagramUrl" maxlength="260">
+              </label>
+              <label class="admin-field admin-field-wide">
+                <span>Google avaliações</span>
+                <input type="url" id="showcaseGoogleUrl" maxlength="260">
+              </label>
+            </div>
+          </section>
+        </div>
+
+        <aside class="admin-showcase-preview" aria-live="polite">
+          <span class="admin-kicker">Prévia</span>
+          <div id="showcasePreview"></div>
+        </aside>
       </div>
     </section>
 
@@ -288,6 +473,6 @@
   </div>
 </div>
 
-<script src="/admin/admin.js?v=6"></script>
+<script src="/admin/admin.js?v=7"></script>
 </body>
 </html>

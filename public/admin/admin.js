@@ -52,6 +52,41 @@ const ordersList = $('#ordersList');
 const refreshOrdersBtn = $('#refreshOrdersBtn');
 const deployChecklist = $('#deployChecklist');
 const downloadBackupBtn = $('#downloadBackupBtn');
+const showcasePanel = $('#showcasePanel');
+const showcasePreview = $('#showcasePreview');
+const saveShowcaseBtn = $('#saveShowcaseBtn');
+const showcaseHeroImageUploadInput = $('#showcaseHeroImageUploadInput');
+const showcasePromoImageUploadInput = $('#showcasePromoImageUploadInput');
+const showcaseFields = {
+  noticeActive: $('#showcaseNoticeActive'),
+  noticeText: $('#showcaseNoticeText'),
+  noticeButtonText: $('#showcaseNoticeButtonText'),
+  noticeButtonHref: $('#showcaseNoticeButtonHref'),
+  premiumActive: $('#showcasePremiumActive'),
+  premiumKicker: $('#showcasePremiumKicker'),
+  premiumTitle: $('#showcasePremiumTitle'),
+  premiumText: $('#showcasePremiumText'),
+  premiumPulse: $('#showcasePremiumPulse'),
+  premiumButtonText: $('#showcasePremiumButtonText'),
+  premiumButtonHref: $('#showcasePremiumButtonHref'),
+  heroTag: $('#showcaseHeroTag'),
+  heroTitle: $('#showcaseHeroTitle'),
+  heroEmphasis: $('#showcaseHeroEmphasis'),
+  heroText: $('#showcaseHeroText'),
+  heroButtonText: $('#showcaseHeroButtonText'),
+  heroButtonHref: $('#showcaseHeroButtonHref'),
+  heroImage: $('#showcaseHeroImage'),
+  promoImage: $('#showcasePromoImage'),
+  menuTag: $('#showcaseMenuTag'),
+  menuTitle: $('#showcaseMenuTitle'),
+  menuEmphasis: $('#showcaseMenuEmphasis'),
+  menuText: $('#showcaseMenuText'),
+  menuActionText: $('#showcaseMenuActionText'),
+  whatsappPhone: $('#showcaseWhatsappPhone'),
+  whatsappMessage: $('#showcaseWhatsappMessage'),
+  instagramUrl: $('#showcaseInstagramUrl'),
+  googleUrl: $('#showcaseGoogleUrl')
+};
 
 const dayFullNames = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
 const maxOriginalImageBytes = 20 * 1024 * 1024;
@@ -73,6 +108,51 @@ let state = {
 let activeKind = 'product';
 let activeCategory = 'todos';
 let activeSection = 'dashboard';
+
+function defaultShowcase(){
+  return {
+    notice: {
+      active: false,
+      text: '',
+      buttonText: 'Ver cardápio',
+      buttonHref: '#combos'
+    },
+    premium: {
+      active: true,
+      kicker: 'Promoção especial',
+      title: 'WA RIO Sushi Premium',
+      text: '35 peças + 4 bananas crocantes com Nutella por R$ 79,00.',
+      pulse: 'Preço especial',
+      buttonText: 'Ver promoção',
+      buttonHref: '#promocoes-premium'
+    },
+    hero: {
+      tag: 'WA RIO Premium',
+      title: 'O verdadeiro',
+      emphasis: 'sabor japonês.',
+      description: 'Ingredientes selecionados, técnicas tradicionais e uma experiência especial para o seu pedido.',
+      buttonText: 'Ver Cardápio',
+      buttonHref: '#combos',
+      image: 'hero_desktop_wa_rio_optimized.jpg'
+    },
+    promo: {
+      image: 'wario2_cardapio_optimized.jpg'
+    },
+    menu: {
+      tag: 'Nosso Cardápio',
+      title: 'Seleção',
+      emphasis: 'WA RIO',
+      text: 'Uma curadoria dos pedidos mais desejados da casa, preparada para quem busca frescor, textura e sabor japonês com acabamento especial.',
+      actionText: 'Falar com atendente'
+    },
+    links: {
+      whatsappPhone: '5521982225443',
+      whatsappMessage: 'Olá, WA RIO Sushi! Quero falar com o atendimento.',
+      instagramUrl: 'https://www.instagram.com/wariosushi/',
+      googleUrl: 'https://maps.app.goo.gl/xuXupQpwMX77WqdR8'
+    }
+  };
+}
 
 function defaultSettings(){
   return {
@@ -98,12 +178,26 @@ function defaultSettings(){
       openDays: [0, 3, 4, 5, 6],
       timeZone: 'America/Sao_Paulo',
       scheduleLeadMinutes: 30
-    }
+    },
+    showcase: defaultShowcase()
   };
 }
 
 function currentSettings(){
   return state.siteSettings || defaultSettings();
+}
+
+function currentShowcase(){
+  const defaults = defaultShowcase();
+  const source = currentSettings().showcase || {};
+  return {
+    notice: { ...defaults.notice, ...(source.notice || {}) },
+    premium: { ...defaults.premium, ...(source.premium || {}) },
+    hero: { ...defaults.hero, ...(source.hero || {}) },
+    promo: { ...defaults.promo, ...(source.promo || {}) },
+    menu: { ...defaults.menu, ...(source.menu || {}) },
+    links: { ...defaults.links, ...(source.links || {}) }
+  };
 }
 
 function allItems(){
@@ -256,6 +350,146 @@ function imageUrl(name){
   return `/${String(name || '').split('/').map(part => encodeURIComponent(part)).join('/')}`;
 }
 
+function setFieldValue(field, value){
+  if(field) field.value = String(value ?? '');
+}
+
+function setFieldChecked(field, checked){
+  if(field) field.checked = !!checked;
+}
+
+function fieldValue(field, fallback = '', allowBlank = false){
+  const value = field?.value.trim();
+  if(value) return value;
+  return allowBlank ? '' : fallback;
+}
+
+function fieldChecked(field, fallback = false){
+  return field ? !!field.checked : fallback;
+}
+
+function collectShowcaseSettings(){
+  const defaults = defaultShowcase();
+  const phone = fieldValue(showcaseFields.whatsappPhone, defaults.links.whatsappPhone).replace(/\D/g, '');
+  return {
+    notice: {
+      active: fieldChecked(showcaseFields.noticeActive, defaults.notice.active),
+      text: fieldValue(showcaseFields.noticeText, defaults.notice.text, true),
+      buttonText: fieldValue(showcaseFields.noticeButtonText, defaults.notice.buttonText),
+      buttonHref: fieldValue(showcaseFields.noticeButtonHref, defaults.notice.buttonHref)
+    },
+    premium: {
+      active: fieldChecked(showcaseFields.premiumActive, defaults.premium.active),
+      kicker: fieldValue(showcaseFields.premiumKicker, defaults.premium.kicker),
+      title: fieldValue(showcaseFields.premiumTitle, defaults.premium.title),
+      text: fieldValue(showcaseFields.premiumText, defaults.premium.text),
+      pulse: fieldValue(showcaseFields.premiumPulse, defaults.premium.pulse),
+      buttonText: fieldValue(showcaseFields.premiumButtonText, defaults.premium.buttonText),
+      buttonHref: fieldValue(showcaseFields.premiumButtonHref, defaults.premium.buttonHref)
+    },
+    hero: {
+      tag: fieldValue(showcaseFields.heroTag, defaults.hero.tag),
+      title: fieldValue(showcaseFields.heroTitle, defaults.hero.title),
+      emphasis: fieldValue(showcaseFields.heroEmphasis, defaults.hero.emphasis),
+      description: fieldValue(showcaseFields.heroText, defaults.hero.description),
+      buttonText: fieldValue(showcaseFields.heroButtonText, defaults.hero.buttonText),
+      buttonHref: fieldValue(showcaseFields.heroButtonHref, defaults.hero.buttonHref),
+      image: fieldValue(showcaseFields.heroImage, defaults.hero.image)
+    },
+    promo: {
+      image: fieldValue(showcaseFields.promoImage, defaults.promo.image)
+    },
+    menu: {
+      tag: fieldValue(showcaseFields.menuTag, defaults.menu.tag),
+      title: fieldValue(showcaseFields.menuTitle, defaults.menu.title),
+      emphasis: fieldValue(showcaseFields.menuEmphasis, defaults.menu.emphasis),
+      text: fieldValue(showcaseFields.menuText, defaults.menu.text),
+      actionText: fieldValue(showcaseFields.menuActionText, defaults.menu.actionText)
+    },
+    links: {
+      whatsappPhone: phone || defaults.links.whatsappPhone,
+      whatsappMessage: fieldValue(showcaseFields.whatsappMessage, defaults.links.whatsappMessage),
+      instagramUrl: fieldValue(showcaseFields.instagramUrl, defaults.links.instagramUrl),
+      googleUrl: fieldValue(showcaseFields.googleUrl, defaults.links.googleUrl)
+    }
+  };
+}
+
+function renderShowcasePreview(showcase = collectShowcaseSettings()){
+  if(!showcasePreview) return;
+  const notice = showcase.notice || {};
+  const premium = showcase.premium || {};
+  const hero = showcase.hero || {};
+  const promo = showcase.promo || {};
+  const menu = showcase.menu || {};
+  const noticeMarkup = notice.active && notice.text
+    ? `<div class="admin-showcase-preview-notice"><span>${escapeHtml(notice.text)}</span><strong>${escapeHtml(notice.buttonText)}</strong></div>`
+    : `<div class="admin-showcase-preview-notice"><span>Aviso temporário oculto</span><strong>Oculto</strong></div>`;
+  showcasePreview.innerHTML = `
+    <div class="admin-showcase-preview-box">${noticeMarkup}</div>
+    <div class="admin-showcase-preview-box admin-showcase-preview-banner">
+      <span>${escapeHtml(premium.kicker)}</span>
+      <strong>${escapeHtml(premium.title)}</strong>
+      <p>${escapeHtml(premium.text)}</p>
+      <div class="admin-showcase-preview-button">${escapeHtml(premium.buttonText)}</div>
+    </div>
+    <div class="admin-showcase-preview-box admin-showcase-preview-hero">
+      <img src="${escapeAttr(imageUrl(hero.image || defaultShowcase().hero.image))}" alt="">
+      <div class="admin-showcase-preview-hero-body">
+        <span>${escapeHtml(hero.tag)}</span>
+        <h3>${escapeHtml(hero.title)}<br><em>${escapeHtml(hero.emphasis)}</em></h3>
+        <p>${escapeHtml(hero.description)}</p>
+        <div class="admin-showcase-preview-button">${escapeHtml(hero.buttonText)}</div>
+      </div>
+    </div>
+    <div class="admin-showcase-preview-box admin-showcase-preview-menu">
+      <span>${escapeHtml(menu.tag)}</span>
+      <strong>${escapeHtml(menu.title)} ${escapeHtml(menu.emphasis)}</strong>
+      <p>${escapeHtml(menu.text)}</p>
+    </div>
+    <div class="admin-showcase-preview-box admin-showcase-preview-promo">
+      <img src="${escapeAttr(imageUrl(promo.image || defaultShowcase().promo.image))}" alt="">
+      <div>
+        <strong>WA RIO Sushi Premium</strong>
+        <span>R$ 79,00</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderShowcase(){
+  const showcase = currentShowcase();
+  setFieldChecked(showcaseFields.noticeActive, showcase.notice.active);
+  setFieldValue(showcaseFields.noticeText, showcase.notice.text);
+  setFieldValue(showcaseFields.noticeButtonText, showcase.notice.buttonText);
+  setFieldValue(showcaseFields.noticeButtonHref, showcase.notice.buttonHref);
+  setFieldChecked(showcaseFields.premiumActive, showcase.premium.active);
+  setFieldValue(showcaseFields.premiumKicker, showcase.premium.kicker);
+  setFieldValue(showcaseFields.premiumTitle, showcase.premium.title);
+  setFieldValue(showcaseFields.premiumText, showcase.premium.text);
+  setFieldValue(showcaseFields.premiumPulse, showcase.premium.pulse);
+  setFieldValue(showcaseFields.premiumButtonText, showcase.premium.buttonText);
+  setFieldValue(showcaseFields.premiumButtonHref, showcase.premium.buttonHref);
+  setFieldValue(showcaseFields.heroTag, showcase.hero.tag);
+  setFieldValue(showcaseFields.heroTitle, showcase.hero.title);
+  setFieldValue(showcaseFields.heroEmphasis, showcase.hero.emphasis);
+  setFieldValue(showcaseFields.heroText, showcase.hero.description);
+  setFieldValue(showcaseFields.heroButtonText, showcase.hero.buttonText);
+  setFieldValue(showcaseFields.heroButtonHref, showcase.hero.buttonHref);
+  setFieldValue(showcaseFields.heroImage, showcase.hero.image);
+  setFieldValue(showcaseFields.promoImage, showcase.promo.image);
+  setFieldValue(showcaseFields.menuTag, showcase.menu.tag);
+  setFieldValue(showcaseFields.menuTitle, showcase.menu.title);
+  setFieldValue(showcaseFields.menuEmphasis, showcase.menu.emphasis);
+  setFieldValue(showcaseFields.menuText, showcase.menu.text);
+  setFieldValue(showcaseFields.menuActionText, showcase.menu.actionText);
+  setFieldValue(showcaseFields.whatsappPhone, showcase.links.whatsappPhone);
+  setFieldValue(showcaseFields.whatsappMessage, showcase.links.whatsappMessage);
+  setFieldValue(showcaseFields.instagramUrl, showcase.links.instagramUrl);
+  setFieldValue(showcaseFields.googleUrl, showcase.links.googleUrl);
+  renderShowcasePreview(showcase);
+}
+
 function updateImagePreview(){
   if(!imagePreview) return;
   const value = $('#fImage')?.value.trim();
@@ -276,7 +510,10 @@ function showImageStatus(message, isError = false){
 }
 
 function imageUsageCount(name){
-  return Array.isArray(state.imageUsage?.[name]) ? state.imageUsage[name].length : allItems().filter(item => item.image === name).length;
+  if(Array.isArray(state.imageUsage?.[name])) return state.imageUsage[name].length;
+  const showcase = currentShowcase();
+  const showcaseCount = [showcase.hero?.image, showcase.promo?.image].filter(image => image === name).length;
+  return allItems().filter(item => item.image === name).length + showcaseCount;
 }
 
 function isUploadedImage(name){
@@ -295,7 +532,7 @@ function renderImages(){
       <img src="${imageUrl(name)}" alt="">
       <div class="admin-image-card-body">
         <strong class="admin-image-name" title="${escapeHtml(name)}">${escapeHtml(name)}</strong>
-        <span class="admin-image-meta">${imageUsageCount(name) ? `${imageUsageCount(name)} item(ns) usando` : (isUploadedImage(name) ? 'Imagem enviada pelo painel' : 'Arquivo fixo do site')}</span>
+        <span class="admin-image-meta">${imageUsageCount(name) ? `${imageUsageCount(name)} uso(s) no site` : (isUploadedImage(name) ? 'Imagem enviada pelo painel' : 'Arquivo fixo do site')}</span>
         <div class="admin-image-actions">
           <button type="button" class="admin-btn admin-btn-ghost admin-btn-sm" data-image-name="${escapeHtml(name)}">Usar no item</button>
           ${isUploadedImage(name) && !imageUsageCount(name) ? `<button type="button" class="admin-btn admin-btn-danger admin-btn-sm" data-delete-image="${escapeHtml(name)}">Remover</button>` : ''}
@@ -417,6 +654,26 @@ async function handleImageUpload(input, useOnOpenItem = false){
     }
     showImageStatus(uploadImageFile.lastCompressed ? 'Imagem reduzida automaticamente e pronta para usar.' : 'Imagem enviada e pronta para usar.');
     showStatus('Imagem enviada.');
+  }catch(err){
+    showImageStatus(err.message || 'Erro ao enviar imagem.', true);
+    showStatus(err.message || 'Erro ao enviar imagem.', true);
+  }finally{
+    if(input) input.value = '';
+  }
+}
+
+async function handleShowcaseImageUpload(input, targetField){
+  const file = input?.files?.[0];
+  if(!file) return;
+  showImageStatus('Enviando imagem...');
+  try{
+    const imageName = await uploadImageFile(file);
+    if(imageName && targetField){
+      targetField.value = imageName;
+      renderShowcasePreview();
+    }
+    showImageStatus(uploadImageFile.lastCompressed ? 'Imagem reduzida automaticamente e selecionada na vitrine.' : 'Imagem enviada e selecionada na vitrine.');
+    showStatus('Imagem pronta para a vitrine.');
   }catch(err){
     showImageStatus(err.message || 'Erro ao enviar imagem.', true);
     showStatus(err.message || 'Erro ao enviar imagem.', true);
@@ -624,6 +881,7 @@ function renderAll(){
   renderCategories();
   renderImages();
   renderDashboard();
+  renderShowcase();
   renderDelivery();
   renderHours();
   renderOrders();
@@ -905,6 +1163,10 @@ editorForm?.addEventListener('input', updateEditorPreview);
 editorForm?.addEventListener('change', updateEditorPreview);
 imageUploadInput?.addEventListener('change', () => handleImageUpload(imageUploadInput, false));
 editorImageUploadInput?.addEventListener('change', () => handleImageUpload(editorImageUploadInput, true));
+showcasePanel?.addEventListener('input', () => renderShowcasePreview());
+showcasePanel?.addEventListener('change', () => renderShowcasePreview());
+showcaseHeroImageUploadInput?.addEventListener('change', () => handleShowcaseImageUpload(showcaseHeroImageUploadInput, showcaseFields.heroImage));
+showcasePromoImageUploadInput?.addEventListener('change', () => handleShowcaseImageUpload(showcasePromoImageUploadInput, showcaseFields.promoImage));
 imageLibrary?.addEventListener('click', (e) => {
   const deleteBtn = e.target.closest('[data-delete-image]');
   if(deleteBtn){
@@ -929,6 +1191,21 @@ imageLibrary?.addEventListener('click', (e) => {
   const btn = e.target.closest('[data-image-name]');
   if(!btn) return;
   selectImageForEditor(btn.dataset.imageName);
+});
+
+saveShowcaseBtn?.addEventListener('click', async () => {
+  try{
+    const showcase = collectShowcaseSettings();
+    const data = await api('/api/admin/settings', {
+      method: 'PUT',
+      body: JSON.stringify({ showcase })
+    });
+    state.siteSettings = data.siteSettings || { ...currentSettings(), showcase };
+    renderAll();
+    showStatus('Vitrine salva.');
+  }catch(err){
+    showStatus(err.message || 'Erro ao salvar vitrine.', true);
+  }
 });
 
 newCategoryBtn?.addEventListener('click', () => {
