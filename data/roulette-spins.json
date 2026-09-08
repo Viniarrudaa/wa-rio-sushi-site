@@ -1,14 +1,14 @@
 {
-  "updatedAt": "2026-09-03T18:57:23.545Z",
+  "updatedAt": "2026-09-08T18:06:02.080Z",
   "spins": {
     "_pTJfVy5aOTAm4cmFcBgLnXr": {
-      "date": "2026-09-03",
+      "date": "2026-09-08",
       "prizeId": "tente-amanha",
       "prizeName": "Não foi dessa vez. Tente novamente amanhã!",
       "type": "none",
       "value": 0,
       "won": false,
-      "at": "2026-09-03T18:57:23.545Z"
+      "at": "2026-09-08T18:06:02.079Z"
     }
   },
   "history": [
@@ -20,6 +20,16 @@
       "value": 0,
       "won": false,
       "at": "2026-09-03T18:57:23.545Z",
+      "guestId": "0f963239597f234b"
+    },
+    {
+      "date": "2026-09-08",
+      "prizeId": "tente-amanha",
+      "prizeName": "Não foi dessa vez. Tente novamente amanhã!",
+      "type": "none",
+      "value": 0,
+      "won": false,
+      "at": "2026-09-08T18:06:02.079Z",
       "guestId": "0f963239597f234b"
     }
   ]

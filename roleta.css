@@ -164,26 +164,44 @@ h1{
   border-radius:50%;
   position:relative;
   overflow:hidden;
+  isolation:isolate;
   background:conic-gradient(var(--red-dark) 0 60deg,var(--panel) 60deg 120deg,var(--red-dark) 120deg 180deg,var(--panel) 180deg 240deg,var(--red-dark) 240deg 300deg,var(--panel) 300deg 360deg);
   transition:transform 5s cubic-bezier(.1,.82,.16,1);
+}
+.roulette-wheel::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  z-index:1;
+  border-radius:50%;
+  background:var(--roulette-divider-gradient,transparent);
+  pointer-events:none;
 }
 
 .roulette-label{
   position:absolute;
-  top:50%;
-  left:50%;
-  width:88px;
-  margin-left:-44px;
-  margin-top:-12px;
+  z-index:2;
+  box-sizing:border-box;
+  width:min(20%,68px);
+  min-height:34px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:5px 6px;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:999px;
+  background:rgba(0,0,0,.20);
   color:#fff;
   font-family:Outfit,Inter,sans-serif;
-  font-size:10px;
+  font-size:9.2px;
   font-weight:900;
   line-height:1.12;
   text-transform:uppercase;
   text-align:center;
   text-shadow:0 2px 5px rgba(0,0,0,.75);
-  transform-origin:44px 12px;
+  transform:translate(-50%,-50%);
+  white-space:pre-line;
+  overflow-wrap:anywhere;
 }
 
 .roulette-center{
@@ -332,5 +350,5 @@ h1{
   .roulette-page{padding-top:76px}
   .roulette-back{left:14px;right:14px;top:14px}
   .roulette-card{padding:26px 14px 18px}
-  .roulette-label{width:72px;margin-left:-36px;font-size:9px;transform-origin:36px 12px}
+  .roulette-label{width:min(20%,58px);min-height:31px;padding:4px 4px;font-size:7.8px}
 }

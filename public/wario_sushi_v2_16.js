@@ -659,6 +659,8 @@ const orderHeadCount=document.getElementById('orderHeadCount');
 const orderSend=document.getElementById('orderSend');
 const orderSupport=document.getElementById('orderSupport')||document.querySelector('.order-support');
 const businessToast=document.getElementById('businessToast');
+const rouletteInvite=document.getElementById('rouletteInvite');
+const rouletteInviteClose=document.getElementById('rouletteInviteClose');
 const orderClear=document.getElementById('orderClear');
 const orderNote=document.getElementById('orderNote');
 const paymentInputs=[...document.querySelectorAll('input[name="paymentMethod"]')];
@@ -700,8 +702,10 @@ const businessHours={openHour:19,closeHour:23,openDays:[0,3,4,5,6],timeZone:'Ame
 let scheduleLeadMinutes=30;
 let lastOrderSendAt=0;
 let businessToastTimer=null;
+let rouletteInviteTimer=null;
 let selectedCouponId='';
 let couponUseEnabled=true;
+const rouletteInviteStorageKey='wa_rio_roleta_convite_fechado';
 const rouletteCouponStorageKey='wa_rio_cupons_ativos';
 const pixApi={
   create:'/api/pix/create',
@@ -1158,6 +1162,24 @@ function showBusinessToast(message=closedOrderMessage()){
     businessToast.classList.remove('is-visible');
     businessToast.setAttribute('aria-hidden','true');
   },businessToastMs);
+}
+function hideRouletteInvite(remember=false){
+  if(!rouletteInvite) return;
+  window.clearTimeout(rouletteInviteTimer);
+  rouletteInvite.classList.remove('is-visible');
+  rouletteInvite.setAttribute('aria-hidden','true');
+  if(remember) sessionStorage.setItem(rouletteInviteStorageKey,'1');
+  window.setTimeout(()=>{
+    if(!rouletteInvite.classList.contains('is-visible')) rouletteInvite.hidden=true;
+  },280);
+}
+function showRouletteInvite(){
+  if(!rouletteInvite) return;
+  if(sessionStorage.getItem(rouletteInviteStorageKey)==='1') return;
+  rouletteInvite.hidden=false;
+  rouletteInvite.setAttribute('aria-hidden','false');
+  window.clearTimeout(rouletteInviteTimer);
+  rouletteInviteTimer=window.setTimeout(()=>rouletteInvite.classList.add('is-visible'),40);
 }
 function showClosedOrderNotice(){
   updateOrderSupport(false);
@@ -2130,10 +2152,13 @@ orderSend?.addEventListener('click',()=>{
   consumeSelectedRouletteCoupon(totals);
   renderOrder();
 });
+rouletteInviteClose?.addEventListener('click',()=>hideRouletteInvite(true));
+rouletteInvite?.querySelector('.roulette-invite-link')?.addEventListener('click',()=>hideRouletteInvite(true));
 renderGoogleReviews();
 setupScheduleControls();
 initSecurityConfig();
 renderOrder();
+window.setTimeout(showRouletteInvite,1700);
 
 // horizontal drag only when the layout becomes scrollable on very small screens
 (function(){

@@ -77,25 +77,36 @@ function activePrizes(){
 }
 
 function labelText(value){
-  return safeText(value).replace(/\s+/g,' ');
+  const text=safeText(value).replace(/\s+/g,' ').trim();
+  const discount=text.match(/^(\d+%)\s*(?:de\s*)?desconto$/i);
+  if(discount) return `${discount[1]}\nOFF`;
+  const hots=text.match(/^(\d+)\s+hots?\s+gr[aá]tis$/i);
+  if(hots) return `${hots[1]} hots\nGrátis`;
+  if(/^frete\s+gr[aá]tis$/i.test(text)) return 'Frete\nGrátis';
+  if(/^tente\s+amanh[ãa]$/i.test(text)) return 'Tente\nAmanhã';
+  return text;
 }
 
 function renderWheel(){
   if(!wheel) return;
   const prizes=activePrizes();
   const segment=360/prizes.length;
+  const dividerGradient=`repeating-conic-gradient(from -90deg,rgba(255,255,255,.30) 0deg .55deg,transparent .55deg ${segment.toFixed(3)}deg)`;
   const gradient=prizes.map((prize,index)=>{
     const start=(index*segment).toFixed(3);
     const end=((index+1)*segment).toFixed(3);
     return `${palette[index%palette.length]} ${start}deg ${end}deg`;
   }).join(',');
   wheel.style.background=`conic-gradient(from -90deg,${gradient})`;
+  wheel.style.setProperty('--roulette-divider-gradient',dividerGradient);
   wheel.innerHTML='';
   prizes.forEach((prize,index)=>{
     const label=document.createElement('span');
     label.className='roulette-label';
-    const angle=index*segment+(segment/2);
-    label.style.transform=`rotate(${angle}deg) translateY(-118px) rotate(${90-angle}deg)`;
+    const angle=(index*segment)-90;
+    const radius=prizes.length>6?34:35;
+    label.style.left=`${50+(Math.cos(angle*Math.PI/180)*radius)}%`;
+    label.style.top=`${50+(Math.sin(angle*Math.PI/180)*radius)}%`;
     label.textContent=labelText(prize.label);
     wheel.appendChild(label);
   });
@@ -137,7 +148,7 @@ function spinToIndex(index){
   const prizes=activePrizes();
   const segment=360/prizes.length;
   const offset=(Math.random()-.5)*Math.min(20,segment*.35);
-  const center=index*segment+(segment/2);
+  const center=index*segment;
   const target=360-center+offset;
   lastRotation=Math.ceil(lastRotation/360)*360+1800+target;
   wheel.style.transform=`rotate(${lastRotation}deg)`;

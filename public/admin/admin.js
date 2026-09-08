@@ -661,12 +661,13 @@ function renderRoulettePreview(roulette = null){
   const gradient = prizes.length
     ? prizes.map((prize, index) => `${colors[index % colors.length]} ${(index * segment).toFixed(2)}deg ${((index + 1) * segment).toFixed(2)}deg`).join(',')
     : '#151518 0 360deg';
+  const dividers = `repeating-conic-gradient(from -90deg, rgba(255,255,255,.30) 0deg .9deg, transparent .9deg ${segment.toFixed(2)}deg)`;
   roulettePreview.innerHTML = `
     <div class="admin-roulette-preview-card">
       <div class="admin-roulette-preview-logo">${settings.logo ? `<img src="${escapeAttr(imageUrl(settings.logo))}" alt="">` : '<span>WA RIO</span>'}</div>
       <strong>${escapeHtml(settings.title)}</strong>
       <p>${escapeHtml(settings.subtitle)}</p>
-      <div class="admin-roulette-preview-wheel" style="background: conic-gradient(from -90deg, ${gradient});">
+      <div class="admin-roulette-preview-wheel" style="background: ${dividers}, conic-gradient(from -90deg, ${gradient});">
         <span></span>
       </div>
       <button type="button">${escapeHtml(settings.buttonText)}</button>
