@@ -942,13 +942,37 @@ function placementSummary(kind, item){
   return `Site: Cardápio > ${categoryLabel(item?.category)}`;
 }
 
+function itemPositionText(kind, category, id = '', isNew = true){
+  if(kind === 'promo'){
+    const list = state.promoProducts || [];
+    const currentIndex = list.findIndex(item => item.id === id);
+    const position = isNew || currentIndex < 0 ? list.length + 1 : currentIndex + 1;
+    return isNew
+      ? `Entra na posição ${position} da seção Promoções.`
+      : `Hoje está na posição ${position} da seção Promoções.`;
+  }
+  const list = (state.menuProducts || []).filter(item => item.category === category);
+  const currentIndex = list.findIndex(item => item.id === id);
+  const position = isNew || currentIndex < 0 ? list.length + 1 : currentIndex + 1;
+  return isNew
+    ? `Entra na posição ${position} da aba ${categoryLabel(category)}.`
+    : `Hoje está na posição ${position} da aba ${categoryLabel(category)}.`;
+}
+
 function updatePlacementPreview(){
   if(!placementPreview) return;
   const kind = $('#fKind')?.value || activeKind;
   const category = $('#fCategory')?.value || activeCategory;
   const isHidden = !!$('#fSoldOut')?.checked;
   const isNew = !$('#fId')?.value;
-  placementPreview.innerHTML = `<strong>Onde aparece no site</strong>${escapeHtml(placementText(kind, category, isHidden, isNew))}`;
+  const id = $('#fId')?.value || '';
+  const hiddenByCategory = kind === 'product' && categoryIsHidden(category);
+  placementPreview.classList.toggle('is-warning', isHidden || hiddenByCategory);
+  placementPreview.innerHTML = `
+    <strong>Onde entra no site</strong>
+    <span>${escapeHtml(placementText(kind, category, isHidden, isNew))}</span>
+    <small>${escapeHtml(itemPositionText(kind, category, id, isNew))}</small>
+  `;
 }
 
 function editorVariants(){
@@ -966,6 +990,8 @@ function editorDraft(){
     badge: $('#fBadge')?.value.trim() || '',
     image: $('#fImage')?.value.trim() || '',
     desc: $('#fDesc')?.value.trim() || 'Descrição do item aparecerá aqui.',
+    composition: $('#fComposition')?.value.trim() || '',
+    details: ($('#fDetails')?.value || '').split('\n').map(s => s.trim()).filter(Boolean),
     meta: ($('#fMeta')?.value || '').split(',').map(s => s.trim()).filter(Boolean),
     variants: editorVariants(),
     soldOut: !!$('#fSoldOut')?.checked,
@@ -978,16 +1004,37 @@ function renderItemLivePreview(){
   const item = editorDraft();
   const firstPrice = item.variants?.[0]?.price ?? 0;
   const priceLabel = item.variants?.length > 1 ? `a partir de ${formatMoney(firstPrice)}` : formatMoney(firstPrice);
-  const tags = [item.badge, ...item.meta].filter(Boolean).slice(0, 4);
-  itemLivePreview.classList.toggle('is-hidden', item.soldOut || (item.kind === 'product' && categoryIsHidden(item.category)));
+  const hiddenByCategory = item.kind === 'product' && categoryIsHidden(item.category);
+  const unavailable = item.soldOut || hiddenByCategory;
+  const tags = item.meta.filter(Boolean).slice(0, 3);
+  const variants = (item.variants || []).slice(0, 4);
+  const details = (item.details || []).slice(0, 5);
+  itemLivePreview.classList.toggle('is-hidden', unavailable);
+  itemLivePreview.classList.toggle('is-promo', item.kind === 'promo');
   itemLivePreview.innerHTML = `
-    ${item.image ? `<img src="${imageUrl(item.image)}" alt="">` : '<div class="admin-live-preview-placeholder">Sem imagem</div>'}
+    <div class="admin-live-preview-media">
+      ${item.image ? `<img src="${escapeAttr(imageUrl(item.image))}" alt="${escapeAttr(item.name)}">` : '<div class="admin-live-preview-placeholder">Sem imagem</div>'}
+    </div>
     <div class="admin-live-preview-body">
-      <span class="admin-live-preview-kicker">${escapeHtml(item.kind === 'promo' ? 'Prévia da promoção' : item.label)}</span>
+      <div class="admin-live-preview-topline">
+        <span class="admin-live-preview-kicker">${escapeHtml(item.kind === 'promo' ? 'Promoção no site' : item.label)}</span>
+        ${item.badge ? `<span class="admin-live-preview-badge">${escapeHtml(item.badge)}</span>` : ''}
+      </div>
       <strong class="admin-live-preview-title">${escapeHtml(item.name)}</strong>
       <p class="admin-live-preview-desc">${escapeHtml(item.desc)}</p>
+      ${details.length ? `
+        <div class="admin-live-preview-details">
+          <strong>${escapeHtml(item.composition || 'Itens inclusos')}</strong>
+          <ul>${details.map(detail => `<li>${escapeHtml(detail)}</li>`).join('')}${item.details.length > details.length ? '<li>...</li>' : ''}</ul>
+        </div>
+      ` : ''}
+      ${variants.length > 1 ? `<div class="admin-live-preview-variants">${variants.map(variant => `<span>${escapeHtml(variant.label)} <strong>${escapeHtml(formatMoney(variant.price))}</strong></span>`).join('')}</div>` : ''}
       ${tags.length ? `<div class="admin-live-preview-tags">${tags.map(tag => `<span>${escapeHtml(tag)}</span>`).join('')}</div>` : ''}
-      <span class="admin-live-preview-price">${escapeHtml(priceLabel)}</span>
+      <div class="admin-live-preview-foot">
+        <span class="admin-live-preview-price">${escapeHtml(priceLabel)}</span>
+        <button type="button" tabindex="-1" aria-hidden="true">${unavailable ? '!' : '+'}</button>
+      </div>
+      ${unavailable ? `<span class="admin-live-preview-state">${hiddenByCategory ? 'Categoria oculta' : 'Item oculto'}</span>` : ''}
     </div>
   `;
 }

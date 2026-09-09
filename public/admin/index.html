@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/admin/admin.css?v=7">
+<link rel="stylesheet" href="/admin/admin.css?v=8">
 </head>
 <body>
 
@@ -483,8 +483,14 @@
     <form id="editorForm" class="admin-editor-body">
       <input type="hidden" id="fId">
       <input type="hidden" id="fKind">
-      <div id="placementPreview" class="admin-placement"></div>
-      <div id="itemLivePreview" class="admin-live-preview"></div>
+      <section class="admin-editor-preview" aria-live="polite">
+        <div class="admin-editor-preview-head">
+          <span class="admin-kicker">Prévia antes de salvar</span>
+          <strong>Como o cliente vai ver</strong>
+        </div>
+        <div id="placementPreview" class="admin-placement"></div>
+        <div id="itemLivePreview" class="admin-live-preview"></div>
+      </section>
 
       <label class="admin-field">
         <span>Nome do item</span>
@@ -565,6 +571,6 @@
   </div>
 </div>
 
-<script src="/admin/admin.js?v=7"></script>
+<script src="/admin/admin.js?v=8"></script>
 </body>
 </html>
