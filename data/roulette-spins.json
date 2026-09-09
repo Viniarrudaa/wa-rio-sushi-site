@@ -1,14 +1,14 @@
 {
-  "updatedAt": "2026-09-08T18:06:02.080Z",
+  "updatedAt": "2026-09-09T13:44:01.918Z",
   "spins": {
     "_pTJfVy5aOTAm4cmFcBgLnXr": {
-      "date": "2026-09-08",
-      "prizeId": "tente-amanha",
-      "prizeName": "Não foi dessa vez. Tente novamente amanhã!",
-      "type": "none",
-      "value": 0,
-      "won": false,
-      "at": "2026-09-08T18:06:02.079Z"
+      "date": "2026-09-09",
+      "prizeId": "desconto-10",
+      "prizeName": "10% de Desconto!",
+      "type": "percent",
+      "value": 10,
+      "won": true,
+      "at": "2026-09-09T13:44:01.915Z"
     }
   },
   "history": [
@@ -30,6 +30,16 @@
       "value": 0,
       "won": false,
       "at": "2026-09-08T18:06:02.079Z",
+      "guestId": "0f963239597f234b"
+    },
+    {
+      "date": "2026-09-09",
+      "prizeId": "desconto-10",
+      "prizeName": "10% de Desconto!",
+      "type": "percent",
+      "value": 10,
+      "won": true,
+      "at": "2026-09-09T13:44:01.915Z",
       "guestId": "0f963239597f234b"
     }
   ]
