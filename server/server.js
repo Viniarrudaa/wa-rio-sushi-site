@@ -41,6 +41,7 @@ const menuDbFile=path.join(menuDataDir,'db.json');
 const menuSeedFile=path.join(rootDir,'data','seed.json');
 const menuUploadDir=path.join(menuDataDir,'uploads','menu');
 const rouletteStoreFile=path.resolve(process.env.ROULETTE_STORE_FILE||path.join(menuDataDir,'roulette-spins.json'));
+const marketingStoreFile=path.resolve(process.env.MARKETING_STORE_FILE||path.join(menuDataDir,'marketing-contacts.json'));
 const rouletteCookieMaxAgeSeconds=Math.max(1,Number(process.env.ROULETTE_COOKIE_DAYS)||180)*24*60*60;
 const adminPassword=String(process.env.ADMIN_PASSWORD||'');
 const adminLoginEnabled=adminPassword.length>0;
@@ -148,6 +149,141 @@ async function persistOrders(){
   };
   await mkdir(path.dirname(orderStoreFile),{recursive:true});
   await writeFile(orderStoreFile,JSON.stringify(payload,null,2),'utf8');
+}
+
+function readMarketingStore(){
+  try{
+    if(!existsSync(marketingStoreFile)) return {contacts:[]};
+    const data=JSON.parse(readFileSync(marketingStoreFile,'utf8'));
+    return {contacts:Array.isArray(data?.contacts)?data.contacts:[]};
+  }catch(error){
+    console.error('Falha ao ler clientes de marketing:',error.message);
+    return {contacts:[]};
+  }
+}
+
+function writeMarketingStore(store){
+  mkdirSync(path.dirname(marketingStoreFile),{recursive:true});
+  const payload={
+    updatedAt:new Date().toISOString(),
+    contacts:Array.isArray(store?.contacts)?store.contacts.slice(-2000):[]
+  };
+  writeFileSync(marketingStoreFile,JSON.stringify(payload,null,2),'utf8');
+}
+
+function normalizeMarketingPhone(value){
+  const digits=String(value||'').replace(/\D/g,'');
+  if(!digits) return '';
+  if(digits.startsWith('55')&&(digits.length===12||digits.length===13)) return digits;
+  if(digits.length===10||digits.length===11) return `55${digits}`;
+  return '';
+}
+
+function marketingPhoneDisplay(phone){
+  const digits=normalizeMarketingPhone(phone);
+  const national=digits.startsWith('55')?digits.slice(2):digits;
+  if(national.length===11) return `(${national.slice(0,2)}) ${national.slice(2,7)}-${national.slice(7)}`;
+  if(national.length===10) return `(${national.slice(0,2)}) ${national.slice(2,6)}-${national.slice(6)}`;
+  return digits?`+${digits}`:'';
+}
+
+function consentEnabled(value){
+  return value===true||String(value||'').toLowerCase()==='true';
+}
+
+function marketingLeadFromBody(body){
+  if(!consentEnabled(body?.marketingConsent)) return {stored:false};
+  const phone=normalizeMarketingPhone(body?.customerPhone||body?.phone);
+  if(!phone) return {error:'Telefone com DDD é obrigatório para salvar o cliente.',status:400};
+  const now=new Date().toISOString();
+  const items=Array.isArray(body?.items)
+    ? body.items.slice(0,20).map(item=>({
+      name:safeText(item?.name,120),
+      qty:Math.max(1,Math.min(20,Number(item?.qty)||1)),
+      total:normalizeFee(item?.total,0,5000)
+    })).filter(item=>item.name)
+    : [];
+  return {
+    stored:true,
+    phone,
+    phoneDisplay:marketingPhoneDisplay(phone),
+    customerName:safeText(body?.customerName,80)||'Cliente WA RIO',
+    consentAt:now,
+    marketingConsentText:safeText(body?.marketingConsentText,220)||'Aceite de promoções pelo WhatsApp.',
+    source:safeText(body?.source,40)||'checkout',
+    lastOrderAt:now,
+    lastOrder:{
+      amount:normalizeFee(body?.amount,0,5000),
+      paymentMethod:safeText(body?.paymentMethod,40),
+      scheduleLabel:safeText(body?.schedule?.label,80),
+      couponName:safeText(body?.coupon?.name,100),
+      neighborhood:safeText(body?.address?.neighborhood,80),
+      itemsSummary:items.map(item=>`${item.qty}x ${item.name}`).join(', ').slice(0,500)
+    }
+  };
+}
+
+function saveMarketingLead(body){
+  const lead=marketingLeadFromBody(body);
+  if(lead.error||!lead.stored) return lead;
+  const store=readMarketingStore();
+  const existingIndex=store.contacts.findIndex(contact=>normalizeMarketingPhone(contact?.phone)===lead.phone);
+  const existing=existingIndex>=0?store.contacts[existingIndex]:null;
+  const next={
+    ...(existing||{}),
+    phone:lead.phone,
+    phoneDisplay:lead.phoneDisplay,
+    customerName:lead.customerName,
+    active:true,
+    source:lead.source,
+    marketingConsentText:lead.marketingConsentText,
+    consentAt:existing?.consentAt||lead.consentAt,
+    createdAt:existing?.createdAt||lead.consentAt,
+    updatedAt:lead.lastOrderAt,
+    lastOrderAt:lead.lastOrderAt,
+    orderCount:(Number(existing?.orderCount)||0)+1,
+    lastOrder:lead.lastOrder
+  };
+  if(existingIndex>=0) store.contacts[existingIndex]=next;
+  else store.contacts.push(next);
+  writeMarketingStore(store);
+  return {stored:true,contact:next};
+}
+
+function publicMarketingContact(contact){
+  return {
+    phone:safeText(contact?.phone,20),
+    phoneDisplay:safeText(contact?.phoneDisplay,24)||marketingPhoneDisplay(contact?.phone),
+    whatsappPhone:normalizeMarketingPhone(contact?.phone),
+    customerName:safeText(contact?.customerName,80),
+    active:contact?.active!==false,
+    source:safeText(contact?.source,40),
+    orderCount:Math.max(0,Number(contact?.orderCount)||0),
+    consentAt:safeText(contact?.consentAt,40),
+    createdAt:safeText(contact?.createdAt,40),
+    updatedAt:safeText(contact?.updatedAt,40),
+    lastOrderAt:safeText(contact?.lastOrderAt,40),
+    marketingConsentText:safeText(contact?.marketingConsentText,220),
+    lastOrder:{
+      amount:normalizeFee(contact?.lastOrder?.amount,0,5000),
+      paymentMethod:safeText(contact?.lastOrder?.paymentMethod,40),
+      scheduleLabel:safeText(contact?.lastOrder?.scheduleLabel,80),
+      couponName:safeText(contact?.lastOrder?.couponName,100),
+      neighborhood:safeText(contact?.lastOrder?.neighborhood,80),
+      itemsSummary:safeText(contact?.lastOrder?.itemsSummary,500)
+    }
+  };
+}
+
+function adminCustomersPayload(){
+  const contacts=readMarketingStore().contacts
+    .map(publicMarketingContact)
+    .sort((a,b)=>(Date.parse(b.lastOrderAt)||0)-(Date.parse(a.lastOrderAt)||0));
+  return {
+    total:contacts.length,
+    active:contacts.filter(contact=>contact.active).length,
+    contacts
+  };
 }
 
 function sendJson(res,status,body){
@@ -905,6 +1041,7 @@ function adminOrdersPayload(){
         : null,
       gift:safeText(order?.gift,100),
       customerName:safeText(order?.customerName,80),
+      customerPhone:safeText(order?.customerPhone,20),
       address:{
         street:safeText(order?.address?.street,140),
         number:safeText(order?.address?.number,12),
@@ -1373,6 +1510,7 @@ function clientIp(req){
 function ratePolicy(pathname){
   if(pathname==='/api/admin/login') return {windowMs:60_000,max:12};
   if(pathname.startsWith('/api/admin/')) return {windowMs:60_000,max:120};
+  if(pathname==='/api/customers/lead') return {windowMs:60_000,max:20};
   if(pathname==='/api/roulette/spin') return {windowMs:60_000,max:8};
   if(pathname==='/api/roulette') return {windowMs:60_000,max:60};
   if(pathname==='/api/pix/create') return {windowMs:60_000,max:6};
@@ -1407,7 +1545,7 @@ function rateLimit(req,url){
 }
 
 function requiresJson(req,pathname){
-  return (req.method==='POST'&&(pathname==='/api/pix/create'||pathname==='/api/pix/webhook'||pathname==='/api/roulette/spin'))
+  return (req.method==='POST'&&(pathname==='/api/pix/create'||pathname==='/api/pix/webhook'||pathname==='/api/roulette/spin'||pathname==='/api/customers/lead'))
     || (['POST','PUT','PATCH'].includes(req.method)&&pathname.startsWith('/api/admin/'));
 }
 
@@ -1561,6 +1699,9 @@ function normalizeOrder(body,schedule,req){
     coupon:couponResult.coupon,
     gift:couponResult.gift,
     customerName:safeText(body?.customerName,80)||'Cliente WA RIO',
+    customerPhone:normalizeMarketingPhone(body?.customerPhone),
+    marketingConsent:consentEnabled(body?.marketingConsent),
+    marketingConsentText:safeText(body?.marketingConsentText,220),
     items,
     address,
     schedule
@@ -1843,6 +1984,7 @@ function buildWhatsappMessage(order){
   return [
     'Ola, WA RIO Sushi!',
     `Nome: ${order.customerName}`,
+    order.customerPhone?`WhatsApp: +${order.customerPhone}`:'',
     'Pedido:',
     ...order.items.map(item=>`- ${item.qty}x ${item.name} - ${formatMoney(item.total)}`),
     order.coupon?.name?`Cupom da roleta: ${order.coupon.name}`:'',
@@ -1854,7 +1996,7 @@ function buildWhatsappMessage(order){
     'Pagamento: Pix aprovado',
     `Total: ${formatMoney(order.amount)}`,
     `Codigo do pagamento: ${order.mpOrderId||order.paymentId}`
-  ].join('\n');
+  ].filter(Boolean).join('\n');
 }
 
 async function createPixOrder(req,res){
@@ -1909,6 +2051,14 @@ async function createPixOrder(req,res){
   orders.set(String(mpOrder.id),{...order,mpOrderId:String(mpOrder.id),status:responseBody.status});
   scheduleOrderPersist();
   return sendJson(res,200,responseBody);
+}
+
+async function createCustomerLead(req,res){
+  const body=await readJson(req);
+  const saved=saveMarketingLead(body);
+  if(saved.error) return sendJson(res,saved.status||400,{error:saved.error});
+  if(!saved.stored) return sendJson(res,200,{ok:true,stored:false});
+  return sendJson(res,200,{ok:true,stored:true,contact:publicMarketingContact(saved.contact)});
 }
 
 async function getPixStatus(req,res,paymentId,url){
@@ -2068,6 +2218,9 @@ async function handleMenuAdminApi(req,res,url){
   if(req.method==='GET'&&url.pathname==='/api/admin/orders'){
     return sendJson(res,200,adminOrdersPayload());
   }
+  if(req.method==='GET'&&url.pathname==='/api/admin/customers'){
+    return sendJson(res,200,adminCustomersPayload());
+  }
 
   const parts=url.pathname.split('/').filter(Boolean);
   if(parts[0]!=='api'||parts[1]!=='admin'||parts[2]!=='menu') return false;
@@ -2225,6 +2378,7 @@ const server=http.createServer(async(req,res)=>{
       if(req.method==='GET'&&url.pathname==='/api/security/config') return sendJson(res,200,securityConfig());
       if(req.method==='GET'&&url.pathname==='/api/roulette') return await getRouletteStatus(req,res);
       if(req.method==='POST'&&url.pathname==='/api/roulette/spin') return await spinRoulette(req,res);
+      if(req.method==='POST'&&url.pathname==='/api/customers/lead') return await createCustomerLead(req,res);
       if(req.method==='POST'&&url.pathname==='/api/pix/create') return await createPixOrder(req,res);
       if(req.method==='GET'&&url.pathname.startsWith('/api/pix/status/')) return await getPixStatus(req,res,url.pathname.split('/').pop(),url);
       if(req.method==='POST'&&url.pathname==='/api/pix/webhook') return await handleWebhook(req,res,url);

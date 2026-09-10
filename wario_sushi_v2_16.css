@@ -385,6 +385,12 @@ body.order-open .order-drawer{transform:translateX(0);}
 .address-field input::placeholder{color:rgba(210,191,176,.38);}
 .address-field input:focus{border-color:rgba(212,168,67,.46);background:rgba(0,0,0,.31);}
 .address-field input:disabled{opacity:.55;cursor:not-allowed;background:rgba(0,0,0,.15);}
+.marketing-optin{grid-column:1 / -1;display:grid;grid-template-columns:18px minmax(0,1fr);gap:10px;align-items:flex-start;margin-top:2px;padding:12px 13px;border:1px solid rgba(212,168,67,.14);border-radius:8px;background:rgba(212,168,67,.055);color:rgba(245,235,222,.70);}
+.marketing-optin input{width:18px;height:18px;margin:1px 0 0;accent-color:var(--gold-light);}
+.marketing-optin input:disabled{opacity:.48;cursor:not-allowed;}
+.marketing-optin span{display:grid;gap:4px;min-width:0;}
+.marketing-optin strong{font-family:var(--body-font);font-size:10.5px;font-weight:900;letter-spacing:1.15px;text-transform:uppercase;color:var(--gold-light);}
+.marketing-optin small{font-family:var(--body-font);font-size:11px;font-weight:600;line-height:1.45;color:rgba(210,191,176,.64);}
 .address-help{margin:10px 2px 0;font-family:var(--body-font);font-size:11px;font-weight:700;line-height:1.55;color:rgba(210,191,176,.60);}
 .address-help.is-success{color:#62e68f;}
 .address-help.is-warning{color:#f0c65c;}
@@ -803,6 +809,9 @@ footer{background:linear-gradient(90deg,#240000 0%,#5E0000 45%,#7A0000 100%);bor
   .delivery-field button{width:100%;}
   .address-form{grid-template-columns:1fr;gap:10px;}
   .address-field input{height:46px;font-size:13px;}
+  .marketing-optin{padding:11px 12px;gap:9px;}
+  .marketing-optin strong{font-size:9.7px;letter-spacing:.9px;}
+  .marketing-optin small{font-size:10.5px;line-height:1.38;}
   .schedule-check{padding:16px;margin-top:20px;}
   .schedule-check-head{align-items:flex-start;flex-direction:column;gap:6px;}
   .schedule-check-head strong{font-size:20px;}
@@ -938,6 +947,8 @@ footer{background:linear-gradient(90deg,#240000 0%,#5E0000 45%,#7A0000 100%);bor
   .order-qty{grid-column:2;justify-content:flex-start;justify-self:flex-start;}
   .order-remove{grid-column:2;justify-self:flex-start;}
   .order-note{padding:16px;margin-top:20px;}
+  .marketing-optin{padding:10px 11px;margin-top:0;}
+  .marketing-optin small{display:none;}
   .order-send{min-height:46px;font-size:9px;letter-spacing:1px;}
   .order-support{margin:8px 2px 0;font-size:10px;line-height:1.35;}
   .order-clear{display:none;}

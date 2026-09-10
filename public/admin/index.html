@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/admin/admin.css?v=8">
+<link rel="stylesheet" href="/admin/admin.css?v=9">
 </head>
 <body>
 
@@ -43,6 +43,7 @@
       <button class="admin-section-tab" type="button" data-section="delivery">Entregas</button>
       <button class="admin-section-tab" type="button" data-section="hours">Horários</button>
       <button class="admin-section-tab" type="button" data-section="orders">Pedidos</button>
+      <button class="admin-section-tab" type="button" data-section="customers">Clientes</button>
       <button class="admin-section-tab" type="button" data-section="tools">Ferramentas</button>
     </nav>
 
@@ -452,6 +453,25 @@
       <div id="ordersList" class="admin-orders-list"></div>
     </section>
 
+    <section class="admin-panel" id="customersPanel" data-panel="customers">
+      <div class="admin-panel-head">
+        <div>
+          <span class="admin-kicker">Marketing</span>
+          <h1>Clientes autorizados</h1>
+        </div>
+        <button id="refreshCustomersBtn" type="button" class="admin-btn admin-btn-ghost">Atualizar</button>
+      </div>
+      <div class="admin-campaign-box">
+        <label class="admin-field" for="campaignMessage">
+          <span>Mensagem da promoção</span>
+          <textarea id="campaignMessage" rows="4" maxlength="500">Olá, {nome}! Hoje temos promoção especial no WA RIO Sushi. Quer conferir o cardápio?</textarea>
+        </label>
+        <p class="admin-panel-note">Use {nome} para personalizar. O envio automático em massa entra depois com a API oficial do WhatsApp.</p>
+      </div>
+      <div id="customersSummary" class="admin-customers-summary"></div>
+      <div id="customersList" class="admin-customers-list"></div>
+    </section>
+
     <section class="admin-panel" id="toolsPanel" data-panel="tools">
       <div class="admin-panel-head">
         <div>
@@ -571,6 +591,6 @@
   </div>
 </div>
 
-<script src="/admin/admin.js?v=8"></script>
+<script src="/admin/admin.js?v=9"></script>
 </body>
 </html>

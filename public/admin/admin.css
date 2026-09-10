@@ -187,6 +187,17 @@ input,textarea,select,button{font-family:var(--font);}
 .admin-order-items{color:var(--white);}
 .admin-order-total{color:var(--gold-light);font-size:16px;font-weight:900;}
 .admin-order-date{color:var(--gray);font-size:11.5px;}
+.admin-campaign-box{display:grid;gap:10px;margin-bottom:14px;border:1px solid var(--border);border-radius:8px;padding:16px;background:linear-gradient(180deg,#111,#0b0b0b);}
+.admin-campaign-box .admin-field textarea{min-height:86px;}
+.admin-customers-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px;}
+.admin-customers-list{display:flex;flex-direction:column;gap:10px;}
+.admin-customer-card{border:1px solid var(--border);border-radius:8px;padding:15px;background:linear-gradient(180deg,#111,#0b0b0b);}
+.admin-customer-card.is-inactive{opacity:.58;}
+.admin-customer-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;}
+.admin-customer-top strong{display:block;color:var(--white);font-size:14px;font-weight:900;}
+.admin-customer-top span:not(.admin-order-status){display:block;margin-top:4px;color:var(--gold-light);font-size:12px;font-weight:800;}
+.admin-customer-body{display:grid;gap:5px;margin:12px 0;color:var(--gray);font-size:12.5px;line-height:1.45;}
+.admin-customer-actions{display:flex;flex-wrap:wrap;gap:8px;}
 
 .admin-items-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;}
 .admin-empty{color:var(--gray);font-size:13px;grid-column:1/-1;}
@@ -266,6 +277,9 @@ input,textarea,select,button{font-family:var(--font);}
   .admin-days{grid-template-columns:repeat(2,minmax(0,1fr));}
   .admin-field-row{grid-template-columns:1fr;}
   .admin-variant-row{grid-template-columns:1fr 90px 34px;}
+  .admin-customers-summary{grid-template-columns:1fr;}
+  .admin-customer-top{flex-direction:column;}
+  .admin-customer-actions{display:grid;grid-template-columns:1fr;}
   .admin-header{padding:0 16px;}
   .admin-main{padding:20px 14px 60px;}
   .admin-toolbar-right{width:100%;flex-direction:column;align-items:stretch;}

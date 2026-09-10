@@ -50,6 +50,10 @@ const openDaysGroup = $('#openDaysGroup');
 const saveHoursBtn = $('#saveHoursBtn');
 const ordersList = $('#ordersList');
 const refreshOrdersBtn = $('#refreshOrdersBtn');
+const customersList = $('#customersList');
+const customersSummary = $('#customersSummary');
+const refreshCustomersBtn = $('#refreshCustomersBtn');
+const campaignMessage = $('#campaignMessage');
 const deployChecklist = $('#deployChecklist');
 const downloadBackupBtn = $('#downloadBackupBtn');
 const showcasePanel = $('#showcasePanel');
@@ -122,6 +126,9 @@ let state = {
   imageUsage: {},
   categoryCounts: {},
   orders: [],
+  customers: [],
+  customersTotal: 0,
+  customersActive: 0,
   siteSettings: null,
   deployCheck: null
 };
@@ -1099,11 +1106,12 @@ logoutBtn.addEventListener('click', async () => {
 
 async function loadData(){
   try{
-    const [menuData, imageData, settingsData, ordersData, categoryData, deployData] = await Promise.all([
+    const [menuData, imageData, settingsData, ordersData, customersData, categoryData, deployData] = await Promise.all([
       api('/api/admin/menu'),
       api('/api/admin/images').catch(() => ({ images: [] })),
       api('/api/admin/settings').catch(() => null),
       api('/api/admin/orders').catch(() => ({ orders: [] })),
+      api('/api/admin/customers').catch(() => ({ contacts: [], total: 0, active: 0 })),
       api('/api/admin/categories').catch(() => ({ categories: null, counts: {} })),
       api('/api/admin/deploy-check').catch(() => null)
     ]);
@@ -1115,6 +1123,9 @@ async function loadData(){
       imageUsage: imageData.usage || {},
       categoryCounts: categoryData.counts || {},
       orders: Array.isArray(ordersData.orders) ? ordersData.orders : [],
+      customers: Array.isArray(customersData.contacts) ? customersData.contacts : [],
+      customersTotal: Number(customersData.total) || 0,
+      customersActive: Number(customersData.active) || 0,
       siteSettings: settingsData || menuData.siteSettings || defaultSettings(),
       deployCheck: deployData
     };
@@ -1136,6 +1147,20 @@ async function refreshOrders(showMessage = true){
   }
 }
 
+async function refreshCustomers(showMessage = true){
+  try{
+    const data = await api('/api/admin/customers');
+    state.customers = Array.isArray(data.contacts) ? data.contacts : [];
+    state.customersTotal = Number(data.total) || state.customers.length;
+    state.customersActive = Number(data.active) || state.customers.filter(customer => customer.active !== false).length;
+    renderCustomers();
+    renderDashboard();
+    if(showMessage) showStatus('Clientes atualizados.');
+  }catch(e){
+    showStatus('Não foi possível carregar os clientes.', true);
+  }
+}
+
 function renderAll(){
   populateImageOptions();
   populateCategoryFilter();
@@ -1148,6 +1173,7 @@ function renderAll(){
   renderDelivery();
   renderHours();
   renderOrders();
+  renderCustomers();
   renderTools();
   switchSection(activeSection);
 }
@@ -1187,7 +1213,8 @@ function renderDashboard(){
       ['Itens no cardápio', state.menuProducts.length],
       ['Promoções', state.promoProducts.length],
       ['Ocultos', hidden.length],
-      ['Bairros ativos', activeAreas.length]
+      ['Bairros ativos', activeAreas.length],
+      ['Clientes', state.customersActive || 0]
     ].map(([label, value]) => `
       <article class="admin-metric">
         <span>${escapeHtml(label)}</span>
@@ -1206,7 +1233,8 @@ function renderDashboard(){
       compactRow('Funcionamento', scheduleLabel()),
       compactRow('Antecedência', `${hours.scheduleLeadMinutes || 0} min`),
       compactRow('Taxa padrão', formatMoney(delivery.defaultFee)),
-      compactRow('Pedidos Pix recentes', String(state.orders.length))
+      compactRow('Pedidos Pix recentes', String(state.orders.length)),
+      compactRow('Clientes autorizados', String(state.customersActive || 0))
     ].join('');
   }
 }
@@ -1779,7 +1807,7 @@ function renderOrders(){
           <span class="admin-order-status">${escapeHtml(statusLabel(order.status))}</span>
         </div>
         <div class="admin-order-body">
-          <strong>${escapeHtml(order.customerName || 'Cliente WA RIO')}</strong><br>
+          <strong>${escapeHtml(order.customerName || 'Cliente WA RIO')}</strong>${order.customerPhone ? ` · ${escapeHtml(order.customerPhone)}` : ''}<br>
           ${escapeHtml(addressLine || 'Endereço não informado')}<br>
           ${escapeHtml(order.schedule?.label || 'Entrega não informada')}<br>
           <span class="admin-order-items">${escapeHtml(itemLine || 'Itens não informados')}</span>
@@ -1794,7 +1822,97 @@ function renderOrders(){
   }).join('');
 }
 
+function customerFirstName(customer){
+  return String(customer?.customerName || '').trim().split(/\s+/)[0] || 'tudo bem';
+}
+
+function campaignTextFor(customer){
+  const template = campaignMessage?.value || 'Olá, {nome}! Hoje temos promoção especial no WA RIO Sushi.';
+  return template.replace(/\{nome\}/gi, customerFirstName(customer));
+}
+
+async function copyText(text, successMessage){
+  try{
+    await navigator.clipboard.writeText(text);
+    showStatus(successMessage);
+  }catch(e){
+    showStatus('Não foi possível copiar automaticamente.', true);
+  }
+}
+
+function customerByPhone(phone){
+  return (state.customers || []).find(customer => customer.whatsappPhone === phone || customer.phone === phone);
+}
+
+function openCustomerWhatsApp(customer){
+  const phone = customer?.whatsappPhone || customer?.phone;
+  if(!phone) return;
+  const url = `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(campaignTextFor(customer))}`;
+  const opened = window.open(url, '_blank', 'noopener,noreferrer');
+  if(opened) opened.opener = null;
+}
+
+function renderCustomers(){
+  if(customersSummary){
+    customersSummary.innerHTML = [
+      compactRow('Clientes na lista', String(state.customersTotal || state.customers.length || 0)),
+      compactRow('Autorizados para promoção', String(state.customersActive || 0))
+    ].join('');
+  }
+  if(!customersList) return;
+  const customers = Array.isArray(state.customers) ? state.customers : [];
+  if(!customers.length){
+    customersList.innerHTML = '<p class="admin-empty">Nenhum cliente autorizado ainda. Quando alguém marcar o aceite no pedido, aparecerá aqui.</p>';
+    return;
+  }
+  customersList.innerHTML = customers.map(customer => {
+    const last = customer.lastOrder || {};
+    const lastOrderLine = [
+      last.itemsSummary,
+      last.amount ? formatMoney(last.amount) : '',
+      last.neighborhood,
+      last.couponName ? `Cupom: ${last.couponName}` : ''
+    ].filter(Boolean).join(' · ');
+    const phone = customer.whatsappPhone || customer.phone || '';
+    return `
+      <article class="admin-customer-card${customer.active === false ? ' is-inactive' : ''}">
+        <div class="admin-customer-top">
+          <div>
+            <strong>${escapeHtml(customer.customerName || 'Cliente WA RIO')}</strong>
+            <span>${escapeHtml(customer.phoneDisplay || phone || 'Telefone não informado')}</span>
+          </div>
+          <span class="admin-order-status">${customer.active === false ? 'Inativo' : 'Autorizado'}</span>
+        </div>
+        <div class="admin-customer-body">
+          <span>${escapeHtml(`Pedidos registrados: ${customer.orderCount || 1}`)}</span>
+          <span>${escapeHtml(`Último pedido: ${formatDateTime(customer.lastOrderAt || customer.updatedAt || customer.createdAt)}`)}</span>
+          ${lastOrderLine ? `<span>${escapeHtml(lastOrderLine)}</span>` : ''}
+        </div>
+        <div class="admin-customer-actions">
+          <button type="button" class="admin-btn admin-btn-primary admin-btn-sm" data-open-customer="${escapeAttr(phone)}">Abrir WhatsApp</button>
+          <button type="button" class="admin-btn admin-btn-ghost admin-btn-sm" data-copy-customer="${escapeAttr(phone)}">Copiar mensagem</button>
+          <button type="button" class="admin-btn admin-btn-ghost admin-btn-sm" data-copy-phone="${escapeAttr(phone)}">Copiar telefone</button>
+        </div>
+      </article>
+    `;
+  }).join('');
+}
+
 refreshOrdersBtn?.addEventListener('click', () => refreshOrders(true));
+refreshCustomersBtn?.addEventListener('click', () => refreshCustomers(true));
+
+customersList?.addEventListener('click', async event => {
+  const openButton = event.target.closest('[data-open-customer]');
+  const copyButton = event.target.closest('[data-copy-customer]');
+  const phoneButton = event.target.closest('[data-copy-phone]');
+  const phone = openButton?.dataset.openCustomer || copyButton?.dataset.copyCustomer || phoneButton?.dataset.copyPhone || '';
+  if(!phone) return;
+  const customer = customerByPhone(phone);
+  if(!customer) return;
+  if(openButton) openCustomerWhatsApp(customer);
+  if(copyButton) await copyText(campaignTextFor(customer), 'Mensagem copiada.');
+  if(phoneButton) await copyText(customer.phoneDisplay || customer.phone || phone, 'Telefone copiado.');
+});
 
 function renderTools(){
   if(!deployChecklist) return;

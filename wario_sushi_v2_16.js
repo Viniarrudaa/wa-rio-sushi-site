@@ -681,13 +681,15 @@ const deliveryCheckButton=document.getElementById('deliveryCheckButton');
 const deliveryManualButton=document.getElementById('deliveryManualButton');
 const deliveryStatus=document.getElementById('deliveryStatus');
 const customerName=document.getElementById('customerName');
+const customerPhone=document.getElementById('customerPhone');
+const marketingConsent=document.getElementById('marketingConsent');
 const deliveryStreet=document.getElementById('deliveryStreet');
 const deliveryNumber=document.getElementById('deliveryNumber');
 const deliveryComplement=document.getElementById('deliveryComplement');
 const deliveryNeighborhood=document.getElementById('deliveryNeighborhood');
 const deliveryReference=document.getElementById('deliveryReference');
 const addressHelp=document.getElementById('addressHelp');
-const addressInputs=[customerName,deliveryStreet,deliveryNumber,deliveryComplement,deliveryNeighborhood,deliveryReference].filter(Boolean);
+const addressInputs=[customerName,customerPhone,deliveryStreet,deliveryNumber,deliveryComplement,deliveryNeighborhood,deliveryReference].filter(Boolean);
 const scheduleFields=document.getElementById('scheduleFields');
 const scheduleModeInputs=[...document.querySelectorAll('input[name="scheduleMode"]')];
 const scheduleDate=document.getElementById('scheduleDate');
@@ -707,6 +709,8 @@ let selectedCouponId='';
 let couponUseEnabled=true;
 const rouletteInviteStorageKey='wa_rio_roleta_convite_fechado';
 const rouletteCouponStorageKey='wa_rio_cupons_ativos';
+const customerLeadApi='/api/customers/lead';
+const marketingConsentText='Aceito receber promoções da WA RIO Sushi pelo WhatsApp.';
 const pixApi={
   create:'/api/pix/create',
   status:id=>`/api/pix/status/${encodeURIComponent(id)}`,
@@ -940,6 +944,14 @@ function isAddressComplete(){
   const needsNeighborhood=deliveryState.status==='manual';
   return hasDeliveryAddressMode()&&hasBaseAddress&&(!needsNeighborhood||Boolean(deliveryNeighborhood?.value.trim()));
 }
+function normalizeCustomerPhone(value){
+  const digits=String(value||'').replace(/\D/g,'');
+  if(!digits) return '';
+  if(digits.startsWith('55')&&(digits.length===12||digits.length===13)) return digits;
+  if(digits.length===10||digits.length===11) return `55${digits}`;
+  return '';
+}
+function hasValidMarketingPhone(){return !marketingConsent?.checked||Boolean(normalizeCustomerPhone(customerPhone?.value));}
 function requiresPixApproval(){return selectedPaymentMethod().value==='pix';}
 function currentBusinessMinutes(date=new Date()){
   try{
@@ -1484,6 +1496,9 @@ function orderPayloadForPayment(){
   return {
     amount:Number(totals.total.toFixed(2)),
     customerName:safeText(customerName?.value,80),
+    customerPhone:normalizeCustomerPhone(customerPhone?.value),
+    marketingConsent:Boolean(marketingConsent?.checked),
+    marketingConsentText,
     items:[...order.values()].map(item=>({
       id:safeText(item.id,80),
       name:safeText(item.name,120),
@@ -1578,7 +1593,11 @@ async function createPixCharge(){
     updatePixPayment();
   }
 }
-function setAddressEnabled(enabled){addressInputs.forEach(input=>{input.disabled=!enabled;});updateAddressHelp();}
+function setAddressEnabled(enabled){
+  addressInputs.forEach(input=>{input.disabled=!enabled;});
+  if(marketingConsent) marketingConsent.disabled=!enabled;
+  updateAddressHelp();
+}
 function updateAddressHelp(){
   if(!addressHelp) return;
   addressHelp.classList.toggle('is-success',isAddressComplete());
@@ -1945,6 +1964,7 @@ function buildWhatsappMessage(){
     ? typedNeighborhood
     : deliveryState.area?safeText(deliveryState.area.name,80):'';
   const clientName=safeText(customerName?.value,80);
+  const phone=normalizeCustomerPhone(customerPhone?.value);
   const street=safeText(deliveryStreet?.value,140);
   const number=safeText(deliveryNumber?.value,12);
   const complement=safeText(deliveryComplement?.value,80);
@@ -1961,6 +1981,7 @@ function buildWhatsappMessage(){
   return [
     'Olá, WA RIO Sushi!',
     `Nome: ${clientName || 'Não informado'}`,
+    phone?`WhatsApp: +${phone}`:'',
     'Pedido:',
     ...lines,
     totals.appliedCoupon?`Cupom da roleta: ${couponLabel(totals.appliedCoupon)}`:'',
@@ -1973,6 +1994,49 @@ function buildWhatsappMessage(){
     `Total: ${totalLine}`,
     note?`Obs: ${note}`:''
   ].filter(Boolean).join('\n');
+}
+function customerLeadPayload(totals=orderTotals()){
+  const typedNeighborhood=safeText(deliveryNeighborhood?.value,80);
+  const areaName=deliveryState.status==='manual'
+    ? typedNeighborhood
+    : deliveryState.area?safeText(deliveryState.area.name,80):'';
+  return {
+    source:'checkout',
+    customerName:safeText(customerName?.value,80),
+    customerPhone:normalizeCustomerPhone(customerPhone?.value),
+    marketingConsent:Boolean(marketingConsent?.checked),
+    marketingConsentText,
+    amount:Number((deliveryState.status==='manual'?totals.subtotalAfterDiscount:totals.total).toFixed(2)),
+    paymentMethod:selectedPaymentMethod().label,
+    schedule:schedulePayload(),
+    coupon:totals.appliedCoupon?{name:couponLabel(totals.appliedCoupon)}:null,
+    address:{neighborhood:areaName},
+    items:[...order.values()].slice(0,20).map(item=>({
+      id:safeText(item.id,80),
+      name:safeText(item.name,120),
+      qty:Number(item.qty)||0,
+      total:Number((item.price*item.qty).toFixed(2))||0
+    }))
+  };
+}
+async function registerCustomerLead(totals=orderTotals()){
+  if(!marketingConsent?.checked) return;
+  if(!normalizeCustomerPhone(customerPhone?.value)) return;
+  const controller=typeof AbortController!=='undefined'?new AbortController():null;
+  const timer=controller?window.setTimeout(()=>controller.abort(),1200):null;
+  try{
+    await fetch(customerLeadApi,{
+      method:'POST',
+      headers:{'Content-Type':'application/json',Accept:'application/json'},
+      credentials:'same-origin',
+      keepalive:true,
+      ...(controller?{signal:controller.signal}:{}),
+      body:JSON.stringify(customerLeadPayload(totals))
+    });
+  }catch(error){
+  }finally{
+    if(timer) window.clearTimeout(timer);
+  }
 }
 document.addEventListener('click',event=>{
   const button=event.target.closest('.combo-variant-option');
@@ -2060,6 +2124,10 @@ addressInputs.forEach(input=>{
     renderOrder();
   });
 });
+marketingConsent?.addEventListener('change',()=>{
+  resetPixState();
+  renderOrder();
+});
 paymentInputs.forEach(input=>input.addEventListener('change',()=>{
   resetPixState();
   sendAnalyticsEvent('payment_method_selected',{payment_method:selectedPaymentMethod().value,cart_items:orderQty(),value:orderGrandTotal()});
@@ -2113,7 +2181,7 @@ orderClear?.addEventListener('click',()=>{
   renderOrder();
   if(window.matchMedia('(max-width:900px)').matches)setOrderOpen(false);
 });
-orderSend?.addEventListener('click',()=>{
+orderSend?.addEventListener('click',async()=>{
   const scheduleCheck=scheduleValidation();
   if(!scheduleCheck.valid){
     setOrderOpen(true);
@@ -2139,11 +2207,18 @@ orderSend?.addEventListener('click',()=>{
     missingField?.focus();
     return;
   }
+  if(!hasValidMarketingPhone()){
+    setOrderOpen(true);
+    showBusinessToast('Informe seu WhatsApp com DDD para receber promoções.');
+    customerPhone?.focus();
+    return;
+  }
   const now=Date.now();
   if(now-lastOrderSendAt<orderSendCooldownMs) return;
   lastOrderSendAt=now;
   const totals=orderTotals();
   sendAnalyticsEvent('send_order_whatsapp',{cart_items:orderQty(),value:totals.total,payment_method:selectedPaymentMethod().value,pix_approved:pixState.approved});
+  await registerCustomerLead(totals);
   const message=requiresPixApproval()&&pixState.whatsappMessage?pixState.whatsappMessage:buildWhatsappMessage();
   const url=`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message)}`;
   const opened=window.open(url,'_blank','noopener,noreferrer');
