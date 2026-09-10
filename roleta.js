@@ -14,7 +14,7 @@ const prizeText=document.getElementById('roulettePrizeText');
 const applyButton=document.getElementById('rouletteApplyButton');
 
 const couponStorageKey='wa_rio_cupons_ativos';
-const palette=['#68110c','#151518','#8d1c16','#222225','#4a0e17','#303035','#a82127','#101012'];
+const palette=['#b5121b','#050506'];
 let settings=null;
 let lastRotation=0;
 let spinning=false;

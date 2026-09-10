@@ -663,7 +663,7 @@ function renderRoulettePreview(roulette = null){
   }
   const prizes = (settings.prizes || []).filter(prize => prize.active !== false);
   const totalChance = prizes.reduce((sum, prize) => sum + (Number(prize.probability) || 0), 0);
-  const colors = ['#68110c', '#151518', '#8d1c16', '#222225', '#4a0e17', '#303035', '#a82127', '#101012'];
+  const colors = ['#b5121b', '#050506'];
   const segment = prizes.length ? 360 / prizes.length : 360;
   const gradient = prizes.length
     ? prizes.map((prize, index) => `${colors[index % colors.length]} ${(index * segment).toFixed(2)}deg ${((index + 1) * segment).toFixed(2)}deg`).join(',')

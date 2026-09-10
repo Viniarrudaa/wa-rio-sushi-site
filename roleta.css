@@ -6,6 +6,8 @@
   --line-soft:rgba(255,255,255,.1);
   --red:#df2d36;
   --red-dark:#68110c;
+  --slice-red:#b5121b;
+  --slice-black:#050506;
   --gold:#d4a843;
   --gold-soft:#f0d88b;
   --text:#f7f4ee;
@@ -165,7 +167,7 @@ h1{
   position:relative;
   overflow:hidden;
   isolation:isolate;
-  background:conic-gradient(var(--red-dark) 0 60deg,var(--panel) 60deg 120deg,var(--red-dark) 120deg 180deg,var(--panel) 180deg 240deg,var(--red-dark) 240deg 300deg,var(--panel) 300deg 360deg);
+  background:conic-gradient(var(--slice-red) 0 60deg,var(--slice-black) 60deg 120deg,var(--slice-red) 120deg 180deg,var(--slice-black) 180deg 240deg,var(--slice-red) 240deg 300deg,var(--slice-black) 300deg 360deg);
   transition:transform 5s cubic-bezier(.1,.82,.16,1);
 }
 .roulette-wheel::after{
@@ -188,9 +190,9 @@ h1{
   align-items:center;
   justify-content:center;
   padding:5px 6px;
-  border:1px solid rgba(255,255,255,.16);
+  border:1px solid rgba(255,255,255,.26);
   border-radius:999px;
-  background:rgba(0,0,0,.20);
+  background:rgba(0,0,0,.34);
   color:#fff;
   font-family:Outfit,Inter,sans-serif;
   font-size:9.2px;
